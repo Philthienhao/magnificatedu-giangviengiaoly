@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MagnificatEdu - Hệ Thống Quản Lý Giáo Lý Công Giáo</title>
+  
+  <!-- Montserrat Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons, Chart.js & SheetJS Excel Library -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- APP CONTAINER -->
+  <div id="app" class="app-container">
+    
+    <!-- SIDEBAR NAV -->
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-header">
+        <div class="brand-logo-container">
+          <div class="brand-icon">
+            <img src="brand_logo.jpg" alt="Chân Phước Anrê Phú Yên" class="brand-avatar-img">
+          </div>
+          <div class="brand-text">
+            <h1 class="brand-title">Magnificat<span>Edu</span></h1>
+            <span class="brand-badge">Giáo Lý Số</span>
+          </div>
+        </div>
+        <button id="toggle-sidebar-btn" class="toggle-btn" title="Thu gọn/Mở rộng">
+          <i class="fa-solid fa-bars-staggered"></i>
+        </button>
+      </div>
+
+      <!-- Slogan Box in Sidebar -->
+      <div class="sidebar-slogan-box">
+        <div class="slogan-icon"><i class="fa-solid fa-quote-left"></i></div>
+        <p class="slogan-text">"Không phải tất cả chúng ta đều làm được những điều vĩ đại, nhưng chúng ta có thể làm những điều nhỏ nhặt với tình yêu vĩ đại"</p>
+        <span class="slogan-author">— Mẹ Têrêsa Calcutta —</span>
+      </div>
+
+      <!-- Main Navigation Menu -->
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">MENU CHÍNH</div>
+        
+        <a href="#overview" class="nav-item active" data-page="overview">
+          <i class="fa-solid fa-chart-pie"></i>
+          <span>Tổng quan</span>
+        </a>
+
+        <!-- Training Management Dropdown -->
+        <div class="nav-group">
+          <button class="nav-item nav-dropdown-trigger" data-group="training">
+            <i class="fa-solid fa-book-bible"></i>
+            <span>Quản lý đào tạo</span>
+            <i class="fa-solid fa-chevron-down arrow"></i>
+          </button>
+          <div class="nav-sub-menu" id="sub-training">
+            <a href="#classes" class="nav-sub-item" data-page="classes"><i class="fa-solid fa-layer-group"></i> Lớp học</a>
+            <a href="#students" class="nav-sub-item" data-page="students"><i class="fa-solid fa-user-graduate"></i> Học viên</a>
+            <a href="#catechists" class="nav-sub-item" data-page="catechists"><i class="fa-solid fa-chalkboard-user"></i> Giáo lý viên</a>
+          </div>
+        </div>
+
+        <a href="#attendance" class="nav-item" data-page="attendance">
+          <i class="fa-solid fa-clipboard-user"></i>
+          <span>Điểm danh</span>
+        </a>
+
+        <!-- Grades Dropdown -->
+        <div class="nav-group">
+          <button class="nav-item nav-dropdown-trigger" data-group="grades">
+            <i class="fa-solid fa-trophy"></i>
+            <span>Kết quả & Đánh giá</span>
+            <i class="fa-solid fa-chevron-down arrow"></i>
+          </button>
+          <div class="nav-sub-menu" id="sub-grades">
+            <a href="#gradebook" class="nav-sub-item" data-page="gradebook"><i class="fa-solid fa-table-list"></i> Bảng điểm học tập</a>
+            <a href="#conduct" class="nav-sub-item" data-page="conduct"><i class="fa-solid fa-star"></i> Đánh giá rèn luyện</a>
+          </div>
+        </div>
+
+        <!-- Materials Dropdown -->
+        <div class="nav-group">
+          <button class="nav-item nav-dropdown-trigger" data-group="materials">
+            <i class="fa-solid fa-folder-open"></i>
+            <span>Học liệu & Kiểm tra</span>
+            <i class="fa-solid fa-chevron-down arrow"></i>
+          </button>
+          <div class="nav-sub-menu" id="sub-materials">
+            <a href="#library" class="nav-sub-item" data-page="library"><i class="fa-solid fa-book-bookmark"></i> Thư viện Giáo lý</a>
+            <a href="#quizzes" class="nav-sub-item" data-page="quizzes"><i class="fa-solid fa-file-pen"></i> Ngân hàng đề thi</a>
+          </div>
+        </div>
+
+        <a href="#certificates" class="nav-item" data-page="certificates">
+          <i class="fa-solid fa-certificate"></i>
+          <span>Bằng & Chứng chỉ</span>
+        </a>
+
+        <a href="#reports" class="nav-item" data-page="reports">
+          <i class="fa-solid fa-chart-column"></i>
+          <span>Báo cáo giáo lý</span>
+        </a>
+
+        <a href="#notifications" class="nav-item" data-page="notifications">
+          <i class="fa-solid fa-bell"></i>
+          <span>Thông báo</span>
+          <span class="badge badge-pill badge-primary" id="unread-count-badge" style="display: none;">0</span>
+        </a>
+
+        <a href="#settings" class="nav-item" data-page="settings">
+          <i class="fa-solid fa-church"></i>
+          <span>Thông tin Giáo Xứ</span>
+        </a>
+
+        <!-- ADMIN SECTION (Visible to Admin user only) -->
+        <div id="admin-menu-section" class="admin-only-block" style="display: none;">
+          <div class="nav-section-label text-warning">QUẢN TRỊ VIÊN</div>
+          <a href="#admin-users" class="nav-item nav-admin-item" data-page="admin-users">
+            <i class="fa-solid fa-user-shield"></i>
+            <span>Quản trị tài khoản</span>
+            <span class="badge badge-pill badge-danger" id="admin-badge">Admin</span>
+          </a>
+        </div>
+      </nav>
+
+      <!-- Sidebar Footer User Card -->
+      <div class="sidebar-footer">
+        <div class="user-mini-card" onclick="window.openUserProfileModal()" title="Bấm vào đây để đổi ảnh đại diện và chỉnh sửa thông tin cá nhân">
+          <div class="user-avatar-wrapper">
+            <img id="sidebar-user-avatar" src="admin_avatar.png" alt="User Avatar" class="user-avatar-sm">
+            <span class="sidebar-avatar-camera-badge"><i class="fa-solid fa-camera"></i></span>
+          </div>
+          <div class="user-info-sm">
+            <span id="sidebar-user-holyname" class="holy-name">Philiphê</span>
+            <strong id="sidebar-user-fullname" class="full-name">Võ Thiện Hảo</strong>
+            <span id="sidebar-user-role" class="user-role-badge text-warning"><i class="fa-solid fa-crown"></i> Admin / Quản Trị Viên</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT AREA -->
+    <div class="main-wrapper">
+      
+      <!-- TOP HEADER BAR -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="parish-branding">
+            <i class="fa-solid fa-church parish-icon"></i>
+            <div>
+              <h2 id="topbar-parish-name" class="parish-title">Giáo Xứ Hoà Khánh</h2>
+              <span id="topbar-parish-sub" class="parish-subtitle">Giáo phận Đà Nẵng • Niên học 2026 - 2027</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="topbar-right">
+          <!-- Search Bar -->
+          <div class="topbar-search">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" id="global-search" placeholder="Tìm kiếm học viên, lớp học...">
+          </div>
+
+          <!-- Notification Bell -->
+          <div class="topbar-action-btn" id="notif-dropdown-btn">
+            <i class="fa-solid fa-bell"></i>
+            <span class="pulse-dot"></span>
+          </div>
+
+          <!-- User Profile Dropdown Menu -->
+          <div class="user-profile-menu-container">
+            <button id="user-profile-trigger" class="user-profile-btn">
+              <img id="topbar-user-avatar" src="admin_avatar.png" alt="Avatar" class="avatar-circle">
+              <div class="user-display">
+                <span id="topbar-user-name" class="display-name">Philiphê Võ Thiện Hảo</span>
+                <span id="topbar-user-tag" class="display-role"><i class="fa-solid fa-shield-halved"></i> Admin</span>
+              </div>
+              <i class="fa-solid fa-chevron-down"></i>
+            </button>
+
+            <!-- Dropdown Menu items -->
+            <div id="user-dropdown-menu" class="dropdown-menu">
+              <div class="dropdown-header">
+                <p id="dropdown-user-email" class="user-email">philthienhao@gmail.com</p>
+                <span id="dropdown-user-role-tag" class="role-badge role-admin">Tài Khoản Admin</span>
+              </div>
+              <div class="dropdown-divider"></div>
+              <button type="button" class="dropdown-item" onclick="window.openUserProfileModal()">
+                <i class="fa-solid fa-camera text-primary"></i> 📷 Đổi ảnh đại diện cá nhân
+              </button>
+              <button type="button" class="dropdown-item" id="btn-open-profile" onclick="window.openUserProfileModal()">
+                <i class="fa-regular fa-id-card text-primary"></i> Trang cá nhân & Hồ sơ
+              </button>
+              <a href="#settings" class="dropdown-item">
+                <i class="fa-solid fa-church"></i> Thông tin Giáo xứ
+              </a>
+              <div class="dropdown-divider"></div>
+              <button id="switch-account-btn" class="dropdown-item">
+                <i class="fa-brands fa-google text-danger"></i> Đổi Tài Khoản Google
+              </button>
+              <button id="logout-btn" class="dropdown-item text-danger">
+                <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- DYNAMIC CONTENT CONTAINER -->
+      <main id="content-area" class="content-area">
+        <!-- Dynamic page views injected via JS -->
+      </main>
+
+      <!-- MAIN FOOTER -->
+      <footer class="app-footer">
+        <div class="footer-content">
+          <p>© 2026 <strong>MagnificatEdu</strong> — Nền Tảng Số Hóa Giáo Lý Công Giáo. Thiết kế tối giản, phục vụ Giáo Lý Viên & Huấn Luyện Viên.</p>
+          <div class="footer-quote">
+            <em>"Không phải tất cả chúng ta đều làm được những điều vĩ đại, nhưng chúng ta có thể làm những điều nhỏ nhặt với tình yêu vĩ đại"</em> — Mẹ Têrêsa Calcutta
+          </div>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <!-- MODALS CONTAINER -->
+
+  <!-- GOOGLE LOGIN & ACCOUNT SELECTION MODAL -->
+  <div id="google-auth-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-dialog auth-modal">
+      <div class="modal-content">
+        <div class="auth-header">
+          <div class="auth-logo">
+            <div class="brand-icon" style="width: 46px; height: 46px;">
+              <img src="brand_logo.jpg" alt="Chân Phước Anrê Phú Yên" class="brand-avatar-img">
+            </div>
+            <h2>Magnificat<span>Edu</span></h2>
+          </div>
+          <p class="auth-subtitle">Cổng Đăng Nhập Giáo Lý Viên Công Giáo</p>
+        </div>
+
+        <div class="auth-body">
+          <div class="slogan-card-auth">
+            <i class="fa-solid fa-quote-left quote-icon"></i>
+            <p>"Không phải tất cả chúng ta đều làm được những điều vĩ đại, nhưng chúng ta có thể làm những điều nhỏ nhặt với tình yêu vĩ đại"</p>
+            <span>— Mẹ Têrêsa Calcutta —</span>
+          </div>
+
+          <div class="auth-prompt">
+            <p><i class="fa-brands fa-google text-primary"></i> Vui lòng chọn tài khoản Google để tiếp tục:</p>
+          </div>
+
+          <!-- List of available accounts -->
+          <div id="google-accounts-list" class="google-accounts-list">
+            <!-- Account items injected via JS -->
+          </div>
+
+          <!-- Add custom Google account form -->
+          <div class="add-account-toggle-wrapper">
+            <button id="toggle-custom-google-btn" class="btn btn-outline-secondary btn-block">
+              <i class="fa-solid fa-user-plus"></i> Đăng nhập bằng tài khoản Google khác
+            </button>
+          </div>
+
+          <form id="custom-google-form" class="custom-google-form" style="display: none;">
+            <div class="form-group">
+              <label><i class="fa-brands fa-google"></i> Địa chỉ Email Google:</label>
+              <input type="email" id="custom-email" class="form-control" placeholder="vi-du@gmail.com" required>
+            </div>
+            <div class="form-group">
+              <label><i class="fa-solid fa-user"></i> Họ và Tên Giáo lý viên:</label>
+              <input type="text" id="custom-fullname" class="form-control" placeholder="Võ Thiện Hảo" required>
+            </div>
+            <div class="form-group">
+              <label><i class="fa-solid fa-cross"></i> Tên Thánh:</label>
+              <input type="text" id="custom-holyname" class="form-control" placeholder="T. Giuse" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">
+              <i class="fa-solid fa-right-to-bracket"></i> Đăng nhập ngay
+            </button>
+          </form>
+
+          <div class="auth-notice">
+            <i class="fa-solid fa-shield-halved"></i> Dữ liệu của từng tài khoản được mã hóa và lưu trữ riêng biệt trên hệ thống MagnificatEdu.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD / EDIT STUDENT MODAL -->
+  <div id="student-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="student-modal-title"><i class="fa-solid fa-user-plus"></i> Thêm Học Viên Mới</h3>
+          <button class="close-modal-btn" data-modal="student-modal"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="student-form">
+          <input type="hidden" id="student-form-id">
+          <div class="modal-body">
+            <div class="form-tabs">
+              <button type="button" class="tab-btn active" data-tab="tab-personal">Thông tin cá nhân</button>
+              <button type="button" class="tab-btn" data-tab="tab-family">Gia đình & Liên hệ</button>
+              <button type="button" class="tab-btn" data-tab="tab-sacraments">Bí tích đã nhận</button>
+            </div>
+
+            <!-- Tab 1: Personal -->
+            <div id="tab-personal" class="tab-pane active">
+              <!-- Student Photo Upload Section -->
+              <div class="form-row align-items-center mb-3 p-2 style-box" style="background: var(--slate-bg); border-radius: 8px;">
+                <div class="col-4 text-center">
+                  <div class="student-avatar-preview-box">
+                    <img id="std-photo-preview" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" alt="Student Photo" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary); display: inline-block;">
+                  </div>
+                  <label for="std-photo-input" class="btn btn-xs btn-outline-primary mt-2" style="font-size: 11px; padding: 3px 8px; cursor: pointer;">
+                    <i class="fa-solid fa-camera"></i> Chọn Ảnh Vĩnh Viễn
+                  </label>
+                  <input type="file" id="std-photo-input" accept="image/*" style="display: none;">
+                  <input type="hidden" id="std-photo-url">
+                </div>
+                <div class="col-8">
+                  <div class="form-group mb-2">
+                    <label>Mã Học Viên: <span class="text-danger">*</span></label>
+                    <input type="text" id="std-code" class="form-control" placeholder="HV2026001" required>
+                  </div>
+                  <div class="form-group mb-0">
+                    <label>Lớp Giáo Lý: <span class="text-danger">*</span></label>
+                    <select id="std-class" class="form-control" required>
+                      <!-- Options populated via JS -->
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group col-4">
+                  <label>Tên Thánh: <span class="text-danger">*</span></label>
+                  <input type="text" id="std-holyname" class="form-control" placeholder="T. Maria / T. Giuse" required>
+                </div>
+                <div class="form-group col-8">
+                  <label>Họ và Tên: <span class="text-danger">*</span></label>
+                  <input type="text" id="std-fullname" class="form-control" placeholder="Nguyễn Văn An" required>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group col-6">
+                  <label>Giới Tính: <span class="text-danger">*</span></label>
+                  <select id="std-gender" class="form-control" required>
+                    <option value="Nam">Nam</option>
+                    <option value="Nữ">Nữ</option>
+                  </select>
+                </div>
+                <div class="form-group col-6">
+                  <label>Ngày Sinh:</label>
+                  <input type="date" id="std-dob" class="form-control">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group col-6">
+                  <label>Giáo Khóm / Xóm Giáo:</label>
+                  <input type="text" id="std-subparish" class="form-control" placeholder="Ví dụ: Giáo khóm 1, Xóm Giuse...">
+                </div>
+                <div class="form-group col-6">
+                  <label>Địa Chỉ Thường Trú:</label>
+                  <input type="text" id="std-address" class="form-control" placeholder="Số nhà, đường, phường/xã...">
+                </div>
+              </div>
+            </div>
+
+            <!-- Tab 2: Family -->
+            <div id="tab-family" class="tab-pane">
+              <div class="form-row">
+                <div class="form-group col-6">
+                  <label>Tên Thánh & Họ Tên Cha:</label>
+                  <input type="text" id="std-father" class="form-control" placeholder="Giuse Nguyễn Văn B">
+                </div>
+                <div class="form-group col-6">
+                  <label>Số Điện Thoại Cha:</label>
+                  <input type="tel" id="std-father-phone" class="form-control" placeholder="0905xxxxxx">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group col-6">
+                  <label>Tên Thánh & Họ Tên Mẹ:</label>
+                  <input type="text" id="std-mother" class="form-control" placeholder="Maria Trần Thị C">
+                </div>
+                <div class="form-group col-6">
+                  <label>Số Điện Thoại Mẹ:</label>
+                  <input type="tel" id="std-mother-phone" class="form-control" placeholder="0914xxxxxx">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Ghi Chú Gia Đình / Hoàn Cảnh Đặc Biệt:</label>
+                <textarea id="std-family-notes" class="form-control" rows="3" placeholder="Ghi chú về phụ huynh hoặc hoàn cảnh gia đình..."></textarea>
+              </div>
+            </div>
+
+            <!-- Tab 3: Sacraments -->
+            <div id="tab-sacraments" class="tab-pane">
+              <div class="sacrament-check-grid">
+                <div class="sacrament-item">
+                  <label><input type="checkbox" id="sac-baptized"> Bí tích Rửa Tội</label>
+                  <input type="date" id="sac-baptized-date" class="form-control form-control-sm" placeholder="Ngày nhận">
+                </div>
+                <div class="sacrament-item">
+                  <label><input type="checkbox" id="sac-eucharist"> Rơt Lễ Lần Đầu</label>
+                  <input type="date" id="sac-eucharist-date" class="form-control form-control-sm" placeholder="Ngày nhận">
+                </div>
+                <div class="sacrament-item">
+                  <label><input type="checkbox" id="sac-confirmed"> Bí tích Thêm Sức</label>
+                  <input type="date" id="sac-confirmed-date" class="form-control form-control-sm" placeholder="Ngày nhận">
+                </div>
+                <div class="sacrament-item">
+                  <label><input type="checkbox" id="sac-solemn"> Tuyên Hứa Bao Đồng</label>
+                  <input type="date" id="sac-solemn-date" class="form-control form-control-sm" placeholder="Ngày nhận">
+                </div>
+              </div>
+            </div>
+
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary close-modal-btn" data-modal="student-modal">Hủy bỏ</button>
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Lưu Học Viên</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD / EDIT CLASS MODAL -->
+  <div id="class-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="class-modal-title"><i class="fa-solid fa-layer-group"></i> Tạo Lớp Học Mới</h3>
+          <button class="close-modal-btn" data-modal="class-modal"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="class-form">
+          <input type="hidden" id="class-form-id">
+          <div class="modal-body">
+            <div class="form-group">
+              <label>Tên Lớp Học: <span class="text-danger">*</span></label>
+              <input type="text" id="cls-name" class="form-control" placeholder="Ví dụ: Thiếu Nhi 2A, Ấu Nhi 1..." required>
+            </div>
+            <div class="form-group">
+              <label>Phân Đoàn / Ngành: <span class="text-danger">*</span></label>
+              <select id="cls-grade" class="form-control" required>
+                <option value="Khai Tâm">Khai Tâm</option>
+                <option value="Ấu Nhi">Ấu Nhi</option>
+                <option value="Thiếu Nhi">Thiếu Nhi</option>
+                <option value="Nghĩa Sĩ">Nghĩa Sĩ</option>
+                <option value="Hiệp Sĩ">Hiệp Sĩ</option>
+                <option value="Dự Trưởng / GLV">Dự Trưởng / GLV</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <div class="form-group col-6">
+                <label>Phòng Học:</label>
+                <input type="text" id="cls-room" class="form-control" placeholder="Phòng 102">
+              </div>
+              <div class="form-group col-6">
+                <label>Lịch Học Hằng Tuần:</label>
+                <input type="text" id="cls-schedule" class="form-control" placeholder="Chúa Nhật (08:00 - 09:30)">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Giáo Lý Viên Phụ Trách:</label>
+              <input type="text" id="cls-teacher" class="form-control" placeholder="T. Giuse Võ Thiện Hảo">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary close-modal-btn" data-modal="class-modal">Hủy bỏ</button>
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Lưu Lớp Học</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- CERTIFICATE PRINT MODAL -->
+  <div id="certificate-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content">
+        <div class="modal-header no-print">
+          <h3><i class="fa-solid fa-certificate"></i> In Giấy Chứng Nhận Giáo Lý</h3>
+          <div class="modal-header-actions">
+            <button id="print-cert-btn" class="btn btn-success"><i class="fa-solid fa-print"></i> In Chứng Chỉ / Xuất PDF</button>
+            <button class="close-modal-btn" data-modal="certificate-modal"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+        </div>
+        <div class="modal-body print-area">
+          <div id="cert-preview-card" class="certificate-paper">
+            <div class="cert-border-outer">
+              <div class="cert-border-inner">
+                <div class="cert-header">
+                  <div class="cert-cross"><i class="fa-solid fa-cross"></i></div>
+                  <h4 id="cert-parish-title">GIÁO XỨ HOÀ KHÁNH — GIÁO PHẬN ĐÀ NẴNG</h4>
+                  <h2 id="cert-main-title">CHỨNG NHẬN HOÀN THÀNH CHƯƠNG TRÌNH GIÁO LÝ</h2>
+                  <div class="cert-divider">✦ ✝ ✦</div>
+                </div>
+
+                <div class="cert-body">
+                  <p class="cert-salutation">Ban Giáo Lý Trân Trọng Chứng Nhận Em:</p>
+                  <h1 id="cert-student-name" class="cert-recipient">MARIA NGUYỄN THỊ MAI</h1>
+                  <p class="cert-details">
+                    Ngày sinh: <strong id="cert-dob">15/04/2014</strong> • Lớp: <strong id="cert-class">Thiếu Nhi 2B</strong>
+                  </p>
+                  <p class="cert-achievement">
+                    Đã hoàn thành xuất sắc chương trình học Giáo lý năm học <strong id="cert-year">2025 - 2026</strong><br>
+                    với Xếp loại Học tập: <strong id="cert-grade-rank">XUẤT SẮC</strong> và Hạnh kiểm: <strong id="cert-conduct-rank">TỐT</strong>.
+                  </p>
+                  <div class="cert-verse">
+                    <em>"Hãy để trẻ em đến với Thầy, đừng ngăn cấm chúng" (Mc 10,14)</em>
+                  </div>
+                </div>
+
+                <div class="cert-footer">
+                  <div class="cert-sign-col">
+                    <p>Giảng Viên Giáo Lý Phụ Trách</p>
+                    <div class="sign-space"></div>
+                    <strong id="cert-catechist-sign">T. Giuse Võ Thiện Hảo</strong>
+                  </div>
+                  <div class="cert-seal-col">
+                    <p class="cert-date-line">Hoà Khánh, ngày 15 tháng 06 năm 2026</p>
+                    <p>Linh Mục Quản Xứ</p>
+                    <div class="sign-space"></div>
+                    <strong>Lm. Giuse Nguyễn Văn Hoàng</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN USER EDIT & SUSPEND MODAL -->
+  <div id="admin-user-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3><i class="fa-solid fa-user-gear"></i> Quản Lý Tài Khoản</h3>
+          <button class="close-modal-btn" data-modal="admin-user-modal"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="admin-user-form">
+          <input type="hidden" id="admin-target-id">
+          <div class="modal-body">
+            <div class="user-summary-box">
+              <img id="admin-target-avatar" src="" alt="Avatar" class="avatar-circle-lg">
+              <div>
+                <h4 id="admin-target-name">Nguyễn Văn A</h4>
+                <p id="admin-target-email" class="text-muted">email@gmail.com</p>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Tên Thánh & Họ Tên:</label>
+              <input type="text" id="admin-target-fullname" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+              <label>Vai Trò Trong Hệ Thống:</label>
+              <select id="admin-target-role" class="form-control">
+                <option value="Giáo lý viên">Giáo lý viên / Huấn Luyện Viên</option>
+                <option value="Admin">Quản Trị Viên (Admin)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Trạng Thái Tài Khoản:</label>
+              <select id="admin-target-status" class="form-control">
+                <option value="active">🟢 Đang Hoạt Động</option>
+                <option value="suspended">🟡 Tạm Khóa / Đóng Tạm Thời</option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" id="admin-delete-user-btn" onclick="window.confirmDeleteAccount(document.getElementById('admin-target-id').value)" class="btn btn-outline-danger"><i class="fa-solid fa-trash"></i> Xóa Tài Khoản</button>
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Lưu Thay Đổi</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- USER PROFILE & AVATAR EDIT MODAL -->
+  <div id="user-profile-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3><i class="fa-solid fa-user-pen text-primary"></i> Chỉnh Sửa Thông Tin Cá Nhân</h3>
+          <button class="close-modal-btn" data-modal="user-profile-modal"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="user-profile-form">
+          <div class="modal-body">
+            <!-- Avatar Upload Section -->
+            <div class="profile-avatar-upload-box">
+              <div class="avatar-preview-wrapper" onclick="document.getElementById('profile-avatar-file-input').click()" style="cursor: pointer;" title="Bấm vào đây để chọn ảnh đại diện từ máy tính">
+                <img id="profile-avatar-preview" src="admin_avatar.png" alt="Avatar Preview" class="profile-avatar-lg">
+                <label for="profile-avatar-file-input" class="avatar-edit-badge" title="Tải ảnh đại diện mới từ máy tính">
+                  <i class="fa-solid fa-camera"></i>
+                </label>
+                <input type="file" id="profile-avatar-file-input" accept="image/*" style="display: none;">
+              </div>
+              <div class="avatar-upload-help">
+                <p style="font-weight: 700; color: var(--dark-navy); margin-bottom: 2px;">Ảnh Đại Diện Cá Nhân</p>
+                <small class="text-muted d-block mb-2">Bấm vào ảnh hoặc nút bên dưới để chọn ảnh mới từ máy tính (PNG, JPG, WEBP)</small>
+                <button type="button" class="btn btn-sm btn-outline-primary" onclick="document.getElementById('profile-avatar-file-input').click()">
+                  <i class="fa-solid fa-cloud-arrow-up"></i> Chọn Ảnh Đại Diện Mới
+                </button>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group col-4">
+                <label>Tên Thánh: <span class="text-danger">*</span></label>
+                <input type="text" id="prof-holyname" class="form-control" placeholder="T. Giuse" required>
+              </div>
+              <div class="form-group col-8">
+                <label>Họ và Tên Giáo Lý Viên: <span class="text-danger">*</span></label>
+                <input type="text" id="prof-fullname" class="form-control" placeholder="Võ Thiện Hảo" required>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group col-6">
+                <label>Số Điện Thoại:</label>
+                <input type="tel" id="prof-phone" class="form-control" placeholder="0905 123 456">
+              </div>
+              <div class="form-group col-6">
+                <label>Chức Vụ / Vai Trò:</label>
+                <select id="prof-role" class="form-control">
+                  <option value="Huấn Luyện Viên">Huấn Luyện Viên</option>
+                  <option value="Huynh Trưởng">Huynh Trưởng</option>
+                  <option value="GLV Cấp 1">GLV Cấp 1</option>
+                  <option value="GLV Cấp 2">GLV Cấp 2</option>
+                  <option value="GLV Cấp 3">GLV Cấp 3</option>
+                  <option value="Dự Trưởng">Dự Trưởng</option>
+                  <option value="Admin">Admin / Quản Trị Viên</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Địa Chỉ Email Google (Định danh):</label>
+              <input type="email" id="prof-email" class="form-control" readonly style="background: var(--slate-bg);">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary close-modal-btn" data-modal="user-profile-modal">Hủy bỏ</button>
+            <button type="submit" id="save-profile-btn" onclick="window.submitUserProfileForm(event)" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Lưu Thông Tin Cá Nhân</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- CSV / EXCEL IMPORT MODAL -->
+  <div id="csv-upload-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-dialog modal-lg" style="max-height: 90vh; margin: 20px auto; display: flex; flex-direction: column;">
+      <div class="modal-content" style="max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);">
+        <div class="modal-header" style="flex-shrink: 0; background: #f8fafc; border-bottom: 1px solid var(--slate-border);">
+          <h3><i class="fa-solid fa-file-excel text-success"></i> Tải Danh Sách Học Viên Từ File Excel</h3>
+          <button class="close-modal-btn" data-modal="csv-upload-modal"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body" style="overflow-y: auto; flex: 1; padding: 20px;">
+          <div class="alert alert-info" style="background: var(--primary-light); color: var(--primary-dark); border-left: 4px solid var(--primary); padding: 12px; margin-bottom: 16px;">
+            <p style="margin: 0; font-size: 13px;"><i class="fa-solid fa-circle-info"></i> Tải file danh sách đúng định dạng mẫu của hệ thống (Excel .xlsx, .xls hoặc .csv). Tự động nhận diện Tên Thánh, Họ Tên, Ngày Sinh, Tên Cha/Mẹ, SĐT, Giáo Khóm, Địa Chỉ và phân lớp tự động!</p>
+          </div>
+          
+          <div class="text-center mb-3">
+            <button class="btn btn-outline-primary" onclick="window.downloadCSVTemplate()"><i class="fa-solid fa-file-excel"></i> 1. Tải Mẫu File Roster Excel (.xlsx)</button>
+          </div>
+
+          <div class="file-upload-dropzone" style="border: 2px dashed var(--slate-border); padding: 24px; text-align: center; border-radius: var(--radius-md); background: #f8fafc; cursor: pointer;" onclick="document.getElementById('csv-file-input').click()">
+            <i class="fa-solid fa-cloud-arrow-up" style="font-size: 40px; color: var(--primary); margin-bottom: 8px;"></i>
+            <h4 style="margin-bottom: 6px; font-size: 15px; font-weight: 700;">Kéo & Thả file Excel (.xlsx, .xls, .csv) vào đây hoặc bấm để chọn file</h4>
+            <p style="font-size: 12px; color: var(--slate-muted);">Hỗ trợ mặc định định dạng Excel (.xlsx, .xls, .csv)</p>
+            <input type="file" id="csv-file-input" accept=".xlsx, .xls, .csv" style="display: none;" onchange="window.handleCSVFileSelected(event)">
+          </div>
+
+          <div id="csv-preview-container" style="display: none; margin-top: 16px;">
+            <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 8px; color: var(--dark-navy);"><i class="fa-solid fa-list-check text-primary"></i> Xem trước danh sách học viên (<span id="csv-preview-count" class="text-success" style="font-weight: 800;">0</span> học viên):</h4>
+            <div class="table-responsive" style="max-height: 280px; overflow-y: auto; border: 1px solid var(--slate-border); border-radius: 8px;">
+              <table class="custom-table" id="csv-preview-table">
+                <thead style="position: sticky; top: 0; background: #f1f5f9; z-index: 5;">
+                  <tr>
+                    <th>Tên Thánh</th>
+                    <th>Họ và Tên</th>
+                    <th>Giới Tính</th>
+                    <th>Ngày Sinh</th>
+                    <th>Tên Cha / Mẹ</th>
+                    <th>Giáo Khóm</th>
+                    <th>Lớp Học</th>
+                  </tr>
+                </thead>
+                <tbody id="csv-preview-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer" style="flex-shrink: 0; background: #ffffff; border-top: 2px solid var(--slate-border); padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; z-index: 20;">
+          <button type="button" class="btn btn-secondary close-modal-btn" data-modal="csv-upload-modal">Hủy bỏ</button>
+          <button type="button" id="btn-confirm-csv-import" class="btn btn-success btn-lg" style="display: none; font-weight: 800; font-size: 15px; padding: 10px 24px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);" onclick="window.confirmImportCSVData()"><i class="fa-solid fa-floppy-disk"></i> 💾 2. XÁC NHẬN LƯU DANH SÁCH HỌC VIÊN & LỚP HỌC</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CATECHIST MODAL -->
+  <div id="catechist-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="catechist-modal-title"><i class="fa-solid fa-chalkboard-user"></i> Thêm Giáo Lý Viên Mới</h3>
+          <button class="close-modal-btn" data-modal="catechist-modal"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="catechist-form" onsubmit="window.saveCatechistForm(event)">
+          <input type="hidden" id="cat-form-id">
+          <div class="modal-body">
+            <div class="form-row">
+              <div class="form-group col-4">
+                <label>Tên Thánh: <span class="text-danger">*</span></label>
+                <input type="text" id="cat-holyname" class="form-control" placeholder="T. Giuse" required>
+              </div>
+              <div class="form-group col-8">
+                <label>Họ và Tên: <span class="text-danger">*</span></label>
+                <input type="text" id="cat-fullname" class="form-control" placeholder="Nguyễn Văn A" required>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group col-6">
+                <label>Cấp Bậc / Vai Trò:</label>
+                <select id="cat-role" class="form-control">
+                  <option value="Huấn Luyện Viên">Huấn Luyện Viên</option>
+                  <option value="GLV Cấp 3">GLV Cấp 3</option>
+                  <option value="GLV Cấp 2">GLV Cấp 2</option>
+                  <option value="GLV Cấp 1">GLV Cấp 1</option>
+                  <option value="Huynh Trưởng">Huynh Trưởng</option>
+                  <option value="Dự Trưởng">Dự Trưởng</option>
+                </select>
+              </div>
+              <div class="form-group col-6">
+                <label>Số Điện Thoại:</label>
+                <input type="tel" id="cat-phone" class="form-control" placeholder="0905 123 456">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Email Liên Hệ:</label>
+              <input type="email" id="cat-email" class="form-control" placeholder="email@gmail.com">
+            </div>
+
+            <div class="form-group">
+              <label>Lớp Phụ Trách:</label>
+              <input type="text" id="cat-class" class="form-control" placeholder="Ví dụ: Ấu Nhi 2A & Thiếu Nhi 2B">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary close-modal-btn" data-modal="catechist-modal">Hủy bỏ</button>
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Lưu Giáo Lý Viên</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIBRARY MODAL -->
+  <div id="library-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="library-modal-title"><i class="fa-solid fa-book-bookmark"></i> Thêm Học Liệu Mới</h3>
+          <button class="close-modal-btn" data-modal="library-modal"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="library-form" onsubmit="window.saveLibraryForm(event)">
+          <input type="hidden" id="lib-form-id">
+          <div class="modal-body">
+            <div class="form-group">
+              <label>Tên Tài Liệu / Học Liệu: <span class="text-danger">*</span></label>
+              <input type="text" id="lib-title" class="form-control" placeholder="Sách Giáo Lý Hội Thánh..." required>
+            </div>
+            <div class="form-row">
+              <div class="form-group col-6">
+                <label>Định Dạng File:</label>
+                <select id="lib-format" class="form-control">
+                  <option value="PDF">Document PDF</option>
+                  <option value="PPT">Slide Presentation (PPT)</option>
+                  <option value="Audio">Âm Thanh / Thánh Ca</option>
+                  <option value="Doc">Văn Bản Word</option>
+                </select>
+              </div>
+              <div class="form-group col-6">
+                <label>Phân Đoàn / Ngành:</label>
+                <select id="lib-grade" class="form-control">
+                  <option value="Chung">Dùng Chung Toàn Giáo Xứ</option>
+                  <option value="Khai Tâm">Khai Tâm</option>
+                  <option value="Ấu Nhi">Ấu Nhi</option>
+                  <option value="Thiếu Nhi">Thiếu Nhi</option>
+                  <option value="Nghĩa Sĩ">Nghĩa Sĩ</option>
+                  <option value="Hiệp Sĩ">Hiệp Sĩ</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Mô Tả Tóm Tắt:</label>
+              <textarea id="lib-desc" class="form-control" rows="2" placeholder="Ghi chú về nội dung tài liệu..."></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary close-modal-btn" data-modal="library-modal">Hủy bỏ</button>
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Lưu Học Liệu</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUIZ MODAL -->
+  <div id="quiz-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="quiz-modal-title"><i class="fa-solid fa-file-pen"></i> Tạo Đề Thi / Câu Hỏi Mới</h3>
+          <button class="close-modal-btn" data-modal="quiz-modal"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="quiz-form" onsubmit="window.saveQuizForm(event)">
+          <input type="hidden" id="quiz-form-id">
+          <div class="modal-body">
+            <div class="form-group">
+              <label>Tên Đề Thi / Bài Kiểm Tra: <span class="text-danger">*</span></label>
+              <input type="text" id="quiz-title" class="form-control" placeholder="Đề thi Giữa Kỳ I..." required>
+            </div>
+            <div class="form-row">
+              <div class="form-group col-6">
+                <label>Phân Đoàn:</label>
+                <select id="quiz-grade" class="form-control">
+                  <option value="Khai Tâm">Khai Tâm</option>
+                  <option value="Ấu Nhi">Ấu Nhi</option>
+                  <option value="Thiếu Nhi">Thiếu Nhi</option>
+                  <option value="Nghĩa Sĩ">Nghĩa Sĩ</option>
+                  <option value="Hiệp Sĩ">Hiệp Sĩ</option>
+                </select>
+              </div>
+              <div class="form-group col-6">
+                <label>Số Câu Hỏi:</label>
+                <input type="number" id="quiz-count" class="form-control" value="20" min="1">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Nội Dung & Đáp Án Mẫu:</label>
+              <textarea id="quiz-content" class="form-control" rows="4" placeholder="Nhập các câu hỏi hoặc ghi chú đề thi..."></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary close-modal-btn" data-modal="quiz-modal">Hủy bỏ</button>
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Lưu Đề Thi</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- NOTIFICATION MODAL -->
+  <div id="notification-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="notification-modal-title"><i class="fa-solid fa-bullhorn"></i> Tạo Thông Báo Mới</h3>
+          <button class="close-modal-btn" data-modal="notification-modal"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="notification-form" onsubmit="window.saveNotificationForm(event)">
+          <input type="hidden" id="ntf-form-id">
+          <div class="modal-body">
+            <div class="form-group">
+              <label>Tiêu Đề Thông Báo: <span class="text-danger">*</span></label>
+              <input type="text" id="ntf-title" class="form-control" placeholder="Thông báo sinh hoạt Chúa Nhật..." required>
+            </div>
+            <div class="form-group">
+              <label>Chuyên Mục:</label>
+              <select id="ntf-category" class="form-control">
+                <option value="📢 Thông báo chung">📢 Thông báo chung</option>
+                <option value="✝ Thánh lễ & Phụng vụ">✝ Thánh lễ & Phụng vụ</option>
+                <option value="📝 Kiểm tra & Thi">📝 Kiểm tra & Thi</option>
+                <option value="🎉 Sinh hoạt & Ngoại khóa">🎉 Sinh hoạt & Ngoại khóa</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Nội Dung Chi Tiết:</label>
+              <textarea id="ntf-content" class="form-control" rows="3" placeholder="Nhập nội dung thông báo..."></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary close-modal-btn" data-modal="notification-modal">Hủy bỏ</button>
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Lưu Thông Báo</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- CUSTOM CONFIRMATION MODAL -->
+  <div id="custom-confirm-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-dialog" style="max-width: 440px;">
+      <div class="modal-content">
+        <div class="modal-header" style="background: #fef2f2; border-bottom: 1px solid #fecaca;">
+          <h3 style="color: #ef4444;"><i class="fa-solid fa-triangle-exclamation"></i> Xác Nhận Xóa Tài Khoản</h3>
+          <button class="close-modal-btn" data-modal="custom-confirm-modal"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body" style="text-align: center; padding: 24px;">
+          <div style="width: 64px; height: 64px; border-radius: 50%; background: #fef2f2; color: #ef4444; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 16px auto;">
+            <i class="fa-solid fa-user-xmark"></i>
+          </div>
+          <h4 id="confirm-target-name" style="font-size: 17px; font-weight: 800; color: var(--dark-navy); margin-bottom: 6px;">Nguyễn Thị Huyền</h4>
+          <p id="confirm-target-email" style="font-size: 13px; color: var(--slate-muted); margin-bottom: 16px; word-break: break-all;">mariahuyen.glv@gmail.com</p>
+          <div style="background: #fffbeb; border: 1px solid #fde68a; padding: 12px; border-radius: 8px; font-size: 12px; color: #b45309; text-align: left;">
+            <i class="fa-solid fa-triangle-exclamation text-warning"></i> <strong>Lưu ý:</strong> Hành động này sẽ xóa hoàn toàn tài khoản khỏi hệ thống MagnificatEdu và không thể hoàn tác.
+          </div>
+        </div>
+        <div class="modal-footer" style="justify-content: center; gap: 12px; background: #fafafa;">
+          <button type="button" class="btn btn-secondary close-modal-btn" data-modal="custom-confirm-modal">Hủy bỏ</button>
+          <button type="button" id="confirm-do-delete-btn" onclick="window.executeAccountDeletion(this)" class="btn btn-danger"><i class="fa-solid fa-trash"></i> Đồng Ý Xóa Ngay</button>
+        </div>
+      </div>
+    </div>
+  <!-- UNIVERSAL CONFIRM MODAL -->
+  <div id="universal-confirm-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-content" style="max-width: 440px;">
+      <div class="modal-header" style="background: #fef2f2; border-bottom: 1px solid #fecaca;">
+        <h3 style="color: #ef4444;"><i class="fa-solid fa-triangle-exclamation"></i> <span id="uni-confirm-title">Xác Nhận Xóa</span></h3>
+        <button class="close-modal-btn" data-modal="universal-confirm-modal"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body" style="text-align: center; padding: 24px;">
+        <div style="width: 56px; height: 56px; border-radius: 50%; background: #fef2f2; color: #ef4444; display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 16px auto;">
+          <i class="fa-solid fa-trash-can"></i>
+        </div>
+        <p id="uni-confirm-msg" style="font-size: 14px; font-weight: 600; color: var(--dark-navy); margin-bottom: 12px; line-height: 1.5;">Bạn có chắc chắn muốn xóa bản ghi này khỏi hệ thống?</p>
+      </div>
+      <div class="modal-footer" style="justify-content: center; gap: 12px; background: #fafafa;">
+        <button type="button" class="btn btn-secondary close-modal-btn" data-modal="universal-confirm-modal">Hủy bỏ</button>
+        <button type="button" id="uni-confirm-btn" class="btn btn-danger"><i class="fa-solid fa-trash"></i> Đồng Ý Xóa</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Application JS Code -->
+  <script src="app_v2.js?v=20261004_v20"></script>
+</body>
+</html>
