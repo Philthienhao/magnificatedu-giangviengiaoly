@@ -266,6 +266,17 @@
     if (!currentUser || !appData) return;
     const key = STORAGE_PREFIX_DATA + currentUser.email.toLowerCase().replace(/[^a-z0-9]/g, '_');
     localStorage.setItem(key, JSON.stringify(appData));
+
+    // Supabase Cloud Data Persistence Sync
+    if (window.supabaseClient && currentUser.email) {
+      try {
+        window.supabaseClient.from('user_data').upsert({
+          email: currentUser.email.toLowerCase(),
+          data: appData,
+          updated_at: new Date().toISOString()
+        });
+      } catch (e) {}
+    }
   }
 
   /* --------------------------------------------------------------------------
