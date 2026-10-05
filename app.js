@@ -151,10 +151,10 @@
         if (!adminMatch) {
           loaded.unshift(SEED_ACCOUNTS[0]);
         } else {
-          adminMatch.holyName = 'Philiphê';
-          adminMatch.name = 'Võ Thiện Hảo';
+          adminMatch.holyName = adminMatch.holyName || 'Philiphê';
+          adminMatch.name = adminMatch.name || 'Võ Thiện Hảo';
           adminMatch.role = 'Admin';
-          adminMatch.avatar = 'admin_avatar.png';
+          adminMatch.avatar = adminMatch.avatar || 'admin_avatar.png';
           adminMatch.status = 'active';
         }
 
@@ -191,13 +191,14 @@
       currentUser = accountsList.find(a => a.email.toLowerCase() === 'philthienhao@gmail.com') || SEED_ACCOUNTS[0]; // Default Admin user
     }
 
-    // Ensure current admin user properties are Philiphê Võ Thiện Hảo with Admin role & avatar
+    // Ensure current admin user properties are Philiphê Võ Thiện Hảo with Admin role & preserve custom avatar
     if (!currentUser || currentUser.email.toLowerCase() === 'philthienhao@gmail.com') {
-      currentUser = accountsList.find(a => a.email.toLowerCase() === 'philthienhao@gmail.com') || SEED_ACCOUNTS[0];
-      currentUser.holyName = 'Philiphê';
-      currentUser.name = 'Võ Thiện Hảo';
+      const adminAcc = accountsList.find(a => a.email.toLowerCase() === 'philthienhao@gmail.com');
+      currentUser = adminAcc || currentUser || SEED_ACCOUNTS[0];
+      currentUser.holyName = currentUser.holyName || 'Philiphê';
+      currentUser.name = currentUser.name || 'Võ Thiện Hảo';
       currentUser.role = 'Admin';
-      currentUser.avatar = 'admin_avatar.png';
+      currentUser.avatar = currentUser.avatar || 'admin_avatar.png';
     }
 
     saveCurrentUser();
@@ -272,13 +273,29 @@
     if (window.supabaseClient && email) {
       window.supabaseClient
         .from('user_data')
-        .select('data')
+        .select('data, account_info')
         .eq('email', email.toLowerCase())
         .maybeSingle()
         .then(({ data, error }) => {
-          if (data && data.data) {
-            appData = data.data;
-            localStorage.setItem(key, JSON.stringify(appData));
+          if (data) {
+            if (data.data) {
+              appData = data.data;
+              localStorage.setItem(key, JSON.stringify(appData));
+            }
+            if (data.account_info && data.account_info.avatar && currentUser && currentUser.email.toLowerCase() === email.toLowerCase()) {
+              currentUser.avatar = data.account_info.avatar;
+              currentUser.holyName = data.account_info.holyName || currentUser.holyName;
+              currentUser.name = data.account_info.name || currentUser.name;
+              const match = accountsList.find(a => a.email.toLowerCase() === currentUser.email.toLowerCase());
+              if (match) {
+                match.avatar = currentUser.avatar;
+                match.holyName = currentUser.holyName;
+                match.name = currentUser.name;
+              }
+              saveAccounts();
+              saveCurrentUser();
+              renderAppHeaderAndSidebar();
+            }
             if (typeof renderCurrentView === 'function') renderCurrentView();
           }
         })
@@ -297,6 +314,18 @@
         window.supabaseClient.from('user_data').upsert({
           email: currentUser.email.toLowerCase(),
           data: appData,
+          account_info: {
+            id: currentUser.id,
+            email: currentUser.email,
+            name: currentUser.name,
+            holyName: currentUser.holyName,
+            role: currentUser.role,
+            avatar: currentUser.avatar,
+            phone: currentUser.phone,
+            status: currentUser.status,
+            lastLogin: currentUser.lastLogin,
+            loginCount: currentUser.loginCount
+          },
           updated_at: new Date().toISOString()
         }).then(({ error }) => {
           if (error) console.warn('Supabase sync notice:', error.message);
@@ -3291,6 +3320,7 @@
     try {
       saveAccounts();
       saveCurrentUser();
+      saveUserData();
       renderAppHeaderAndSidebar();
 
       const contentArea = document.getElementById('content-area');
