@@ -260,6 +260,23 @@
     }
 
     saveUserData();
+
+    // Async sync from Supabase Cloud if available
+    if (window.supabaseClient && email) {
+      window.supabaseClient
+        .from('user_data')
+        .select('data')
+        .eq('email', email.toLowerCase())
+        .maybeSingle()
+        .then(({ data, error }) => {
+          if (data && data.data) {
+            appData = data.data;
+            localStorage.setItem(key, JSON.stringify(appData));
+            if (typeof renderCurrentView === 'function') renderCurrentView();
+          }
+        })
+        .catch(err => console.log('Supabase cloud load notice:', err));
+    }
   }
 
   function saveUserData() {
@@ -274,6 +291,8 @@
           email: currentUser.email.toLowerCase(),
           data: appData,
           updated_at: new Date().toISOString()
+        }).then(({ error }) => {
+          if (error) console.warn('Supabase sync notice:', error.message);
         });
       } catch (e) {}
     }
