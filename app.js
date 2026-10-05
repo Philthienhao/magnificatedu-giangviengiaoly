@@ -8,6 +8,13 @@
 (function () {
   'use strict';
 
+  // Supabase Credentials & Fallback Initialization
+  const SUPABASE_URL = 'https://hnuacgqxbjhezwjzsfpf.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhudWFjZ3F4YmpoZXp3anpzZnBmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEyMDAzMjAsImV4cCI6MjEwNjc3NjMyMH0.4EV5Rv7LNTZvTQPpw4dHzu2ReFMSsETUryMqUcrSxJw';
+  if (!window.supabaseClient && window.supabase) {
+    try { window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch (e) {}
+  }
+
   /* --------------------------------------------------------------------------
      1. CONSTANTS & SYSTEM SEED DATA
      -------------------------------------------------------------------------- */
