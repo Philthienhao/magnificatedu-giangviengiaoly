@@ -194,11 +194,16 @@
     // Ensure current admin user properties are Philiphê Võ Thiện Hảo with Admin role & preserve custom avatar
     if (!currentUser || currentUser.email.toLowerCase() === 'philthienhao@gmail.com') {
       const adminAcc = accountsList.find(a => a.email.toLowerCase() === 'philthienhao@gmail.com');
+      const savedAdminAvatar = (currentUser && currentUser.avatar && currentUser.avatar !== 'admin_avatar.png') 
+        ? currentUser.avatar 
+        : (adminAcc && adminAcc.avatar && adminAcc.avatar !== 'admin_avatar.png' ? adminAcc.avatar : 'admin_avatar.png');
+
       currentUser = adminAcc || currentUser || SEED_ACCOUNTS[0];
       currentUser.holyName = currentUser.holyName || 'Philiphê';
       currentUser.name = currentUser.name || 'Võ Thiện Hảo';
       currentUser.role = 'Admin';
-      currentUser.avatar = currentUser.avatar || 'admin_avatar.png';
+      currentUser.avatar = savedAdminAvatar;
+      if (adminAcc) adminAcc.avatar = savedAdminAvatar;
     }
 
     saveCurrentUser();
@@ -214,7 +219,10 @@
           saveCurrentUser();
         }
       } else {
+        const bestAv = (currentUser.avatar && currentUser.avatar !== 'admin_avatar.png') ? currentUser.avatar : (match.avatar || 'admin_avatar.png');
+        match.avatar = bestAv;
         currentUser = match;
+        currentUser.avatar = bestAv;
       }
     }
 
@@ -3213,36 +3221,37 @@
   }
   window.flashButtonSuccess = flashButtonSuccess;
 
-  // IMAGE COMPRESSION UTILITY (Prevents LocalStorage Quota Exceeded error)
-  function compressImage(base64Str, maxWidth = 300, maxHeight = 300, quality = 0.85, callback) {
+  // IMAGE COMPRESSION UTILITY (Crops square & prevents LocalStorage Quota Exceeded error)
+  function compressImage(base64Str, maxWidth = 200, maxHeight = 200, quality = 0.75, callback) {
+    if (!base64Str) { if (callback) callback(base64Str); return; }
     const img = new Image();
-    img.src = base64Str;
+    img.crossOrigin = 'Anonymous';
     img.onload = () => {
-      const canvas = document.createElement('canvas');
-      let width = img.width;
-      let height = img.height;
+      try {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
 
-      if (width > height) {
-        if (width > maxWidth) {
-          height = Math.round((height * maxWidth) / width);
-          width = maxWidth;
-        }
-      } else {
-        if (height > maxHeight) {
-          width = Math.round((width * maxHeight) / height);
-          height = maxHeight;
-        }
+        let minDim = Math.min(width, height);
+        let sx = (width - minDim) / 2;
+        let sy = (height - minDim) / 2;
+
+        let targetDim = Math.min(minDim, maxWidth || 200);
+
+        canvas.width = targetDim;
+        canvas.height = targetDim;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, targetDim, targetDim);
+        const compressed = canvas.toDataURL('image/jpeg', quality || 0.75);
+        if (callback) callback(compressed);
+      } catch (e) {
+        if (callback) callback(base64Str);
       }
-
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, width, height);
-      callback(canvas.toDataURL('image/jpeg', quality));
     };
     img.onerror = () => {
-      callback(base64Str);
+      if (callback) callback(base64Str);
     };
+    img.src = base64Str;
   }
 
   // USER PROFILE EDITING LOGIC & AVATAR UPLOAD
@@ -3345,10 +3354,19 @@
         if (file) {
           const reader = new FileReader();
           reader.onload = (evt) => {
-            compressImage(evt.target.result, 300, 300, 0.85, (compressed) => {
+            compressImage(evt.target.result, 180, 180, 0.75, (compressed) => {
               uploadedUserAvatarBase64 = compressed;
               avatarPreview.src = compressed;
-              showToast('Đã chọn ảnh đại diện mới! Bấm "Lưu Thông Tin Cá Nhân" để áp dụng.', 'info');
+              if (currentUser) {
+                currentUser.avatar = compressed;
+                const match = accountsList.find(a => a.email.toLowerCase() === currentUser.email.toLowerCase());
+                if (match) match.avatar = compressed;
+                saveAccounts();
+                saveCurrentUser();
+                saveUserData();
+                renderAppHeaderAndSidebar();
+                showToast('✓ Đã cập nhật & lưu ảnh đại diện mới thành công! ✨', 'success');
+              }
             });
           };
           reader.readAsDataURL(file);
