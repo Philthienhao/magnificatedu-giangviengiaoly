@@ -2030,19 +2030,47 @@
     }
   }
 
-  // PAGE 14: QUẢN TRỊ TÀI KHOẢN (ADMIN EXCLUSIVE)
-  function renderAdminUsers(container) {
+  // PAGE 14: QUẢN TRỊ TÀI KHOẢN (ADMIN EXCLUSIVE & MASTER DASHBOARD)
+  async function renderAdminUsers(container) {
+    let cloudDataRows = [];
+    let parishClassesCount = 0;
+    let parishStudentsCount = 0;
+
+    if (window.supabaseClient) {
+      try {
+        const { data, error } = await window.supabaseClient.from('user_data').select('*');
+        if (data && Array.isArray(data)) {
+          cloudDataRows = data;
+          data.forEach(r => {
+            if (r.data) {
+              if (Array.isArray(r.data.classes)) parishClassesCount += r.data.classes.length;
+              if (Array.isArray(r.data.students)) parishStudentsCount += r.data.students.length;
+            }
+          });
+        }
+      } catch (e) {
+        console.warn('Supabase admin fetch notice:', e);
+      }
+    }
+
     const totalUsers = accountsList.length;
     const activeUsers = accountsList.filter(a => a.status === 'active').length;
     const suspendedUsers = accountsList.filter(a => a.status === 'suspended').length;
 
     container.innerHTML = `
-      <div class="page-header">
+      <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
         <div>
-          <h2 class="page-title"><i class="fa-solid fa-user-shield text-warning"></i> Quản Trị Hệ Thống Tài Khoản (Admin)</h2>
-          <p class="page-subtitle">Xem tổng quan tất cả tài khoản đã tạo, đóng tạm thời hoặc xóa tài khoản bất kỳ</p>
+          <h2 class="page-title"><i class="fa-solid fa-user-shield text-warning"></i> Quản Trị Hệ Thống Toàn Giáo Xứ (Master Admin)</h2>
+          <p class="page-subtitle">Quản lý tài khoản Giáo lý viên, xem dữ liệu lớp học và xuất báo cáo tổng hợp toàn Giáo xứ</p>
         </div>
-        <span class="badge badge-warning" style="font-size: 13px; padding: 6px 14px;"><i class="fa-solid fa-crown"></i> Quyền Admin Đầu Tiên</span>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <button class="btn btn-success" onclick="window.exportParishMasterExcel()">
+            <i class="fa-solid fa-file-excel"></i> Xuất Báo Cáo Excel Toàn Giáo Xứ
+          </button>
+          <button class="btn btn-outline-primary" onclick="window.refreshAdminCloudData()">
+            <i class="fa-solid fa-arrows-rotate"></i> Tải Lại Dữ Liệu Cloud
+          </button>
+        </div>
       </div>
 
       <!-- ADMIN STATS -->
@@ -2050,78 +2078,103 @@
         <div class="kpi-card">
           <div class="kpi-icon kpi-blue"><i class="fa-solid fa-users"></i></div>
           <div class="kpi-info">
-            <h4>Tài Khoản Đã Tạo</h4>
+            <h4>Tài Khoản Đã Đăng Nhập</h4>
             <div class="kpi-number">${totalUsers}</div>
           </div>
         </div>
 
         <div class="kpi-card">
-          <div class="kpi-icon kpi-green"><i class="fa-solid fa-user-check"></i></div>
+          <div class="kpi-icon kpi-green"><i class="fa-solid fa-school"></i></div>
           <div class="kpi-info">
-            <h4>Đang Hoạt Động</h4>
-            <div class="kpi-number">${activeUsers}</div>
+            <h4>Tổng Số Lớp Giáo Xứ</h4>
+            <div class="kpi-number">${parishClassesCount}</div>
           </div>
         </div>
 
         <div class="kpi-card">
-          <div class="kpi-icon kpi-amber"><i class="fa-solid fa-user-slash"></i></div>
+          <div class="kpi-icon kpi-purple"><i class="fa-solid fa-graduation-cap"></i></div>
           <div class="kpi-info">
-            <h4>Tạm Khóa / Tạm Đóng</h4>
-            <div class="kpi-number">${suspendedUsers}</div>
+            <h4>Tổng Học Viên Giáo Xứ</h4>
+            <div class="kpi-number">${parishStudentsCount}</div>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-amber"><i class="fa-solid fa-user-check"></i></div>
+          <div class="kpi-info">
+            <h4>Đang Hoạt Động</h4>
+            <div class="kpi-number">${activeUsers} / ${totalUsers}</div>
           </div>
         </div>
       </div>
 
-      <!-- ACCOUNTS TABLE -->
+      <!-- ACCOUNTS & CLASSES MASTER TABLE -->
       <div class="card">
-        <div class="card-header">
-          <h3 class="card-title"><i class="fa-solid fa-users-gear"></i> Danh Sách Tài Khoản Người Dùng</h3>
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+          <h3 class="card-title"><i class="fa-solid fa-users-gear"></i> Danh Sách Tài Khoản & Dữ Liệu Lớp Phụ Trách</h3>
+          <span class="badge badge-primary"><i class="fa-solid fa-cloud"></i> Đồng Bộ Đám Mây Supabase Cloud</span>
         </div>
         <div class="card-body" style="padding: 0;">
           <div class="table-responsive">
             <table class="custom-table">
               <thead>
                 <tr>
-                  <th>Tài Khoản Google</th>
+                  <th>Tài Khoản Google / Gmail</th>
                   <th>Tên Thánh & Họ Tên</th>
                   <th>Vai Trò</th>
+                  <th>Số Lớp Phụ Trách</th>
+                  <th>Số Học Viên</th>
                   <th>Lần Đăng Nhập Cuối</th>
-                  <th>Số Lần Đăng Nhập</th>
                   <th>Trạng Thái</th>
-                  <th>Thao Tác Admin</th>
+                  <th>Thao Tác Admin Master</th>
                 </tr>
               </thead>
               <tbody>
-                ${accountsList.map(acc => `
-                  <tr>
-                    <td>
-                      <div style="display: flex; align-items: center; gap: 10px;">
-                        <img src="${acc.avatar}" style="width: 34px; height: 34px; border-radius: 50%; object-fit: cover;">
-                        <div>
-                          <strong>${acc.email}</strong>
-                          <div style="font-size: 10px; color: var(--slate-muted);">ID: ${acc.id}</div>
+                ${accountsList.map(acc => {
+                  const cloudMatch = cloudDataRows.find(r => r.email.toLowerCase() === acc.email.toLowerCase());
+                  const cCount = cloudMatch && cloudMatch.data && Array.isArray(cloudMatch.data.classes) ? cloudMatch.data.classes.length : 0;
+                  const sCount = cloudMatch && cloudMatch.data && Array.isArray(cloudMatch.data.students) ? cloudMatch.data.students.length : 0;
+                  const lastSync = cloudMatch && cloudMatch.updated_at ? new Date(cloudMatch.updated_at).toLocaleString('vi-VN') : (acc.lastLogin || 'Mới khởi tạo');
+
+                  return `
+                    <tr>
+                      <td>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                          <img src="${acc.avatar || 'admin_avatar.png'}" style="width: 34px; height: 34px; border-radius: 50%; object-fit: cover;">
+                          <div>
+                            <strong>${acc.email}</strong>
+                            <div style="font-size: 10px; color: var(--slate-muted);">ID: ${acc.id}</div>
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                    <td><strong>${acc.holyName || ''}</strong> ${acc.name}</td>
-                    <td>
-                      <span class="role-badge ${acc.role === 'Admin' ? 'role-admin' : 'role-catechist'}">
-                        ${acc.role}
-                      </span>
-                    </td>
-                    <td><small style="color: var(--slate-muted);">${acc.lastLogin || 'Mới khởi tạo'}</small></td>
-                    <td><strong>${acc.loginCount || 1}</strong> lần</td>
-                    <td>
-                      ${acc.status === 'active' 
-                        ? '<span class="badge badge-success">🟢 Đang hoạt động</span>' 
-                        : '<span class="badge badge-warning">🟡 Tạm khóa</span>'}
-                    </td>
-                    <td>
-                      <button class="btn btn-sm btn-outline-primary" onclick="window.openAdminEditModal('${acc.id}')"><i class="fa-solid fa-user-gear"></i> Quản lý</button>
-                      <button class="btn btn-sm btn-outline-danger" onclick="window.quickDeleteAdminUser('${acc.id}')" title="Xóa tài khoản"><i class="fa-solid fa-trash"></i> Xóa</button>
-                    </td>
-                  </tr>
-                `).join('')}
+                      </td>
+                      <td><strong>${acc.holyName || ''}</strong> ${acc.name}</td>
+                      <td>
+                        <span class="role-badge ${acc.role === 'Admin' ? 'role-admin' : 'role-catechist'}">
+                          ${acc.role === 'Admin' ? '👑 Admin Master' : '⛪ Giáo Lý Viên'}
+                        </span>
+                      </td>
+                      <td><span class="badge badge-info">${cCount} lớp</span></td>
+                      <td><span class="badge badge-success">${sCount} học viên</span></td>
+                      <td><small style="color: var(--slate-muted);">${lastSync}</small></td>
+                      <td>
+                        ${acc.status === 'active' 
+                          ? '<span class="badge badge-success">🟢 Hoạt động</span>' 
+                          : '<span class="badge badge-warning">🟡 Tạm khóa</span>'}
+                      </td>
+                      <td>
+                        <button class="btn btn-sm btn-outline-info" onclick="window.inspectUserData('${acc.email}')" title="Xem & Quản lý các lớp của tài khoản này">
+                          <i class="fa-solid fa-eye"></i> Xem Lớp
+                        </button>
+                        <button class="btn btn-sm btn-outline-primary" onclick="window.openAdminEditModal('${acc.id}')">
+                          <i class="fa-solid fa-user-gear"></i> Quản lý
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="window.quickDeleteAdminUser('${acc.id}')" title="Xóa tài khoản">
+                          <i class="fa-solid fa-trash"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
               </tbody>
             </table>
           </div>
@@ -3017,6 +3070,82 @@
 
   window.quickDeleteAdminUser = function (accId) {
     window.confirmDeleteAccount(accId);
+  };
+
+  // ADMIN MASTER TOOLS & INSPECTION
+  window.inspectUserData = function(targetEmail) {
+    if (!targetEmail) return;
+    window.adminInspectingEmail = targetEmail;
+    loadUserData(targetEmail);
+    renderAppHeaderAndSidebar();
+    navigateTo('classes');
+    showToast(`Đã chuyển sang xem dữ liệu lớp của tài khoản: ${targetEmail}`, 'info');
+  };
+
+  window.exitAdminInspection = function() {
+    window.adminInspectingEmail = null;
+    loadUserData(currentUser.email);
+    renderAppHeaderAndSidebar();
+    navigateTo('admin');
+    showToast('Đã quay lại dữ liệu của Admin Master', 'success');
+  };
+
+  window.refreshAdminCloudData = function() {
+    showToast('Đang tải lại dữ liệu mới nhất từ Supabase Cloud...', 'info');
+    const container = document.getElementById('content-area');
+    if (container) renderAdminUsers(container);
+  };
+
+  window.exportParishMasterExcel = async function() {
+    if (!window.supabaseClient) {
+      alert('Chưa kết nối Supabase Cloud để tải dữ liệu toàn giáo xứ.');
+      return;
+    }
+    showToast('Đang tổng hợp dữ liệu toàn Giáo xứ từ Cloud...', 'info');
+    try {
+      const { data, error } = await window.supabaseClient.from('user_data').select('*');
+      if (error || !data) throw error || new Error('Không thể tải dữ liệu');
+
+      const allRows = [];
+      data.forEach(row => {
+        const uData = row.data;
+        const email = row.email;
+        const teacherName = (row.account_info && row.account_info.name ? row.account_info.name : email);
+        if (uData && Array.isArray(uData.students)) {
+          uData.students.forEach((s, idx) => {
+            const cls = (uData.classes || []).find(c => c.id === s.classId);
+            allRows.push({
+              'STT': idx + 1,
+              'Giáo Lý Viên Phụ Trách': teacherName,
+              'Email': email,
+              'Tên Lớp': cls ? cls.name : (s.classId || 'Chưa xếp lớp'),
+              'Mã Học Viên': s.code || ('HV' + s.id),
+              'Tên Thánh': s.holyName || '',
+              'Họ và Tên': s.name || '',
+              'Giới Tính': s.gender || '',
+              'Ngày Sinh': s.dob || '',
+              'Tên Cha/Mẹ': s.parentName || s.phone || '',
+              'Điểm TB HK1': s.grades && s.grades.semester1 ? s.grades.semester1.average : '0.0',
+              'Điểm TB HK2': s.grades && s.grades.semester2 ? s.grades.semester2.average : '0.0',
+              'Đánh Giá/Xếp Loại': s.grades && s.grades.semester2 ? s.grades.semester2.rank : 'Chưa xếp loại'
+            });
+          });
+        }
+      });
+
+      if (allRows.length === 0) {
+        alert('Chưa có dữ liệu học viên nào trong toàn bộ hệ thống Giáo xứ.');
+        return;
+      }
+
+      const ws = XLSX.utils.json_to_sheet(allRows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "BaoCao_ToanGiaoXu");
+      XLSX.writeFile(wb, `MagnificatEdu_BaoCao_ToanGiaoXu_${new Date().toISOString().slice(0,10)}.xlsx`);
+      showToast('✓ Đã xuất thành công Báo Cáo Excel Toàn Giáo Xứ!', 'success');
+    } catch (err) {
+      alert('Lỗi khi tải dữ liệu từ Cloud: ' + err.message);
+    }
   };
 
   // UTILITY HELPER FUNCTIONS
