@@ -210,6 +210,13 @@
                 <span id="dropdown-user-role-tag" class="role-badge role-admin">Tài Khoản Admin</span>
               </div>
               <div class="dropdown-divider"></div>
+              <button type="button" class="dropdown-item text-primary" onclick="window.manualCloudBackup()">
+                <i class="fa-solid fa-cloud-arrow-up"></i> ☁️ Sao Lưu Đám Mây Supabase
+              </button>
+              <button type="button" class="dropdown-item text-success" onclick="window.manualCloudRestore()">
+                <i class="fa-solid fa-rotate-left"></i> 🔄 Khôi Phục Dữ Liệu Từ Cloud
+              </button>
+              <div class="dropdown-divider"></div>
               <button type="button" class="dropdown-item" onclick="window.openUserProfileModal()">
                 <i class="fa-solid fa-camera text-primary"></i> 📷 Đổi ảnh đại diện cá nhân
               </button>
@@ -677,9 +684,19 @@
               <input type="email" id="prof-email" class="form-control" readonly style="background: var(--slate-bg);">
             </div>
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary close-modal-btn" data-modal="user-profile-modal">Hủy bỏ</button>
-            <button type="submit" id="save-profile-btn" onclick="window.submitUserProfileForm(event)" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Lưu Thông Tin Cá Nhân</button>
+          <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div style="display: flex; gap: 8px;">
+              <button type="button" class="btn btn-sm btn-outline-primary" onclick="window.manualCloudBackup()" title="Sao lưu ngay lập tức dữ liệu cá nhân lên Supabase Cloud">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Sao Lưu Cloud
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-success" onclick="window.manualCloudRestore()" title="Tải & khôi phục bản sao lưu mới nhất từ Supabase Cloud">
+                <i class="fa-solid fa-cloud-arrow-down"></i> Khôi Phục Cloud
+              </button>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button type="button" class="btn btn-secondary close-modal-btn" data-modal="user-profile-modal">Hủy bỏ</button>
+              <button type="submit" id="save-profile-btn" onclick="window.submitUserProfileForm(event)" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Lưu Thông Tin Cá Nhân</button>
+            </div>
           </div>
         </form>
       </div>
@@ -979,6 +996,6 @@
   <div id="toast-container" class="toast-container"></div>
 
   <!-- Application JS Code -->
-  <script src="app_v2.js?v=20261004_v20"></script>
+  <script src="app_v2.js?v=20261006_v100"></script>
 </body>
 </html>
