@@ -372,6 +372,7 @@ input, select, textarea {
   border-radius: var(--radius-full);
   object-fit: cover;
   border: 2px solid var(--primary);
+  background: var(--white);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -616,6 +617,7 @@ input, select, textarea {
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid var(--primary);
+  background: var(--white);
 }
 
 .user-display {

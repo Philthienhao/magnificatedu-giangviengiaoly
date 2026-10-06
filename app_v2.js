@@ -3749,6 +3749,8 @@
         let sy = (height - minDim) / 2;
 
         const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, targetSize, targetSize);
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
         ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, targetSize, targetSize);
