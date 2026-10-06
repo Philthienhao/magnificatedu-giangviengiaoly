@@ -171,7 +171,7 @@
   function isDefaultAvatar(url) {
     if (!url || typeof url !== 'string') return true;
     const clean = url.trim().toLowerCase();
-    return clean === '' || clean === 'admin_avatar.png' || clean === 'assets/images/admin_avatar.png' || clean.endsWith('/admin_avatar.png');
+    return clean === '' || clean === 'null' || clean === 'undefined' || clean === 'admin_avatar.png' || clean === 'assets/images/admin_avatar.png' || clean.endsWith('/admin_avatar.png');
   }
 
   function saveAccounts() {
@@ -280,17 +280,16 @@
     if (!Array.isArray(appData.quizzes)) appData.quizzes = [];
     if (!appData.parishInfo) appData.parishInfo = generateDefaultUserData(email).parishInfo;
 
-    // Restore custom avatar from appData if available
-    if (appData.userAvatar && !isDefaultAvatar(appData.userAvatar)) {
-      if (currentUser && currentUser.email.toLowerCase() === email.toLowerCase()) {
-        currentUser.avatar = appData.userAvatar;
-        const match = accountsList.find(a => a.email.toLowerCase() === currentUser.email.toLowerCase());
-        if (match) match.avatar = appData.userAvatar;
-        saveAccounts();
-        saveCurrentUser();
-      }
-    } else if (currentUser && currentUser.avatar && !isDefaultAvatar(currentUser.avatar)) {
-      appData.userAvatar = currentUser.avatar;
+    // Capture any local custom avatar before Supabase fetch
+    const localCustomAvatar = (currentUser && currentUser.avatar && !isDefaultAvatar(currentUser.avatar))
+      ? currentUser.avatar
+      : (appData && appData.userAvatar && !isDefaultAvatar(appData.userAvatar) ? appData.userAvatar : null);
+
+    if (localCustomAvatar) {
+      if (currentUser) currentUser.avatar = localCustomAvatar;
+      appData.userAvatar = localCustomAvatar;
+      const match = accountsList.find(a => a.email.toLowerCase() === email.toLowerCase());
+      if (match) match.avatar = localCustomAvatar;
     }
 
     // Async sync from Supabase Cloud if available
@@ -314,26 +313,29 @@
 
               if (hasCloudClasses || hasCloudStudents || (!hasLocalClasses && !hasLocalStudents)) {
                 appData = data.data;
-                try { localStorage.setItem(key, JSON.stringify(appData)); } catch (e) {}
               }
             }
 
-            // Smart Avatar Merge from Cloud
+            // Smart Avatar Merge: Priority to Local Custom Avatar, fallback to Cloud Avatar
             const cloudAvatar = (data.account_info && data.account_info.avatar && !isDefaultAvatar(data.account_info.avatar))
               ? data.account_info.avatar
               : (data.data && data.data.userAvatar && !isDefaultAvatar(data.data.userAvatar) ? data.data.userAvatar : null);
 
-            if (cloudAvatar && currentUser && currentUser.email.toLowerCase() === email.toLowerCase()) {
-              currentUser.avatar = cloudAvatar;
-              appData.userAvatar = cloudAvatar;
+            const effectiveAvatar = localCustomAvatar || cloudAvatar;
+
+            if (effectiveAvatar && currentUser && currentUser.email.toLowerCase() === email.toLowerCase()) {
+              currentUser.avatar = effectiveAvatar;
+              appData.userAvatar = effectiveAvatar;
               const match = accountsList.find(a => a.email.toLowerCase() === currentUser.email.toLowerCase());
-              if (match) match.avatar = cloudAvatar;
+              if (match) match.avatar = effectiveAvatar;
               saveAccounts();
               saveCurrentUser();
+              try { localStorage.setItem(key, JSON.stringify(appData)); } catch (e) {}
               renderAppHeaderAndSidebar();
-            } else if (currentUser && currentUser.avatar && !isDefaultAvatar(currentUser.avatar)) {
-              // Local user has custom avatar, preserve & upload to cloud
-              appData.userAvatar = currentUser.avatar;
+            }
+
+            // If local has custom avatar that differs from Cloud, sync local custom avatar to Cloud
+            if (localCustomAvatar && (isDefaultAvatar(cloudAvatar) || cloudAvatar !== localCustomAvatar)) {
               saveUserData();
             }
 
