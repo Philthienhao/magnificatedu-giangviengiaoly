@@ -575,16 +575,6 @@
     }
   };
 
-      appData = data.data;
-      const key = STORAGE_PREFIX_DATA + currentUser.email.toLowerCase().replace(/[^a-z0-9]/g, '_');
-      localStorage.setItem(key, JSON.stringify(appData));
-      showToast('✓ KHÔI PHỤC DỮ LIỆU TỪ CLOUD THÀNH CÔNG!', 'success');
-      if (typeof renderCurrentView === 'function') renderCurrentView();
-    } catch (e) {
-      alert('Lỗi khôi phục đám mây: ' + (e.message || e));
-    }
-  };
-
   /* --------------------------------------------------------------------------
      3. EVENT BINDING & ROUTING
      -------------------------------------------------------------------------- */
