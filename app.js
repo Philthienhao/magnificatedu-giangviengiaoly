@@ -1481,17 +1481,15 @@
             </p>
           </div>
           <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            <!-- UPLOAD BASELINE PHOTO (TẢI ẢNH LỚP MẪU ĐẦU NĂM) -->
-            <label for="ai-baseline-photo-input" class="btn btn-sm btn-outline-info" style="margin: 0; cursor: pointer;" title="Tải ảnh sơ đồ mẫu cả lớp đầy đủ đầu năm">
-              <i class="fa-solid fa-image"></i> ${hasBaseline ? '📷 Đổi Ảnh Lớp Mẫu (Đầu Năm)' : '📷 Tải Ảnh Lớp Mẫu (Đầu Năm)'}
-            </label>
-            <input type="file" id="ai-baseline-photo-input" accept="image/*" style="display: none;" onchange="window.handleBaselinePhotoUpload(event, '${classId}')">
+            <!-- BASELINE PHOTO BUTTON -->
+            <button type="button" class="btn btn-sm btn-outline-info" style="margin: 0; cursor: pointer;" onclick="window.openCapturePhotoModal('${classId}', 'baseline')" title="Tải hoặc Chụp ảnh sơ đồ mẫu cả lớp chụp đầu năm">
+              <i class="fa-solid fa-camera"></i> ${hasBaseline ? '📷 Đổi Ảnh Lớp Mẫu (Đầu Năm)' : '📷 Chụp / Tải Ảnh Mẫu (Đầu Năm)'}
+            </button>
 
-            <!-- AUTO AI SCANNER TODAY PHOTO (QUÉT TỰ ĐỘNG AI HÔM NAY) -->
-            <label for="ai-today-photo-input" class="btn btn-sm btn-success" style="margin: 0; cursor: pointer; background: linear-gradient(135deg, #10b981, #059669); border: none;">
-              <i class="fa-solid fa-robot"></i> 🤖 QUÉT ẢNH TỰ ĐỘNG AI (Hôm Nay)
-            </label>
-            <input type="file" id="ai-today-photo-input" accept="image/*" style="display: none;" onchange="window.handleAutoAIScan(event, '${classId}')">
+            <!-- SNAP / UPLOAD TODAY PHOTO FOR AUTO AI ATTENDANCE -->
+            <button type="button" class="btn btn-sm btn-success" style="margin: 0; cursor: pointer; background: linear-gradient(135deg, #10b981, #059669); border: none; font-weight: 700; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);" onclick="window.openCapturePhotoModal('${classId}', 'today')" title="Chụp trực tiếp bằng camera hoặc chọn ảnh để AI tự động điểm danh">
+              <i class="fa-solid fa-camera"></i> 📸 CHỤP / TẢI ẢNH HÔM NAY (QUÉT ĐIỂM DANH AI)
+            </button>
 
             <button class="btn btn-sm btn-outline-secondary" onclick="window.resetAISeatingChart('${classId}')">
               <i class="fa-solid fa-arrows-rotate"></i> Reset Ghế Tất Cả Có Mặt
@@ -1653,21 +1651,53 @@
     renderAttendance(document.getElementById('content-area'));
   };
 
+  // LIVE CAMERA CAPTURE & UPLOAD CONTROLLER
+  window.openCapturePhotoModal = window.openCapturePhotoModal || function(classId, mode) {
+    window._currentCaptureClassId = classId;
+    window._currentCaptureMode = mode || 'today';
+    window._currentFacingMode = 'environment';
+    window._pendingCapturedDataUrl = null;
+
+    const titleEl = document.getElementById('camera-modal-title');
+    if (titleEl) {
+      titleEl.innerHTML = mode === 'baseline'
+        ? '<i class="fa-solid fa-camera"></i> 📷 Chụp / Tải Ảnh Mẫu Cả Lớp (Đầu Năm)'
+        : '<i class="fa-solid fa-camera"></i> 📸 CHỤP / TẢI ẢNH HÔM NAY (QUÉT ĐIỂM DANH AI)';
+    }
+
+    const confirmBtn = document.getElementById('cam-confirm-btn');
+    if (confirmBtn) {
+      confirmBtn.disabled = true;
+      confirmBtn.style.opacity = '0.5';
+      confirmBtn.style.cursor = 'not-allowed';
+    }
+
+    const filePreviewWrapper = document.getElementById('modal-file-preview-wrapper');
+    if (filePreviewWrapper) filePreviewWrapper.style.display = 'none';
+
+    openModal('camera-capture-modal');
+    window.switchCameraModalTab('live');
+  };
+
+  window.processBaselineImage = window.processBaselineImage || function(classId, dataUrl) {
+    showToast('Đang xử lý Ảnh Lớp Mẫu Đầu Năm...', 'info');
+    compressImage(dataUrl, 800, 800, 0.75, function(compressed) {
+      if (!appData.seatingCharts[classId]) appData.seatingCharts[classId] = {};
+      appData.seatingCharts[classId].baselinePhoto = compressed;
+      saveUserData();
+      renderAttendance(document.getElementById('content-area'));
+      showToast('✨ Đã lưu Ảnh Lớp Mẫu Đầu Năm thành công!', 'success');
+    });
+  };
+
   // Upload Baseline Reference Photo (Ảnh Lớp Mẫu Đầu Năm)
   window.handleBaselinePhotoUpload = function(evt, classId) {
     const file = evt.target.files[0];
     if (!file) return;
 
-    showToast('Đang xử lý Ảnh Lớp Mẫu Đầu Năm...', 'info');
     const reader = new FileReader();
     reader.onload = function(e) {
-      compressImage(e.target.result, 800, 800, 0.75, function(compressed) {
-        if (!appData.seatingCharts[classId]) appData.seatingCharts[classId] = {};
-        appData.seatingCharts[classId].baselinePhoto = compressed;
-        saveUserData();
-        renderAttendance(document.getElementById('content-area'));
-        showToast('✨ Đã lưu Ảnh Lớp Mẫu Đầu Năm thành công! Bây giờ bạn chỉ cần bấm "🤖 QUÉT ẢNH TỰ ĐỘNG AI" mỗi buổi học.', 'success');
-      });
+      window.processBaselineImage(classId, e.target.result);
     };
     reader.readAsDataURL(file);
   };

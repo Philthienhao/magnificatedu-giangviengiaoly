@@ -992,12 +992,95 @@
         <button type="button" id="uni-confirm-btn" class="btn btn-danger"><i class="fa-solid fa-trash"></i> Đồng Ý Xóa</button>
       </div>
     </div>
+  <!-- LIVE CAMERA CAPTURE & PHOTO UPLOAD MODAL -->
+  <div id="camera-capture-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-dialog" style="max-width: 650px; width: 95%;">
+      <div class="modal-content" style="border-radius: 16px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5); background: #0f172a; border: 1px solid #334155;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #1e293b, #0f172a); color: #fff; padding: 16px 20px; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center;">
+          <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: #38bdf8; display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-camera"></i> <span id="camera-modal-title">📸 Chụp Ảnh Trực Tiếp Hoặc Chọn Ảnh</span>
+          </h3>
+          <button type="button" class="close-modal-btn" onclick="window.closeCameraCaptureModal()" style="background: rgba(255,255,255,0.1); border: none; color: #fff; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div class="modal-body" style="padding: 20px; background: #0b1329; color: #f8fafc;">
+          <!-- MODE TAB CONTROLS -->
+          <div style="display: flex; gap: 10px; margin-bottom: 16px; background: #1e293b; padding: 4px; border-radius: 10px;">
+            <button id="cam-tab-live-btn" type="button" class="btn" onclick="window.switchCameraModalTab('live')" style="flex: 1; border-radius: 8px; font-weight: 700; padding: 10px; font-size: 13px; background: #2563eb; color: #fff; transition: all 0.2s; border: none; cursor: pointer;">
+              <i class="fa-solid fa-video"></i> 📸 Chụp Trực Tiếp (Camera)
+            </button>
+            <button id="cam-tab-upload-btn" type="button" class="btn" onclick="window.switchCameraModalTab('upload')" style="flex: 1; border-radius: 8px; font-weight: 700; padding: 10px; font-size: 13px; background: transparent; color: #94a3b8; transition: all 0.2s; border: none; cursor: pointer;">
+              <i class="fa-solid fa-upload"></i> 📁 Chọn File Từ Máy
+            </button>
+          </div>
+
+          <!-- TAB 1: LIVE CAMERA VIEW -->
+          <div id="cam-tab-live-content" style="display: block;">
+            <div style="position: relative; width: 100%; height: 340px; background: #000; border-radius: 12px; overflow: hidden; display: flex; align-items: center; justify-content: center; border: 2px dashed #334155;">
+              <!-- Live Video Stream -->
+              <video id="camera-video-feed" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+
+              <!-- Captured Canvas Preview (hidden until snap) -->
+              <canvas id="camera-snapshot-canvas" style="display: none; width: 100%; height: 100%; object-fit: cover;"></canvas>
+
+              <!-- Target Overlay Grid Lines -->
+              <div id="camera-grid-overlay" style="position: absolute; inset: 0; pointer-events: none; border: 2px dashed rgba(56, 189, 248, 0.4); margin: 20px; border-radius: 8px; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 12px;">
+                <span style="font-size: 11px; background: rgba(0,0,0,0.7); color: #38bdf8; padding: 4px 12px; border-radius: 20px; font-weight: 600; border: 1px solid rgba(56, 189, 248, 0.3);">
+                  <i class="fa-solid fa-expand"></i> Giữ camera cố định góc bao quát cả lớp học
+                </span>
+              </div>
+            </div>
+
+            <!-- CAMERA CONTROL TOOLBAR -->
+            <div style="display: flex; gap: 10px; justify-content: center; align-items: center; margin-top: 16px;">
+              <button id="cam-flip-btn" type="button" class="btn btn-outline-secondary btn-sm" onclick="window.flipDeviceCamera()" title="Đổi camera trước / sau" style="color: #cbd5e1; border-color: #475569;">
+                <i class="fa-solid fa-camera-rotate"></i> 🔄 Đổi Camera
+              </button>
+
+              <button id="cam-snap-btn" type="button" class="btn btn-success" onclick="window.takeCameraSnapshot()" style="padding: 10px 24px; font-weight: 800; font-size: 14px; border-radius: 30px; background: linear-gradient(135deg, #10b981, #059669); border: none; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4); cursor: pointer;">
+                <i class="fa-solid fa-camera"></i> 📸 CHỤP ẢNH NGAY
+              </button>
+
+              <button id="cam-retake-btn" type="button" class="btn btn-outline-warning btn-sm" onclick="window.retakeCameraSnapshot()" style="display: none; color: #fbbf24; border-color: #d97706;">
+                <i class="fa-solid fa-arrows-rotate"></i> Chụp Lại
+              </button>
+            </div>
+          </div>
+
+          <!-- TAB 2: FILE UPLOAD -->
+          <div id="cam-tab-upload-content" style="display: none; text-align: center; padding: 30px 20px; border: 2px dashed #334155; border-radius: 12px; background: #0f172a;">
+            <i class="fa-solid fa-cloud-arrow-up" style="font-size: 48px; color: #38bdf8; margin-bottom: 12px;"></i>
+            <h4 style="margin-bottom: 8px; font-size: 15px; font-weight: 700; color: #f8fafc;">Tải Ảnh Từ Máy Tính / Điện Thoại</h4>
+            <p style="font-size: 12px; color: #94a3b8; margin-bottom: 16px;">Hỗ trợ định dạng JPG, PNG, WEBP. Ảnh rõ nét sẽ giúp AI nhận diện chính xác 100%.</p>
+
+            <label for="modal-file-upload-input" class="btn btn-primary" style="cursor: pointer; padding: 10px 20px; font-weight: 700; background: #2563eb; border: none; border-radius: 8px; display: inline-block;">
+              <i class="fa-solid fa-folder-open"></i> Chọn Ảnh Từ Thư Viện
+            </label>
+            <input type="file" id="modal-file-upload-input" accept="image/*" capture="environment" style="display: none;" onchange="window.handleModalFileSelected(event)">
+
+            <div id="modal-file-preview-wrapper" style="display: none; margin-top: 16px;">
+              <img id="modal-file-preview-img" src="" alt="Preview" style="max-height: 200px; border-radius: 8px; border: 2px solid #38bdf8; max-width: 100%; object-fit: contain;">
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer" style="background: #0f172a; border-top: 1px solid #1e293b; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center;">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="window.closeCameraCaptureModal()" style="background: #334155; color: #cbd5e1; border: none;">Hủy bỏ</button>
+
+          <button id="cam-confirm-btn" type="button" class="btn btn-primary" onclick="window.confirmCameraCapturedPhoto()" disabled style="font-weight: 700; opacity: 0.5; background: #3b82f6; border: none; padding: 8px 20px; border-radius: 8px; cursor: not-allowed;">
+            <i class="fa-solid fa-check"></i> ✅ Dùng Ảnh Này Để Điểm Danh AI
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- TOAST NOTIFICATION CONTAINER -->
   <div id="toast-container" class="toast-container"></div>
 
   <!-- Application JS Code -->
-  <script src="app_v2.js?v=20261007_v215"></script>
+  <script src="app_v2.js?v=20261007_v216"></script>
 </body>
 </html>

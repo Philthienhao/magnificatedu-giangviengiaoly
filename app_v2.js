@@ -1582,17 +1582,15 @@
               <i class="fa-solid fa-chair"></i> Sắp Xếp Chỗ Ngồi
             </button>
 
-            <!-- UPLOAD BASELINE PHOTO (TẢI ẢNH LỚP MẪU ĐẦU NĂM) -->
-            <label for="ai-baseline-photo-input" class="btn btn-sm btn-outline-info" style="margin: 0; cursor: pointer;" title="Tải ảnh sơ đồ mẫu cả lớp chụp đầu năm">
-              <i class="fa-solid fa-image"></i> ${hasBaseline ? '📷 Đổi Ảnh Lớp Mẫu (Đầu Năm)' : '📷 Tải Ảnh Lớp Mẫu (Đầu Năm)'}
-            </label>
-            <input type="file" id="ai-baseline-photo-input" accept="image/*" style="display: none;" onchange="window.handleBaselinePhotoUpload(event, '${classId}')">
+            <!-- BASELINE PHOTO BUTTON -->
+            <button type="button" class="btn btn-sm btn-outline-info" style="margin: 0; cursor: pointer;" onclick="window.openCapturePhotoModal('${classId}', 'baseline')" title="Tải hoặc Chụp ảnh sơ đồ mẫu cả lớp chụp đầu năm">
+              <i class="fa-solid fa-camera"></i> ${hasBaseline ? '📷 Đổi Ảnh Lớp Mẫu (Đầu Năm)' : '📷 Chụp / Tải Ảnh Mẫu (Đầu Năm)'}
+            </button>
 
             <!-- SNAP / UPLOAD TODAY PHOTO FOR AUTO AI ATTENDANCE -->
-            <label for="ai-today-photo-input" class="btn btn-sm btn-success" style="margin: 0; cursor: pointer; background: linear-gradient(135deg, #10b981, #059669); border: none; font-weight: 700; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);" title="Chụp hoặc chọn ảnh lớp học hôm nay để AI tự động điểm danh">
+            <button type="button" class="btn btn-sm btn-success" style="margin: 0; cursor: pointer; background: linear-gradient(135deg, #10b981, #059669); border: none; font-weight: 700; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);" onclick="window.openCapturePhotoModal('${classId}', 'today')" title="Chụp trực tiếp bằng camera hoặc chọn ảnh để AI tự động điểm danh">
               <i class="fa-solid fa-camera"></i> 📸 CHỤP / TẢI ẢNH HÔM NAY (QUÉT ĐIỂM DANH AI)
-            </label>
-            <input type="file" id="ai-today-photo-input" accept="image/*" capture="environment" style="display: none;" onchange="window.handleAutoAIScan(event, '${classId}')">
+            </button>
 
             <button class="btn btn-sm btn-outline-secondary" onclick="window.resetAISeatingChart('${classId}')" title="Reset tất cả ô ghế về trạng thái Có mặt">
               <i class="fa-solid fa-arrows-rotate"></i> Reset Sơ Đồ
@@ -1917,6 +1915,238 @@
     showToast('Đã xếp tự động danh sách vào các ô ghế!', 'info');
   };
 
+  // LIVE CAMERA CAPTURE & UPLOAD CONTROLLER
+  window._currentCaptureClassId = null;
+  window._currentCaptureMode = 'today';
+  window._currentFacingMode = 'environment';
+  window._pendingCapturedDataUrl = null;
+  window._cameraStream = null;
+
+  window.openCapturePhotoModal = function(classId, mode) {
+    window._currentCaptureClassId = classId;
+    window._currentCaptureMode = mode || 'today';
+    window._currentFacingMode = 'environment';
+    window._pendingCapturedDataUrl = null;
+
+    const titleEl = document.getElementById('camera-modal-title');
+    if (titleEl) {
+      titleEl.innerHTML = mode === 'baseline'
+        ? '<i class="fa-solid fa-camera"></i> 📷 Chụp / Tải Ảnh Mẫu Cả Lớp (Đầu Năm)'
+        : '<i class="fa-solid fa-camera"></i> 📸 CHỤP / TẢI ẢNH HÔM NAY (QUÉT ĐIỂM DANH AI)';
+    }
+
+    const confirmBtn = document.getElementById('cam-confirm-btn');
+    if (confirmBtn) {
+      confirmBtn.disabled = true;
+      confirmBtn.style.opacity = '0.5';
+      confirmBtn.style.cursor = 'not-allowed';
+    }
+
+    const filePreviewWrapper = document.getElementById('modal-file-preview-wrapper');
+    if (filePreviewWrapper) filePreviewWrapper.style.display = 'none';
+
+    openModal('camera-capture-modal');
+    window.switchCameraModalTab('live');
+  };
+
+  window.closeCameraCaptureModal = function() {
+    if (window._cameraStream) {
+      try {
+        window._cameraStream.getTracks().forEach(t => t.stop());
+      } catch (e) {}
+      window._cameraStream = null;
+    }
+    closeModal('camera-capture-modal');
+  };
+
+  window.switchCameraModalTab = function(tab) {
+    const liveContent = document.getElementById('cam-tab-live-content');
+    const uploadContent = document.getElementById('cam-tab-upload-content');
+    const liveBtn = document.getElementById('cam-tab-live-btn');
+    const uploadBtn = document.getElementById('cam-tab-upload-btn');
+
+    if (tab === 'live') {
+      if (liveContent) liveContent.style.display = 'block';
+      if (uploadContent) uploadContent.style.display = 'none';
+      if (liveBtn) { liveBtn.style.background = '#2563eb'; liveBtn.style.color = '#fff'; }
+      if (uploadBtn) { uploadBtn.style.background = 'transparent'; uploadBtn.style.color = '#94a3b8'; }
+      window.startLiveCameraStream();
+    } else {
+      if (liveContent) liveContent.style.display = 'none';
+      if (uploadContent) uploadContent.style.display = 'block';
+      if (uploadBtn) { uploadBtn.style.background = '#2563eb'; uploadBtn.style.color = '#fff'; }
+      if (liveBtn) { liveBtn.style.background = 'transparent'; liveBtn.style.color = '#94a3b8'; }
+      if (window._cameraStream) {
+        try { window._cameraStream.getTracks().forEach(t => t.stop()); } catch (e) {}
+        window._cameraStream = null;
+      }
+    }
+  };
+
+  window.startLiveCameraStream = function() {
+    if (window._cameraStream) {
+      try { window._cameraStream.getTracks().forEach(t => t.stop()); } catch (e) {}
+      window._cameraStream = null;
+    }
+
+    const video = document.getElementById('camera-video-feed');
+    const canvas = document.getElementById('camera-snapshot-canvas');
+    const snapBtn = document.getElementById('cam-snap-btn');
+    const retakeBtn = document.getElementById('cam-retake-btn');
+
+    if (canvas) canvas.style.display = 'none';
+    if (video) video.style.display = 'block';
+    if (snapBtn) snapBtn.style.display = 'inline-flex';
+    if (retakeBtn) retakeBtn.style.display = 'none';
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      showToast('Trình duyệt không hỗ trợ Camera trực tiếp. Đã chuyển sang Tải File.', 'info');
+      window.switchCameraModalTab('upload');
+      return;
+    }
+
+    const constraints = {
+      video: {
+        facingMode: window._currentFacingMode || 'environment',
+        width: { ideal: 1920 },
+        height: { ideal: 1080 }
+      }
+    };
+
+    navigator.mediaDevices.getUserMedia(constraints)
+      .then(stream => {
+        window._cameraStream = stream;
+        if (video) video.srcObject = stream;
+      })
+      .catch(err => {
+        console.warn('Camera error fallback to default:', err);
+        navigator.mediaDevices.getUserMedia({ video: true })
+          .then(stream => {
+            window._cameraStream = stream;
+            if (video) video.srcObject = stream;
+          })
+          .catch(err2 => {
+            console.warn('Camera permission denied or unavailable:', err2);
+            showToast('Không thể mở Camera. Đã chuyển sang Chọn File Tải Ảnh.', 'info');
+            window.switchCameraModalTab('upload');
+          });
+      });
+  };
+
+  window.flipDeviceCamera = function() {
+    window._currentFacingMode = window._currentFacingMode === 'user' ? 'environment' : 'user';
+    window.startLiveCameraStream();
+  };
+
+  window.takeCameraSnapshot = function() {
+    const video = document.getElementById('camera-video-feed');
+    const canvas = document.getElementById('camera-snapshot-canvas');
+    if (!video || !canvas) return;
+
+    canvas.width = video.videoWidth || 1280;
+    canvas.height = video.videoHeight || 720;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    const rawDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+    compressImage(rawDataUrl, 1280, 1024, 0.8, function(compressed) {
+      window._pendingCapturedDataUrl = compressed;
+
+      video.style.display = 'none';
+      canvas.style.display = 'block';
+
+      const snapBtn = document.getElementById('cam-snap-btn');
+      const retakeBtn = document.getElementById('cam-retake-btn');
+      const confirmBtn = document.getElementById('cam-confirm-btn');
+
+      if (snapBtn) snapBtn.style.display = 'none';
+      if (retakeBtn) retakeBtn.style.display = 'inline-flex';
+      if (confirmBtn) {
+        confirmBtn.disabled = false;
+        confirmBtn.style.opacity = '1';
+        confirmBtn.style.cursor = 'pointer';
+      }
+
+      showToast('📸 Đã chụp ảnh thành công! Bấm "✅ Dùng Ảnh Này Để Điểm Danh AI" để hoàn tất.', 'success');
+    });
+  };
+
+  window.retakeCameraSnapshot = function() {
+    window._pendingCapturedDataUrl = null;
+    const video = document.getElementById('camera-video-feed');
+    const canvas = document.getElementById('camera-snapshot-canvas');
+    const snapBtn = document.getElementById('cam-snap-btn');
+    const retakeBtn = document.getElementById('cam-retake-btn');
+    const confirmBtn = document.getElementById('cam-confirm-btn');
+
+    if (canvas) canvas.style.display = 'none';
+    if (video) video.style.display = 'block';
+    if (snapBtn) snapBtn.style.display = 'inline-flex';
+    if (retakeBtn) retakeBtn.style.display = 'none';
+    if (confirmBtn) {
+      confirmBtn.disabled = true;
+      confirmBtn.style.opacity = '0.5';
+      confirmBtn.style.cursor = 'not-allowed';
+    }
+  };
+
+  window.handleModalFileSelected = function(evt) {
+    const file = evt.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      compressImage(e.target.result, 1280, 1024, 0.8, function(compressed) {
+        window._pendingCapturedDataUrl = compressed;
+
+        const img = document.getElementById('modal-file-preview-img');
+        const wrapper = document.getElementById('modal-file-preview-wrapper');
+        const confirmBtn = document.getElementById('cam-confirm-btn');
+
+        if (img) img.src = compressed;
+        if (wrapper) wrapper.style.display = 'block';
+        if (confirmBtn) {
+          confirmBtn.disabled = false;
+          confirmBtn.style.opacity = '1';
+          confirmBtn.style.cursor = 'pointer';
+        }
+        showToast('Đã nén và chọn ảnh thành công!', 'info');
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  window.confirmCameraCapturedPhoto = function() {
+    if (!window._pendingCapturedDataUrl) {
+      showToast('Vui lòng chụp hoặc chọn 1 bức ảnh trước!', 'warning');
+      return;
+    }
+
+    const classId = window._currentCaptureClassId;
+    const mode = window._currentCaptureMode;
+    const dataUrl = window._pendingCapturedDataUrl;
+
+    window.closeCameraCaptureModal();
+
+    if (mode === 'baseline') {
+      window.processBaselineImage(classId, dataUrl);
+    } else {
+      window.processAutoAIScanImage(classId, dataUrl);
+    }
+  };
+
+  window.processBaselineImage = function(classId, dataUrl) {
+    showToast('Đang xử lý Ảnh Lớp Mẫu Đầu Năm...', 'info');
+    compressImage(dataUrl, 800, 800, 0.75, function(compressed) {
+      if (!appData.seatingCharts[classId]) appData.seatingCharts[classId] = {};
+      appData.seatingCharts[classId].baselinePhoto = compressed;
+      saveUserData();
+      renderAttendance(document.getElementById('content-area'));
+      showToast('✨ Đã lưu Ảnh Lớp Mẫu Đầu Năm thành công!', 'success');
+    });
+  };
+
   // Upload Baseline Reference Photo (Ảnh Lớp Mẫu Đầu Năm)
   window.handleBaselinePhotoUpload = function(evt, classId) {
     const file = evt.target.files[0];
@@ -1925,15 +2155,68 @@
     showToast('Đang xử lý Ảnh Lớp Mẫu Đầu Năm...', 'info');
     const reader = new FileReader();
     reader.onload = function(e) {
-      compressImage(e.target.result, 800, 800, 0.75, function(compressed) {
-        if (!appData.seatingCharts[classId]) appData.seatingCharts[classId] = {};
-        appData.seatingCharts[classId].baselinePhoto = compressed;
-        saveUserData();
-        renderAttendance(document.getElementById('content-area'));
-        showToast('✨ Đã lưu Ảnh Lớp Mẫu Đầu Năm thành công! Bây giờ bạn chỉ cần bấm "🤖 QUÉT ẢNH TỰ ĐỘNG AI" mỗi buổi học.', 'success');
-      });
+      window.processBaselineImage(classId, e.target.result);
     };
     reader.readAsDataURL(file);
+  };
+
+  window.processAutoAIScanImage = function(classId, dataUrl) {
+    compressImage(dataUrl, 800, 800, 0.75, function(compressedToday) {
+      if (!appData.seatingCharts[classId]) appData.seatingCharts[classId] = {};
+      const chart = appData.seatingCharts[classId];
+      chart.todayPhoto = compressedToday;
+
+      // Show AI Scan Overlay Modal
+      const scanModal = document.createElement('div');
+      scanModal.id = 'ai-scan-modal';
+      scanModal.className = 'modal-backdrop';
+      scanModal.style.cssText = 'display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.85); z-index: 99999; position: fixed; top: 0; left: 0; right: 0; bottom: 0;';
+      scanModal.innerHTML = `
+        <div style="max-width: 480px; width: 90%; background: #0f172a; border-radius: 16px; border: 2px solid #3b82f6; padding: 30px; text-align: center; color: #fff; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
+          <div style="font-size: 54px; color: #60a5fa; margin-bottom: 15px;">
+            <i class="fa-solid fa-microchip fa-spin"></i>
+          </div>
+          <h3 style="color: #60a5fa; margin-bottom: 10px; font-size: 20px;">🔍 AI Đang Quét & So Sánh Sơ Đồ Điểm Ảnh...</h3>
+          <p style="font-size: 13px; color: #94a3b8; margin-bottom: 25px; line-height: 1.5;">
+            Hệ thống đang tự động đối chiếu vị trí từng chiếc ghế trên Ảnh Lớp Mẫu Đầu Năm với Ảnh Hôm Nay để phát hiện các vị trí ghế trống vắng mặt...
+          </p>
+          <div style="background: #1e293b; border-radius: 10px; height: 14px; width: 100%; overflow: hidden; margin-bottom: 12px; border: 1px solid #334155;">
+            <div id="ai-progress-bar" style="background: linear-gradient(90deg, #3b82f6, #10b981); height: 100%; width: 5%; transition: width 0.3s ease;"></div>
+          </div>
+          <div id="ai-scan-status" style="font-size: 13px; font-weight: 700; color: #34d399;">Khởi tạo thuật toán Computer Vision AI...</div>
+        </div>
+      `;
+      document.body.appendChild(scanModal);
+
+      const pBar = document.getElementById('ai-progress-bar');
+      const pStatus = document.getElementById('ai-scan-status');
+
+      setTimeout(() => {
+        if (pBar) pBar.style.width = '45%';
+        if (pStatus) pStatus.textContent = 'Phân tích ma trận độ tương phản & viền màu từng ô ghế...';
+      }, 400);
+
+      setTimeout(() => {
+        if (pBar) pBar.style.width = '85%';
+        if (pStatus) pStatus.textContent = 'Đã phát hiện vị trí ghế trống! Đang đối chiếu danh sách học sinh...';
+      }, 900);
+
+      setTimeout(() => {
+        if (pBar) pBar.style.width = '100%';
+        if (pStatus) pStatus.textContent = 'Hoàn tất quét AI tự động!';
+
+        performAIScanAnalysis(classId, chart);
+
+        setTimeout(() => {
+          const modal = document.getElementById('ai-scan-modal');
+          if (modal) modal.remove();
+
+          renderAttendance(document.getElementById('content-area'));
+          const absentCount = chart.absentSeats ? chart.absentSeats.length : 0;
+          showToast(`✨ AI QUÉT TỰ ĐỘNG HOÀN TẤT: Phát hiện ${absentCount} ghế trống!`, 'success');
+        }, 400);
+      }, 1400);
+    });
   };
 
   // Automated AI Computer Vision Scan Today's Photo
@@ -1943,66 +2226,11 @@
 
     const reader = new FileReader();
     reader.onload = function(e) {
-      compressImage(e.target.result, 800, 800, 0.75, function(compressedToday) {
-        if (!appData.seatingCharts[classId]) appData.seatingCharts[classId] = {};
-        const chart = appData.seatingCharts[classId];
-        chart.todayPhoto = compressedToday;
-
-        // Show AI Scan Overlay Modal
-        const scanModal = document.createElement('div');
-        scanModal.id = 'ai-scan-modal';
-        scanModal.className = 'modal-backdrop';
-        scanModal.style.cssText = 'display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.85); z-index: 99999; position: fixed; top: 0; left: 0; right: 0; bottom: 0;';
-        scanModal.innerHTML = `
-          <div style="max-width: 480px; width: 90%; background: #0f172a; border-radius: 16px; border: 2px solid #3b82f6; padding: 30px; text-align: center; color: #fff; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
-            <div style="font-size: 54px; color: #60a5fa; margin-bottom: 15px;">
-              <i class="fa-solid fa-microchip fa-spin"></i>
-            </div>
-            <h3 style="color: #60a5fa; margin-bottom: 10px; font-size: 20px;">🔍 AI Đang Quét & So Sánh Sơ Đồ Điểm Ảnh...</h3>
-            <p style="font-size: 13px; color: #94a3b8; margin-bottom: 25px; line-height: 1.5;">
-              Hệ thống đang tự động đối chiếu vị trí từng chiếc ghế trên Ảnh Lớp Mẫu Đầu Năm với Ảnh Hôm Nay để phát hiện các vị trí ghế trống vắng mặt...
-            </p>
-            <div style="background: #1e293b; border-radius: 10px; height: 14px; width: 100%; overflow: hidden; margin-bottom: 12px; border: 1px solid #334155;">
-              <div id="ai-progress-bar" style="background: linear-gradient(90deg, #3b82f6, #10b981); height: 100%; width: 5%; transition: width 0.3s ease;"></div>
-            </div>
-            <div id="ai-scan-status" style="font-size: 13px; font-weight: 700; color: #34d399;">Khởi tạo thuật toán Computer Vision AI...</div>
-          </div>
-        `;
-        document.body.appendChild(scanModal);
-
-        const pBar = document.getElementById('ai-progress-bar');
-        const pStatus = document.getElementById('ai-scan-status');
-
-        setTimeout(() => {
-          if (pBar) pBar.style.width = '45%';
-          if (pStatus) pStatus.textContent = 'Phân tích ma trận độ tương phản & viền màu từng ô ghế...';
-        }, 400);
-
-        setTimeout(() => {
-          if (pBar) pBar.style.width = '85%';
-          if (pStatus) pStatus.textContent = 'Đã phát hiện vị trí ghế trống! Đang đối chiếu danh sách học sinh...';
-        }, 900);
-
-        setTimeout(() => {
-          if (pBar) pBar.style.width = '100%';
-          if (pStatus) pStatus.textContent = 'Hoàn tất quét AI tự động!';
-
-          // Run Computer Vision seat comparison algorithm
-          performAIScanAnalysis(classId, chart);
-
-          setTimeout(() => {
-            const modal = document.getElementById('ai-scan-modal');
-            if (modal) modal.remove();
-
-            renderAttendance(document.getElementById('content-area'));
-            const absentCount = chart.absentSeats.length;
-            showToast(`✨ AI QUÉT TỰ ĐỘNG HOÀN TẤT: Phát hiện ${absentCount} ghế trống!`, 'success');
-          }, 400);
-        }, 1400);
-      });
+      window.processAutoAIScanImage(classId, e.target.result);
     };
     reader.readAsDataURL(file);
   };
+
 
   // Perform image pixel difference & contrast variance detection per seat sector
   function performAIScanAnalysis(classId, chart) {
