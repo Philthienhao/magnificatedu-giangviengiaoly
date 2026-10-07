@@ -3841,10 +3841,14 @@
     currentUser.phone = phoneInput ? phoneInput.value.trim() : '';
     currentUser.role = roleInput ? roleInput.value : currentUser.role;
 
-    if (uploadedUserAvatarBase64) {
-      currentUser.avatar = uploadedUserAvatarBase64;
+    const avatarPreview = document.getElementById('profile-avatar-preview');
+    const effectiveNewAvatar = uploadedUserAvatarBase64
+      || (avatarPreview && avatarPreview.src && !isDefaultAvatar(avatarPreview.src) ? avatarPreview.src : null);
+
+    if (effectiveNewAvatar) {
+      currentUser.avatar = effectiveNewAvatar;
       if (!appData) appData = {};
-      appData.userAvatar = uploadedUserAvatarBase64;
+      appData.userAvatar = effectiveNewAvatar;
     }
 
     const match = accountsList.find(a => a.email.toLowerCase() === currentUser.email.toLowerCase());
@@ -3897,13 +3901,13 @@
     const avatarInput = document.getElementById('profile-avatar-file-input');
     const avatarPreview = document.getElementById('profile-avatar-preview');
     if (avatarInput) {
-      avatarInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
+      avatarInput.onchange = function(e) {
+        const file = e.target.files && e.target.files[0];
         if (file) {
           showToast('Đang tối ưu nén & lưu ảnh đại diện...', 'info');
           const reader = new FileReader();
-          reader.onload = (evt) => {
-            compressImage(evt.target.result, 100, 100, 0.65, (compressed) => {
+          reader.onload = function(evt) {
+            compressImage(evt.target.result, 120, 120, 0.70, function(compressed) {
               uploadedUserAvatarBase64 = compressed;
               if (avatarPreview) avatarPreview.src = compressed;
               if (currentUser) {
@@ -3914,7 +3918,7 @@
                 if (match) match.avatar = compressed;
                 if (currentUser.email) {
                   const customKey = 'gvl_custom_avatar_' + currentUser.email.toLowerCase().replace(/[^a-z0-9]/g, '_');
-                  try { localStorage.setItem(customKey, compressed); } catch (e) {}
+                  try { localStorage.setItem(customKey, compressed); } catch (err) {}
                 }
                 saveAccounts();
                 saveCurrentUser();
@@ -3926,7 +3930,7 @@
           };
           reader.readAsDataURL(file);
         }
-      });
+      };
     }
 
     // Bind Student Photo Upload Input
