@@ -15,6 +15,50 @@
     try { window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch (e) {}
   }
 
+  // Ultra-reliable IndexedDB Avatar Persistent Storage (Bypasses LocalStorage quota limits)
+  const idbAvatar = {
+    dbName: 'MagnificatEduDB',
+    storeName: 'avatars',
+    getDb: function() {
+      return new Promise((resolve) => {
+        if (!window.indexedDB) return resolve(null);
+        try {
+          const req = window.indexedDB.open(this.dbName, 1);
+          req.onupgradeneeded = function(e) {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains('avatars')) {
+              db.createObjectStore('avatars');
+            }
+          };
+          req.onsuccess = function(e) { resolve(e.target.result); };
+          req.onerror = function() { resolve(null); };
+        } catch (e) { resolve(null); }
+      });
+    },
+    save: async function(email, base64) {
+      if (!email || !base64) return;
+      try {
+        const db = await this.getDb();
+        if (!db) return;
+        const tx = db.transaction(this.storeName, 'readwrite');
+        tx.objectStore(this.storeName).put(base64, email.toLowerCase());
+      } catch (e) {}
+    },
+    get: async function(email) {
+      if (!email) return null;
+      try {
+        const db = await this.getDb();
+        if (!db) return null;
+        return new Promise((resolve) => {
+          const tx = db.transaction(this.storeName, 'readonly');
+          const req = tx.objectStore(this.storeName).get(email.toLowerCase());
+          req.onsuccess = function() { resolve(req.result || null); };
+          req.onerror = function() { resolve(null); };
+        });
+      } catch (e) { return null; }
+    }
+  };
+
   /* --------------------------------------------------------------------------
      1. CONSTANTS & SYSTEM SEED DATA
      -------------------------------------------------------------------------- */
@@ -254,6 +298,24 @@
 
     saveCurrentUser();
 
+    // Async IndexedDB Check & Restore
+    if (currentUser && currentUser.email) {
+      idbAvatar.get(currentUser.email).then(idbAv => {
+        if (idbAv && !isDefaultAvatar(idbAv)) {
+          if (currentUser.avatar !== idbAv) {
+            currentUser.avatar = idbAv;
+            if (match) match.avatar = idbAv;
+            if (!appData) appData = {};
+            appData.userAvatar = idbAv;
+            try { localStorage.setItem(customKey, idbAv); } catch (e) {}
+            saveAccounts();
+            saveCurrentUser();
+            renderAppHeaderAndSidebar();
+          }
+        }
+      });
+    }
+
     // Verify if account is suspended
     if (match && match.status === 'suspended') {
       alert('Tài khoản của bạn hiện đang bị TẠM KHÓA bởi Quản trị viên hệ thống.');
@@ -276,6 +338,7 @@
       if (currentUser && currentUser.avatar && !isDefaultAvatar(currentUser.avatar) && currentUser.email) {
         const customKey = 'gvl_custom_avatar_' + currentUser.email.toLowerCase().replace(/[^a-z0-9]/g, '_');
         localStorage.setItem(customKey, currentUser.avatar);
+        idbAvatar.save(currentUser.email, currentUser.avatar);
       }
     } catch (e) {
       console.warn('LocalStorage saveCurrentUser notice:', e);
@@ -319,6 +382,7 @@
       const match = accountsList.find(a => a.email.toLowerCase() === email.toLowerCase());
       if (match) match.avatar = localCustomAvatar;
       try { localStorage.setItem(customKey, localCustomAvatar); } catch (e) {}
+      idbAvatar.save(email, localCustomAvatar);
     }
 
     // Async sync from Supabase Cloud if available
@@ -350,7 +414,10 @@
               ? cloudAccInfo.avatar
               : (data.data && data.data.userAvatar && !isDefaultAvatar(data.data.userAvatar) ? data.data.userAvatar : null);
 
-            const effectiveAvatar = localCustomAvatar || cloudAvatar;
+            // Local custom avatar ALWAYS wins over default/missing cloud avatar!
+            const effectiveAvatar = (localCustomAvatar && !isDefaultAvatar(localCustomAvatar))
+              ? localCustomAvatar
+              : (cloudAvatar && !isDefaultAvatar(cloudAvatar) ? cloudAvatar : null);
 
             if (effectiveAvatar && currentUser && currentUser.email.toLowerCase() === email.toLowerCase()) {
               currentUser.avatar = effectiveAvatar;
@@ -3776,8 +3843,8 @@
   }
   window.flashButtonSuccess = flashButtonSuccess;
 
-  // ULTRA-COMPACT HIGH-RES AVATAR COMPRESSION (Crisp 200x200px output for retina displays)
-  function compressImage(base64Str, maxWidth = 200, maxHeight = 200, quality = 0.75, callback) {
+  // ULTRA-COMPACT HIGH-RES AVATAR COMPRESSION (~15KB output to guarantee zero quota errors)
+  function compressImage(base64Str, maxWidth = 150, maxHeight = 150, quality = 0.70, callback) {
     if (!base64Str) { if (callback) callback(base64Str); return; }
     const img = new Image();
     if (base64Str.startsWith('http')) {
@@ -3786,9 +3853,10 @@
     img.onload = () => {
       try {
         const canvas = document.createElement('canvas');
-        const targetSize = Math.min(maxWidth || 200, 300);
-        canvas.width = targetSize;
-        canvas.height = targetSize;
+        const targetWidth = maxWidth || 150;
+        const targetHeight = maxHeight || 150;
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
 
         let width = img.width;
         let height = img.height;
@@ -3798,14 +3866,14 @@
 
         const ctx = canvas.getContext('2d');
         ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, targetSize, targetSize);
+        ctx.fillRect(0, 0, targetWidth, targetHeight);
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
-        ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, targetSize, targetSize);
+        ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, targetWidth, targetHeight);
 
-        let compressed = canvas.toDataURL('image/jpeg', quality || 0.75);
-        if (compressed.length > 50000) {
-          compressed = canvas.toDataURL('image/jpeg', 0.55);
+        let compressed = canvas.toDataURL('image/jpeg', quality || 0.70);
+        if (compressed.length > 40000) {
+          compressed = canvas.toDataURL('image/jpeg', 0.50);
         }
         if (callback) callback(compressed);
       } catch (e) {
@@ -3867,16 +3935,19 @@
     currentUser.role = roleInput ? roleInput.value : currentUser.role;
 
     const avatarPreview = document.getElementById('profile-avatar-preview');
+    const previewSrc = avatarPreview ? avatarPreview.src : null;
     const effectiveNewAvatar = uploadedUserAvatarBase64
-      || (avatarPreview && avatarPreview.src && avatarPreview.src.startsWith('data:image/') ? avatarPreview.src : null);
+      || (previewSrc && previewSrc.startsWith('data:image/') && !isDefaultAvatar(previewSrc) ? previewSrc : null)
+      || currentUser.avatar;
 
-    if (effectiveNewAvatar) {
+    if (effectiveNewAvatar && !isDefaultAvatar(effectiveNewAvatar)) {
       currentUser.avatar = effectiveNewAvatar;
       if (!appData) appData = {};
       appData.userAvatar = effectiveNewAvatar;
       if (currentUser.email) {
         const customKey = 'gvl_custom_avatar_' + currentUser.email.toLowerCase().replace(/[^a-z0-9]/g, '_');
         try { localStorage.setItem(customKey, effectiveNewAvatar); } catch (e) {}
+        idbAvatar.save(currentUser.email, effectiveNewAvatar);
       }
     }
 
@@ -3886,7 +3957,7 @@
       match.name = currentUser.name;
       match.phone = currentUser.phone;
       match.role = currentUser.role;
-      if (effectiveNewAvatar) match.avatar = effectiveNewAvatar;
+      if (currentUser.avatar && !isDefaultAvatar(currentUser.avatar)) match.avatar = currentUser.avatar;
     }
 
     if (appData && Array.isArray(appData.catechists)) {
@@ -3895,16 +3966,15 @@
         catMatch.holyName = currentUser.holyName;
         catMatch.name = currentUser.name;
         catMatch.phone = currentUser.phone;
-        if (effectiveNewAvatar) catMatch.avatar = effectiveNewAvatar;
+        if (currentUser.avatar && !isDefaultAvatar(currentUser.avatar)) catMatch.avatar = currentUser.avatar;
       }
     }
 
     try {
-      if (currentUser.email) {
+      if (currentUser.email && currentUser.avatar && !isDefaultAvatar(currentUser.avatar)) {
         const customKey = 'gvl_custom_avatar_' + currentUser.email.toLowerCase().replace(/[^a-z0-9]/g, '_');
-        if (currentUser.avatar && !isDefaultAvatar(currentUser.avatar)) {
-          try { localStorage.setItem(customKey, currentUser.avatar); } catch (e) {}
-        }
+        try { localStorage.setItem(customKey, currentUser.avatar); } catch (e) {}
+        idbAvatar.save(currentUser.email, currentUser.avatar);
       }
 
       saveAccounts();
@@ -3932,22 +4002,13 @@
       avatarInput.onchange = function(e) {
         const file = e.target.files && e.target.files[0];
         if (file) {
-          showToast('Đang xử lý & lưu ảnh đại diện...', 'info');
+          showToast('Đang nén & lưu ảnh đại diện...', 'info');
           const reader = new FileReader();
           reader.onload = function(evt) {
             const rawBase64 = evt.target.result;
-            // Capture rawBase64 immediately so submit works without waiting
-            uploadedUserAvatarBase64 = rawBase64;
-            if (avatarPreview) avatarPreview.src = rawBase64;
-            if (currentUser) {
-              currentUser.avatar = rawBase64;
-              if (!appData) appData = {};
-              appData.userAvatar = rawBase64;
-            }
-
-            // Perform async high-res compression for permanent storage
-            compressImage(rawBase64, 200, 200, 0.75, function(compressed) {
-              const finalAvatar = compressed || rawBase64;
+            // Compress IMMEDIATELY on file load to ~15KB JPEG
+            compressImage(rawBase64, 150, 150, 0.70, function(compressed) {
+              const finalAvatar = (compressed && compressed.length < rawBase64.length) ? compressed : rawBase64;
               uploadedUserAvatarBase64 = finalAvatar;
               if (avatarPreview) avatarPreview.src = finalAvatar;
               if (currentUser) {
@@ -3959,12 +4020,13 @@
                 if (currentUser.email) {
                   const customKey = 'gvl_custom_avatar_' + currentUser.email.toLowerCase().replace(/[^a-z0-9]/g, '_');
                   try { localStorage.setItem(customKey, finalAvatar); } catch (err) {}
+                  idbAvatar.save(currentUser.email, finalAvatar);
                 }
                 saveAccounts();
                 saveCurrentUser();
                 saveUserData();
                 renderAppHeaderAndSidebar();
-                showToast('✓ Đã lưu ảnh đại diện thành công! ✨', 'success');
+                showToast('✓ Đã nén & cập nhật ảnh đại diện mới! ✨', 'success');
               }
             });
           };
