@@ -214,8 +214,17 @@
       if (adminAcc) adminAcc.role = 'Admin';
     }
 
+    // Dedicated Avatar Persistence Key (Bulletproof Layer 0)
+    const emailKey = (currentUser && currentUser.email) ? currentUser.email.toLowerCase().replace(/[^a-z0-9]/g, '_') : 'default';
+    const customKey = 'gvl_custom_avatar_' + emailKey;
+    let dedicatedAvatar = null;
+    try {
+      const raw = localStorage.getItem(customKey);
+      if (raw && !isDefaultAvatar(raw)) dedicatedAvatar = raw;
+    } catch (e) {}
+
     // Check saved appData for custom avatar as robust fallback
-    const userKey = STORAGE_PREFIX_DATA + currentUser.email.toLowerCase().replace(/[^a-z0-9]/g, '_');
+    const userKey = STORAGE_PREFIX_DATA + emailKey;
     let savedDataAvatar = null;
     try {
       const raw = localStorage.getItem(userKey);
@@ -227,15 +236,21 @@
       }
     } catch (e) {}
 
-    const match = accountsList.find(a => a.email.toLowerCase() === currentUser.email.toLowerCase());
-    const bestAv = (!isDefaultAvatar(storedAvatar))
-      ? storedAvatar
-      : ((currentUser.avatar && !isDefaultAvatar(currentUser.avatar))
-        ? currentUser.avatar
-        : (match && match.avatar && !isDefaultAvatar(match.avatar) ? match.avatar : (savedDataAvatar || 'admin_avatar.png')));
+    const match = accountsList.find(a => currentUser && currentUser.email && a.email.toLowerCase() === currentUser.email.toLowerCase());
+    const bestAv = dedicatedAvatar
+      || (!isDefaultAvatar(storedAvatar)
+        ? storedAvatar
+        : ((currentUser && currentUser.avatar && !isDefaultAvatar(currentUser.avatar))
+          ? currentUser.avatar
+          : (match && match.avatar && !isDefaultAvatar(match.avatar) ? match.avatar : (savedDataAvatar || 'admin_avatar.png'))));
 
-    currentUser.avatar = bestAv;
-    if (match) match.avatar = bestAv;
+    if (currentUser) {
+      currentUser.avatar = bestAv;
+      if (match) match.avatar = bestAv;
+      if (bestAv && !isDefaultAvatar(bestAv)) {
+        try { localStorage.setItem(customKey, bestAv); } catch (e) {}
+      }
+    }
 
     saveCurrentUser();
 
@@ -250,12 +265,18 @@
     }
 
     // Load isolated data for this user email
-    loadUserData(currentUser.email);
+    if (currentUser && currentUser.email) {
+      loadUserData(currentUser.email);
+    }
   }
 
   function saveCurrentUser() {
     try {
       localStorage.setItem(STORAGE_KEY_CURRENT_USER, JSON.stringify(currentUser));
+      if (currentUser && currentUser.avatar && !isDefaultAvatar(currentUser.avatar) && currentUser.email) {
+        const customKey = 'gvl_custom_avatar_' + currentUser.email.toLowerCase().replace(/[^a-z0-9]/g, '_');
+        localStorage.setItem(customKey, currentUser.avatar);
+      }
     } catch (e) {
       console.warn('LocalStorage saveCurrentUser notice:', e);
     }
@@ -280,16 +301,24 @@
     if (!Array.isArray(appData.quizzes)) appData.quizzes = [];
     if (!appData.parishInfo) appData.parishInfo = generateDefaultUserData(email).parishInfo;
 
+    const customKey = 'gvl_custom_avatar_' + email.toLowerCase().replace(/[^a-z0-9]/g, '_');
+    let dedicatedAvatar = null;
+    try {
+      const raw = localStorage.getItem(customKey);
+      if (raw && !isDefaultAvatar(raw)) dedicatedAvatar = raw;
+    } catch (e) {}
+
     // Capture any local custom avatar before Supabase fetch
-    const localCustomAvatar = (currentUser && currentUser.avatar && !isDefaultAvatar(currentUser.avatar))
-      ? currentUser.avatar
-      : (appData && appData.userAvatar && !isDefaultAvatar(appData.userAvatar) ? appData.userAvatar : null);
+    const localCustomAvatar = dedicatedAvatar
+      || (currentUser && currentUser.avatar && !isDefaultAvatar(currentUser.avatar) ? currentUser.avatar : null)
+      || (appData && appData.userAvatar && !isDefaultAvatar(appData.userAvatar) ? appData.userAvatar : null);
 
     if (localCustomAvatar) {
       if (currentUser) currentUser.avatar = localCustomAvatar;
       appData.userAvatar = localCustomAvatar;
       const match = accountsList.find(a => a.email.toLowerCase() === email.toLowerCase());
       if (match) match.avatar = localCustomAvatar;
+      try { localStorage.setItem(customKey, localCustomAvatar); } catch (e) {}
     }
 
     // Async sync from Supabase Cloud if available
@@ -3836,18 +3865,24 @@
     }
 
     // Sync avatar to catechists list if matching email or name
-    if (Array.isArray(appData.catechists)) {
+    if (appData && Array.isArray(appData.catechists)) {
       const catMatch = appData.catechists.find(c => (c.email && c.email.toLowerCase() === currentUser.email.toLowerCase()) || c.name === currentUser.name);
       if (catMatch) {
         catMatch.holyName = currentUser.holyName;
         catMatch.name = currentUser.name;
         catMatch.phone = currentUser.phone;
         catMatch.avatar = currentUser.avatar;
-        saveAppData();
       }
     }
 
     try {
+      if (currentUser.email) {
+        const customKey = 'gvl_custom_avatar_' + currentUser.email.toLowerCase().replace(/[^a-z0-9]/g, '_');
+        if (currentUser.avatar && !isDefaultAvatar(currentUser.avatar)) {
+          try { localStorage.setItem(customKey, currentUser.avatar); } catch (e) {}
+        }
+      }
+
       saveAccounts();
       saveCurrentUser();
       saveUserData();
@@ -3885,6 +3920,10 @@
                 appData.userAvatar = compressed;
                 const match = accountsList.find(a => a.email.toLowerCase() === currentUser.email.toLowerCase());
                 if (match) match.avatar = compressed;
+                if (currentUser.email) {
+                  const customKey = 'gvl_custom_avatar_' + currentUser.email.toLowerCase().replace(/[^a-z0-9]/g, '_');
+                  try { localStorage.setItem(customKey, compressed); } catch (e) {}
+                }
                 saveAccounts();
                 saveCurrentUser();
                 saveUserData();
