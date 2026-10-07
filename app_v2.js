@@ -214,6 +214,14 @@
       if (adminAcc) adminAcc.role = 'Admin';
     }
 
+    // One-time migration to clear stale/corrupt cached avatar string for version v204
+    try {
+      if (!localStorage.getItem('gvl_avatar_v204_migrated')) {
+        localStorage.removeItem('gvl_custom_avatar_philthienhao_gmail_com');
+        localStorage.setItem('gvl_avatar_v204_migrated', 'true');
+      }
+    } catch (e) {}
+
     // Dedicated Avatar Persistence Key (Bulletproof Layer 0)
     const emailKey = (currentUser && currentUser.email) ? currentUser.email.toLowerCase().replace(/[^a-z0-9]/g, '_') : 'default';
     const customKey = 'gvl_custom_avatar_' + emailKey;
