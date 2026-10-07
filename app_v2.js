@@ -1431,12 +1431,7 @@
     const selectedSessionType = window._selectedAttendanceSessionType || 'Giáo lý';
     const activeTab = window._attendanceSubTab || 'list'; // 'list' | 'ai-seating' | 'history'
 
-    // Synchronize window global state
-    window._selectedAttendanceClassId = selectedClassId;
-    window._selectedAttendanceDate = selectedDate;
-    window._selectedAttendanceSessionType = selectedSessionType;
-
-    const filteredStudents = appData.students.filter(s => !selectedClassId || String(s.classId) === String(selectedClassId));
+    const filteredStudents = appData.students.filter(s => !selectedClassId || s.classId === selectedClassId);
 
     // Initialize seatingChart state if missing
     if (!appData.seatingCharts) appData.seatingCharts = {};
@@ -1460,7 +1455,7 @@
 
     // Find saved historical record for current (selectedClassId, selectedDate, selectedSessionType)
     const logs = appData.attendanceLogs || [];
-    const savedLog = logs.find(l => String(l.classId) === String(selectedClassId) && l.date === selectedDate && l.sessionType === selectedSessionType);
+    const savedLog = logs.find(l => l.classId === selectedClassId && l.date === selectedDate && l.sessionType === selectedSessionType);
 
     container.innerHTML = `
       <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
@@ -1479,28 +1474,23 @@
             <i class="fa-solid fa-history"></i> 📜 Lịch Sử & Nhật Ký (${logs.length})
           </button>
           <button class="btn btn-outline-success" onclick="window.exportAttendanceToExcel('${selectedClassId}', '${selectedDate}', '${selectedSessionType}')" title="Tải file Excel điểm danh ngày này">
-            <i class="fa-solid fa-file-excel"></i> 📊 Tải Excel Ngày Này
+            <i class="fa-solid fa-file-excel"></i> Tải Excel Ngày Này
           </button>
         </div>
       </div>
 
       <!-- FILTER CARD -->
       <div class="card mb-4">
-        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-          <div>
-            <h3 class="card-title" style="margin: 0;"><i class="fa-solid fa-calendar-check text-primary"></i> Chọn Lớp & Ngày Điểm Danh</h3>
-            <span style="font-size: 12px; color: var(--slate-muted); font-weight: 600; display: block; margin-top: 2px;">(Thay đổi ngày hoặc lớp học để tự động hiển thị lịch sử điểm danh ngày đó)</span>
-          </div>
-          <button type="button" class="btn btn-sm btn-success" onclick="window.exportAttendanceToExcel(window._selectedAttendanceClassId, window._selectedAttendanceDate, window._selectedAttendanceSessionType)" style="font-weight: 700; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);">
-            <i class="fa-solid fa-file-excel"></i> 📊 Tải Bảng Điểm Danh (Excel/CSV)
-          </button>
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <h3 class="card-title"><i class="fa-solid fa-calendar-check text-primary"></i> Chọn Lớp & Ngày Điểm Danh</h3>
+          <span style="font-size: 12px; color: var(--slate-muted); font-weight: 600;">(Đổi ngày để xem lại lịch sử điểm danh ngày đó)</span>
         </div>
         <div class="card-body">
           <div class="form-row">
             <div class="col-4">
               <label>Chọn Lớp Học: <span class="text-danger">*</span></label>
               <select id="att-class-select" class="form-control" onchange="window.handleAttFilterChange()">
-                ${classes.map(c => `<option value="${c.id}" ${String(c.id) === String(selectedClassId) ? 'selected' : ''}>${c.name} (${c.grade})</option>`).join('')}
+                ${classes.map(c => `<option value="${c.id}" ${c.id === selectedClassId ? 'selected' : ''}>${c.name} (${c.grade})</option>`).join('')}
               </select>
             </div>
             <div class="col-4">
@@ -1538,7 +1528,7 @@
       ` : `
         <div class="alert alert-info mb-4" style="background: #eff6ff; border-left: 5px solid #3b82f6; color: #1e40af; padding: 12px 18px; border-radius: 10px; font-size: 12.5px; font-weight: 600; display: flex; align-items: center; gap: 10px;">
           <i class="fa-solid fa-circle-info" style="font-size: 18px; color: #2563eb;"></i>
-          <span>ℹ️ <strong>CHƯA CÓ LỊCH SỬ ĐIỂM DANH CHO NGÀY ${selectedDate}:</strong> Hãy kiểm tra danh sách và bấm <strong>"Lưu Kết Quả Điểm Danh Vĩnh Viễn"</strong> để sao lưu vĩnh viễn vào hệ thống.</span>
+          <span>ℹ️ <strong>CHƯA CÓ LỊCH SỬ ĐIỂM DANH CHO NGÀY ${selectedDate}:</strong> Hãy kiểm tra danh sách và bấm <strong>"Lưu Kết Quả Điểm Danh"</strong> để sao lưu vĩnh viễn vào hệ thống.</span>
         </div>
       `}
 
@@ -1549,7 +1539,7 @@
   function renderTraditionalListSection(filteredStudents, savedLog) {
     const recordsMap = {};
     if (savedLog && Array.isArray(savedLog.records)) {
-      savedLog.records.forEach(r => { recordsMap[String(r.studentId)] = r; });
+      savedLog.records.forEach(r => { recordsMap[r.studentId] = r; });
     }
 
     return `
@@ -1578,7 +1568,7 @@
                 </thead>
                 <tbody>
                   ${filteredStudents.map(s => {
-                    const rec = recordsMap[String(s.id)];
+                    const rec = recordsMap[s.id];
                     const currentStatus = rec ? rec.status : 'present';
                     const currentNote = rec ? (rec.note || '') : '';
                     return `
@@ -1610,13 +1600,8 @@
             <button type="button" class="btn btn-outline-success" onclick="window.exportAttendanceToExcel(window._selectedAttendanceClassId, window._selectedAttendanceDate, window._selectedAttendanceSessionType)">
               <i class="fa-solid fa-file-excel"></i> 📊 Tải Bảng Điểm Danh (Excel/CSV)
             </button>
-            <button type="button" class="btn btn-outline-primary" onclick="window.exportMonthlyAttendanceMatrixExcel(window._selectedAttendanceClassId)">
-              <i class="fa-solid fa-table-cells"></i> 📊 Tải Bảng Tổng Hợp Cả Năm
-            </button>
           </div>
-          <button type="button" class="btn btn-primary" onclick="window.saveAttendanceLog()" style="padding: 10px 24px; font-weight: 700; font-size: 14px; border-radius: 8px; background: linear-gradient(135deg, #2563eb, #1d4ed8); border: none; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35); cursor: pointer;">
-            <i class="fa-solid fa-floppy-disk"></i> 💾 Lưu Kết Quả Điểm Danh Vĩnh Viễn
-          </button>
+          <button type="button" class="btn btn-primary" onclick="window.saveAttendanceLog()"><i class="fa-solid fa-floppy-disk"></i> Lưu Kết Quả Điểm Danh Vĩnh Viễn</button>
         </div>
       </div>
     `;
@@ -2338,82 +2323,38 @@
   }
 
   window.saveAISeatingAttendance = function(classId) {
-    const classes = appData.classes || [];
-    const targetClassId = classId || window._selectedAttendanceClassId || (classes[0] ? classes[0].id : '');
-    const targetClass = classes.find(c => String(c.id) === String(targetClassId));
-    if (!targetClass) {
-      showToast('Vui lòng chọn lớp học!', 'warning');
-      return;
-    }
-
-    const chart = (appData.seatingCharts && appData.seatingCharts[targetClassId]) ? appData.seatingCharts[targetClassId] : { absentSeats: [] };
+    if (!appData.seatingCharts || !appData.seatingCharts[classId]) return;
+    const chart = appData.seatingCharts[classId];
     const absentSeats = chart.absentSeats || [];
-    const dateInput = document.getElementById('att-date');
-    const sessionSelect = document.getElementById('att-session-type');
+    const today = document.getElementById('att-date') ? document.getElementById('att-date').value : new Date().toISOString().split('T')[0];
+    const sessionType = document.getElementById('att-session-type') ? document.getElementById('att-session-type').value : 'Giáo lý';
 
-    const date = dateInput ? dateInput.value : (window._selectedAttendanceDate || new Date().toISOString().split('T')[0]);
-    const sessionType = sessionSelect ? sessionSelect.value : (window._selectedAttendanceSessionType || 'Giáo lý');
+    if (!appData.attendanceLog) appData.attendanceLog = [];
 
-    const filteredStudents = (appData.students || []).filter(s => String(s.classId) === String(targetClassId));
-    if (filteredStudents.length === 0) {
-      showToast('Lớp học này chưa có học viên nào!', 'warning');
-      return;
-    }
-
-    const records = [];
-    let present = 0, unexcused = 0;
-
+    const filteredStudents = appData.students.filter(s => s.classId === classId);
     filteredStudents.forEach(st => {
       let studentSeatKey = null;
       Object.keys(chart.seats || {}).forEach(k => {
-        if (String(chart.seats[k]) === String(st.id)) studentSeatKey = k;
+        if (chart.seats[k] === st.id) studentSeatKey = k;
       });
 
       const isAbsent = studentSeatKey && absentSeats.includes(studentSeatKey);
       const status = isAbsent ? 'unexcused' : 'present';
-      if (status === 'present') present++;
-      else unexcused++;
 
-      records.push({
+      appData.attendanceLog.push({
+        id: 'att_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
         studentId: st.id,
-        studentCode: st.code || `HV${st.id}`,
-        studentName: `${st.holyName || ''} ${st.fullName || ''}`.trim(),
+        classId: classId,
+        date: today,
+        sessionType: sessionType,
         status: status,
-        note: isAbsent ? 'Vắng qua sơ đồ AI' : ''
+        method: 'ai_auto_photo',
+        timestamp: new Date().toISOString()
       });
     });
 
-    if (!Array.isArray(appData.attendanceLogs)) appData.attendanceLogs = [];
-
-    const existingIndex = appData.attendanceLogs.findIndex(l => String(l.classId) === String(targetClassId) && l.date === date && l.sessionType === sessionType);
-
-    const logEntry = {
-      id: existingIndex >= 0 ? appData.attendanceLogs[existingIndex].id : 'att_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
-      classId: targetClassId,
-      className: targetClass.name,
-      date: date,
-      sessionType: sessionType,
-      savedAt: new Date().toISOString(),
-      savedBy: (currentUser ? (currentUser.holyName ? currentUser.holyName + ' ' : '') + currentUser.name : 'Giáo lý viên (AI Sơ Đồ)'),
-      records: records,
-      stats: {
-        total: filteredStudents.length,
-        present: present,
-        late: 0,
-        excused: 0,
-        unexcused: unexcused
-      }
-    };
-
-    if (existingIndex >= 0) {
-      appData.attendanceLogs[existingIndex] = logEntry;
-    } else {
-      appData.attendanceLogs.push(logEntry);
-    }
-
     saveUserData();
-    renderAttendance(document.getElementById('content-area'));
-    showToast(`✓ Đã lưu vĩnh viễn kết quả điểm danh AI cho lớp ${targetClass.name} ngày ${date}! (Vắng ${unexcused} em)`, 'success');
+    showToast(`✓ Đã lưu vĩnh viễn kết quả điểm danh AI cho lớp lên Supabase Cloud! (Vắng ${absentSeats.length} em)`, 'success');
   };
 
   // ATTENDANCE SUB-TAB & FILTER CONTROLLER
@@ -2465,7 +2406,7 @@
             <div style="text-align: center; padding: 40px;">
               <div style="font-size: 48px; color: var(--slate-muted); margin-bottom: 12px;"><i class="fa-solid fa-calendar-xmark"></i></div>
               <h4 style="font-size: 16px; font-weight: 700; color: var(--dark-navy);">Chưa Có Lịch Sử Điểm Danh Nào Được Lưu</h4>
-              <p style="font-size: 13px; color: var(--slate-muted); margin-top: 4px;">Hãy điểm danh và bấm "Lưu Kết Quả Điểm Danh Vĩnh Viễn" để lưu trữ vĩnh viễn vào nhật ký hệ thống!</p>
+              <p style="font-size: 13px; color: var(--slate-muted); margin-top: 4px;">Hãy điểm danh và bấm "Lưu Kết Quả Điểm Danh" để lưu trữ vĩnh viễn vào nhật ký hệ thống!</p>
             </div>
           ` : `
             <div class="table-responsive">
@@ -2528,22 +2469,19 @@
     const dateInput = document.getElementById('att-date');
     const sessionSelect = document.getElementById('att-session-type');
 
-    const classId = classSelect ? classSelect.value : (window._selectedAttendanceClassId || (appData.classes[0] ? appData.classes[0].id : ''));
-    const date = dateInput ? dateInput.value : (window._selectedAttendanceDate || new Date().toISOString().split('T')[0]);
-    const sessionType = sessionSelect ? sessionSelect.value : (window._selectedAttendanceSessionType || 'Giáo lý');
+    if (!classSelect || !dateInput) return;
 
-    window._selectedAttendanceClassId = classId;
-    window._selectedAttendanceDate = date;
-    window._selectedAttendanceSessionType = sessionType;
-
-    const targetClass = (appData.classes || []).find(c => String(c.id) === String(classId));
+    const classId = classSelect.value;
+    const date = dateInput.value;
+    const sessionType = sessionSelect ? sessionSelect.value : 'Giáo lý';
+    const targetClass = appData.classes.find(c => c.id === classId);
 
     if (!targetClass) {
       showToast('Vui lòng chọn lớp học!', 'warning');
       return;
     }
 
-    const filteredStudents = (appData.students || []).filter(s => String(s.classId) === String(classId));
+    const filteredStudents = appData.students.filter(s => s.classId === classId);
     if (filteredStudents.length === 0) {
       showToast('Lớp học này chưa có học viên nào!', 'warning');
       return;
@@ -2577,7 +2515,7 @@
     }
 
     // Check if log for classId + date + sessionType already exists
-    const existingIndex = appData.attendanceLogs.findIndex(l => String(l.classId) === String(classId) && l.date === date && l.sessionType === sessionType);
+    const existingIndex = appData.attendanceLogs.findIndex(l => l.classId === classId && l.date === date && l.sessionType === sessionType);
 
     const logEntry = {
       id: existingIndex >= 0 ? appData.attendanceLogs[existingIndex].id : 'att_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
@@ -2605,7 +2543,7 @@
 
     saveUserData();
     renderAttendance(document.getElementById('content-area'));
-    showToast(`✅ Đã lưu vĩnh viễn kết quả điểm danh ngày ${date} (${sessionType}) lên bộ nhớ và Cloud!`, 'success');
+    showToast(`✅ Đã lưu vĩnh viễn lịch sử điểm danh ngày ${date} (${sessionType}) lên hệ thống Cloud!`, 'success');
   };
 
   // VIEW HISTORICAL ATTENDANCE LOG
@@ -2629,25 +2567,15 @@
 
   // EXPORT SINGLE DAY ATTENDANCE TO EXCEL / CSV
   window.exportAttendanceToExcel = function(classId, date, sessionType) {
-    const classes = appData.classes || [];
-    const targetClassId = classId || window._selectedAttendanceClassId || (classes[0] ? classes[0].id : '');
-    const targetDate = date || window._selectedAttendanceDate || new Date().toISOString().split('T')[0];
-    const targetSessionType = sessionType || window._selectedAttendanceSessionType || 'Giáo lý';
-
-    const targetClass = classes.find(c => String(c.id) === String(targetClassId)) || (classes[0] || { name: 'LopHoc' });
-    const filteredStudents = (appData.students || []).filter(s => String(s.classId) === String(targetClass.id || targetClassId));
-
-    if (filteredStudents.length === 0) {
-      showToast('Lớp học này chưa có học viên nào để xuất danh sách!', 'warning');
-      return;
-    }
+    const targetClass = appData.classes.find(c => c.id === classId) || { name: 'LopHoc' };
+    const filteredStudents = appData.students.filter(s => s.classId === classId);
 
     const logs = appData.attendanceLogs || [];
-    const log = logs.find(l => String(l.classId) === String(targetClass.id || targetClassId) && l.date === targetDate && (targetSessionType ? l.sessionType === targetSessionType : true));
+    const log = logs.find(l => l.classId === classId && l.date === date && (sessionType ? l.sessionType === sessionType : true));
 
     const recordsMap = {};
     if (log && Array.isArray(log.records)) {
-      log.records.forEach(r => { recordsMap[String(r.studentId)] = r; });
+      log.records.forEach(r => { recordsMap[r.studentId] = r; });
     }
 
     const statusTextMap = {
@@ -2661,8 +2589,8 @@
       ['BẢNG ĐIỂM DANH HỌC VIÊN GIÁO LÝ'],
       [`Tên Giáo Xứ: ${appData.parishInfo ? appData.parishInfo.name : 'Giáo Xứ Hoà Khánh'}`],
       [`Tên Lớp Học: ${targetClass.name} (${targetClass.grade || ''})`],
-      [`Ngày Điểm Danh: ${targetDate}`],
-      [`Loại Buổi Sinh Hoạt: ${targetSessionType || (log ? log.sessionType : 'Giờ học Giáo lý')}`],
+      [`Ngày Điểm Danh: ${date}`],
+      [`Loại Buổi Sinh Hoạt: ${sessionType || (log ? log.sessionType : 'Giờ học Giáo lý')}`],
       [''],
       ['STT', 'Mã Học Viên', 'Tên Thánh & Họ Tên', 'Trạng Thái Điểm Danh', 'Ghi Chú']
     ];
@@ -2670,7 +2598,7 @@
     let present = 0, late = 0, excused = 0, unexcused = 0;
 
     filteredStudents.forEach((st, idx) => {
-      const rec = recordsMap[String(st.id)];
+      const rec = recordsMap[st.id];
       let statusStr = '🟢 Có mặt';
       let noteStr = '';
 
@@ -2706,22 +2634,20 @@
     rowsData.push(['TỔNG HỢP SỐ LIỆU:']);
     rowsData.push([`Tổng sĩ số: ${filteredStudents.length} em`, `Có mặt: ${present}`, `Đi trễ: ${late}`, `Vắng có phép: ${excused}`, `Vắng không phép: ${unexcused}`]);
 
-    const sanitizedClassName = (targetClass.name || 'LopHoc').replace(/[^a-z0-9]/gi, '_');
-    const filename = `DiemDanh_${sanitizedClassName}_${targetDate}.xlsx`;
-
     if (typeof XLSX !== 'undefined') {
       const ws = XLSX.utils.aoa_to_sheet(rowsData);
       ws['!cols'] = [{ wch: 6 }, { wch: 15 }, { wch: 30 }, { wch: 22 }, { wch: 25 }];
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Điểm Danh');
+      const filename = `DiemDanh_${targetClass.name.replace(/[^a-z0-9]/gi, '_')}_${date}.xlsx`;
       XLSX.writeFile(wb, filename);
-      showToast(`📊 Đã xuất thành công file Excel: ${filename}`, 'success');
+      showToast(`📊 Đã xuất thành công file Excel điểm danh: ${filename}`, 'success');
     } else {
       const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + rowsData.map(e => e.map(cell => `"${cell}"`).join(",")).join("\n");
       const encodedUri = encodeURI(csvContent);
       const link = document.createElement("a");
       link.setAttribute("href", encodedUri);
-      link.setAttribute("download", filename.replace('.xlsx', '.csv'));
+      link.setAttribute("download", `DiemDanh_${targetClass.name}_${date}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -2731,17 +2657,16 @@
 
   // EXPORT FULL MONTHLY/ANNUAL MATRIX SPREADSHEET TO EXCEL
   window.exportMonthlyAttendanceMatrixExcel = function(classId) {
-    const classes = appData.classes || [];
-    const targetClass = classes.find(c => String(c.id) === String(classId)) || (classes[0] || { name: 'Toan_Bo_Lop' });
+    const targetClass = appData.classes.find(c => c.id === classId) || (appData.classes[0] || { name: 'Toan_Bo_Lop' });
     const targetClassId = targetClass.id || classId;
-    const students = (appData.students || []).filter(s => String(s.classId) === String(targetClassId));
+    const students = appData.students.filter(s => s.classId === targetClassId);
 
     if (students.length === 0) {
       showToast('Không có dữ liệu học viên trong lớp!', 'warning');
       return;
     }
 
-    const logs = (appData.attendanceLogs || []).filter(l => String(l.classId) === String(targetClassId));
+    const logs = (appData.attendanceLogs || []).filter(l => l.classId === targetClassId);
     const dateSet = new Set();
     logs.forEach(l => { if (l.date) dateSet.add(l.date); });
 
@@ -2749,30 +2674,36 @@
 
     const headers = ['STT', 'Mã Học Viên', 'Tên Thánh', 'Họ và Tên'];
     sortedDates.forEach(d => headers.push(d));
-    headers.push('Tổng Có Mặt', 'Tổng Trễ', 'Tổng Vắng');
+    headers.push('Tổng Có Mặt', 'Tổng Đi Trễ', 'Tổng Vắng', 'Tỷ Lệ Chuyên Cần');
 
     const rowsData = [
-      ['BẢNG TỔNG HỢP ĐIỂM DANH TOÀN BỘ NĂM HỌC'],
-      [`Tên Giáo Xứ: ${appData.parishInfo ? appData.parishInfo.name : 'Giáo Xứ Hoà Khánh'}`],
-      [`Tên Lớp Học: ${targetClass.name} (${targetClass.grade || ''})`],
+      [`BẢNG TỔNG HỢP ĐIỂM DANH HỌC VIÊN CẢ NĂM / CẢ THÁNG`],
+      [`Giáo Xứ: ${appData.parishInfo ? appData.parishInfo.name : 'Giáo Xứ Hoà Khánh'}`],
+      [`Lớp Học: ${targetClass.name} (${targetClass.grade || ''})`],
+      [`Thời Gian Xuất Báo Cáo: ${new Date().toLocaleDateString('vi-VN')}`],
       [''],
       headers
     ];
 
     students.forEach((st, idx) => {
-      let pCount = 0, lCount = 0, aCount = 0;
-      const row = [idx + 1, st.code || `HV${st.id}`, st.holyName || '', st.fullName || ''];
+      let pCount = 0, lCount = 0, vCount = 0;
+      const row = [
+        idx + 1,
+        st.code || `HV${st.id}`,
+        st.holyName || '',
+        st.fullName || ''
+      ];
 
       sortedDates.forEach(d => {
         const log = logs.find(l => l.date === d);
         if (log && Array.isArray(log.records)) {
-          const rec = log.records.find(r => String(r.studentId) === String(st.id));
+          const rec = log.records.find(r => r.studentId === st.id);
           if (rec) {
-            if (rec.status === 'present') { row.push('✓'); pCount++; }
+            if (rec.status === 'present') { row.push('P'); pCount++; }
             else if (rec.status === 'late') { row.push('T'); lCount++; }
-            else if (rec.status === 'excused') { row.push('P'); aCount++; }
-            else if (rec.status === 'unexcused') { row.push('KP'); aCount++; }
-            else row.push('-');
+            else if (rec.status === 'excused') { row.push('V (P)'); vCount++; }
+            else if (rec.status === 'unexcused') { row.push('V (KP)'); vCount++; }
+            else { row.push('-'); }
           } else {
             row.push('-');
           }
@@ -2781,29 +2712,22 @@
         }
       });
 
-      row.push(pCount, lCount, aCount);
+      const totalSessions = sortedDates.length || 1;
+      const rate = Math.round(((pCount + lCount * 0.5) / totalSessions) * 100);
+
+      row.push(pCount, lCount, vCount, `${rate}%`);
       rowsData.push(row);
     });
-
-    const sanitizedClassName = (targetClass.name || 'LopHoc').replace(/[^a-z0-9]/gi, '_');
-    const filename = `TongHopDiemDanh_${sanitizedClassName}_CaNam.xlsx`;
 
     if (typeof XLSX !== 'undefined') {
       const ws = XLSX.utils.aoa_to_sheet(rowsData);
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Ma Trận Điểm Danh');
+      XLSX.utils.book_append_sheet(wb, ws, 'Bảng Điểm Danh Cả Năm');
+      const filename = `BangTongHop_DiemDanh_${targetClass.name.replace(/[^a-z0-9]/gi, '_')}.xlsx`;
       XLSX.writeFile(wb, filename);
-      showToast(`📊 Đã xuất thành công Bảng tổng hợp cả năm: ${filename}`, 'success');
+      showToast(`📊 Đã tải thành công file Excel tổng hợp điểm danh: ${filename}`, 'success');
     } else {
-      const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + rowsData.map(e => e.map(cell => `"${cell}"`).join(",")).join("\n");
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", filename.replace('.xlsx', '.csv'));
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      showToast('📊 Đã tải file CSV Bảng tổng hợp thành công!', 'success');
+      showToast('Đang xuất báo cáo Excel...', 'info');
     }
   };
 
@@ -2855,6 +2779,44 @@
     };
   }
 
+  function calculateStudentYearGrade(student) {
+    if (!student.grades) student.grades = {};
+    const sem1 = getStudentSemesterGrades(student, 'semester1');
+    const sem2 = getStudentSemesterGrades(student, 'semester2');
+    const sem1Avg = typeof sem1.average === 'number' ? sem1.average : 0;
+    const sem2Avg = typeof sem2.average === 'number' ? sem2.average : 0;
+
+    // Formula: Điểm trung bình cộng cả năm = (Học kỳ 1 + Học kỳ 2) / 2
+    const yearAvg = Math.round(((sem1Avg + sem2Avg) / 2) * 10) / 10;
+
+    let rank = 'Yếu';
+    let badgeClass = 'badge-danger';
+    if (yearAvg >= 9.0) {
+      rank = 'Xuất sắc';
+      badgeClass = 'badge-success';
+    } else if (yearAvg >= 8.0) {
+      rank = 'Giỏi';
+      badgeClass = 'badge-success';
+    } else if (yearAvg >= 6.5) {
+      rank = 'Khá';
+      badgeClass = 'badge-info';
+    } else if (yearAvg >= 5.0) {
+      rank = 'Trung bình';
+      badgeClass = 'badge-warning';
+    } else {
+      rank = 'Yếu';
+      badgeClass = 'badge-danger';
+    }
+
+    return {
+      sem1Avg,
+      sem2Avg,
+      yearAvg,
+      rank,
+      badgeClass
+    };
+  }
+
   function getStudentSemesterGrades(student, semesterKey) {
     if (!student.grades) student.grades = {};
     const g = student.grades;
@@ -2876,6 +2838,7 @@
   }
 
   window.calculateStudentGrade = calculateStudentGrade;
+  window.calculateStudentYearGrade = calculateStudentYearGrade;
 
   window.updateStudentGradeRow = function (stdId) {
     const semesterKey = window._selectedGradeSemester || 'semester1';
@@ -2889,32 +2852,38 @@
     const student = (appData.students || []).find(s => s.id === stdId || String(s.id) === String(stdId));
     if (student) {
       if (!student.grades) student.grades = {};
-      student.grades[semesterKey] = {
-        oral: computed.oral,
-        min15: computed.min15,
-        midterm: computed.midterm,
-        finalExam: computed.finalExam,
-        average: computed.average,
-        rank: computed.rank
-      };
+      if (semesterKey !== 'year') {
+        student.grades[semesterKey] = {
+          oral: computed.oral,
+          min15: computed.min15,
+          midterm: computed.midterm,
+          finalExam: computed.finalExam,
+          average: computed.average,
+          rank: computed.rank
+        };
+      }
 
-      // Calculate overall year average
-      const sem1Avg = student.grades.semester1 ? student.grades.semester1.average : computed.average;
-      const sem2Avg = student.grades.semester2 ? student.grades.semester2.average : computed.average;
-      const yearAvg = Math.round(((sem1Avg + sem2Avg) / 2) * 10) / 10;
-      student.grades.average = yearAvg;
-      student.grades.rank = yearAvg >= 9.0 ? 'Xuất sắc' : (yearAvg >= 8.0 ? 'Giỏi' : (yearAvg >= 6.5 ? 'Khá' : (yearAvg >= 5.0 ? 'Trung bình' : 'Yếu')));
+      // Calculate overall year average: (Học kỳ 1 + Học kỳ 2) / 2
+      const yearInfo = calculateStudentYearGrade(student);
+      student.grades.average = yearInfo.yearAvg;
+      student.grades.rank = yearInfo.rank;
 
       saveUserData();
-    }
 
-    const avgEl = document.getElementById(`grade-avg-${stdId}`);
-    if (avgEl) avgEl.textContent = computed.average.toFixed(1);
+      // Update HK average element
+      const avgEl = document.getElementById(`grade-avg-${stdId}`);
+      if (avgEl) avgEl.textContent = computed.average.toFixed(1);
 
-    const rankEl = document.getElementById(`grade-rank-${stdId}`);
-    if (rankEl) {
-      rankEl.textContent = computed.rank;
-      rankEl.className = `badge ${computed.badgeClass}`;
+      // Update Year average element
+      const yearAvgEl = document.getElementById(`grade-year-avg-${stdId}`);
+      if (yearAvgEl) yearAvgEl.textContent = yearInfo.yearAvg.toFixed(1);
+
+      // Update rank element
+      const rankEl = document.getElementById(`grade-rank-${stdId}`);
+      if (rankEl) {
+        rankEl.textContent = yearInfo.rank;
+        rankEl.className = `badge ${yearInfo.badgeClass}`;
+      }
     }
   };
 
@@ -2932,21 +2901,30 @@
     );
 
     filteredStudents.forEach(s => {
-      const oralVal = document.getElementById(`grade-oral-${s.id}`)?.value;
-      const min15Val = document.getElementById(`grade-min15-${s.id}`)?.value;
-      const midtermVal = document.getElementById(`grade-midterm-${s.id}`)?.value;
-      const finalVal = document.getElementById(`grade-final-${s.id}`)?.value;
+      if (semesterKey !== 'year') {
+        const oralVal = document.getElementById(`grade-oral-${s.id}`)?.value;
+        const min15Val = document.getElementById(`grade-min15-${s.id}`)?.value;
+        const midtermVal = document.getElementById(`grade-midterm-${s.id}`)?.value;
+        const finalVal = document.getElementById(`grade-final-${s.id}`)?.value;
 
-      const computed = calculateStudentGrade(oralVal, min15Val, midtermVal, finalVal);
-      if (!s.grades) s.grades = {};
-      s.grades[semesterKey] = {
-        oral: computed.oral,
-        min15: computed.min15,
-        midterm: computed.midterm,
-        finalExam: computed.finalExam,
-        average: computed.average,
-        rank: computed.rank
-      };
+        if (oralVal !== undefined || min15Val !== undefined) {
+          const computed = calculateStudentGrade(oralVal, min15Val, midtermVal, finalVal);
+          if (!s.grades) s.grades = {};
+          s.grades[semesterKey] = {
+            oral: computed.oral,
+            min15: computed.min15,
+            midterm: computed.midterm,
+            finalExam: computed.finalExam,
+            average: computed.average,
+            rank: computed.rank
+          };
+        }
+      }
+
+      // Recalculate full year average for student
+      const yearInfo = calculateStudentYearGrade(s);
+      s.grades.average = yearInfo.yearAvg;
+      s.grades.rank = yearInfo.rank;
     });
 
     saveUserData();
@@ -2967,13 +2945,6 @@
       delete s.grades.midterm;
       delete s.grades.finalExam;
       delete s.grades.oral15;
-      delete s.grades.average;
-      delete s.grades.rank;
-      delete s.oral;
-      delete s.min15;
-      delete s.midterm;
-      delete s.finalExam;
-      delete s.oral15;
 
       s.grades.average = 0.0;
       s.grades.rank = 'Yếu';
@@ -2983,6 +2954,7 @@
       const midtermInput = document.getElementById(`grade-midterm-${s.id}`);
       const finalInput = document.getElementById(`grade-final-${s.id}`);
       const avgEl = document.getElementById(`grade-avg-${s.id}`);
+      const yearAvgEl = document.getElementById(`grade-year-avg-${s.id}`);
       const rankEl = document.getElementById(`grade-rank-${s.id}`);
 
       if (oralInput) oralInput.value = 0;
@@ -2990,6 +2962,7 @@
       if (midtermInput) midtermInput.value = 0;
       if (finalInput) finalInput.value = 0;
       if (avgEl) avgEl.textContent = '0.0';
+      if (yearAvgEl) yearAvgEl.textContent = '0.0';
       if (rankEl) {
         rankEl.textContent = 'Yếu';
         rankEl.className = 'badge badge-danger';
@@ -3024,7 +2997,10 @@
     const classes = appData.classes || [];
     const selectedClassId = window._selectedGradeClassId || (classes.length > 0 ? classes[0].id : '');
     const selectedSemester = window._selectedGradeSemester || 'semester1';
-    const semLabel = selectedSemester === 'semester2' ? 'Học Kỳ II' : 'Học Kỳ I';
+
+    let semLabel = 'Học Kỳ I';
+    if (selectedSemester === 'semester2') semLabel = 'Học Kỳ II';
+    else if (selectedSemester === 'year') semLabel = '🌟 Cả Năm (Tổng Kết)';
 
     const targetClass = classes.find(c => c.id === selectedClassId || String(c.id) === String(selectedClassId));
     const targetClassName = targetClass ? targetClass.name : '';
@@ -3035,28 +3011,74 @@
       (targetClassName && s.className === targetClassName)
     );
 
+    // Compute class stats
+    let totalYearAvg = 0;
+    let passedCount = 0;
+    filteredStudents.forEach(s => {
+      const yInfo = calculateStudentYearGrade(s);
+      totalYearAvg += yInfo.yearAvg;
+      if (yInfo.yearAvg >= 5.0) passedCount++;
+    });
+    const classAvg = filteredStudents.length > 0 ? (Math.round((totalYearAvg / filteredStudents.length) * 10) / 10).toFixed(1) : '0.0';
+    const passRate = filteredStudents.length > 0 ? Math.round((passedCount / filteredStudents.length) * 100) : 0;
+
     container.innerHTML = `
       <div class="page-header">
         <div>
           <h2 class="page-title"><i class="fa-solid fa-trophy"></i> Bảng Điểm & Kết Quả Học Tập</h2>
-          <p class="page-subtitle">Quản lý điểm số theo Học Kỳ (HK I & HK II). Tự động tính Trung bình = (Miệng + 15 phút + Giữa Kỳ + Cuối Kỳ) / 4</p>
+          <p class="page-subtitle">Quản lý điểm số Học Kỳ (HK I & HK II). Tự động tính <strong>Điểm Trung Bình Cộng Cả Năm = (HK 1 + HK 2) / 2</strong></p>
         </div>
       </div>
 
-      <div class="card">
-        <div class="card-body" style="padding: 16px 24px;">
-          <div class="form-row" style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
-            <div style="flex: 1; min-width: 220px;">
+      <!-- Quick KPI Stats Banner for Gradebook -->
+      <div class="kpi-grid" style="margin-bottom: 20px;">
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-blue"><i class="fa-solid fa-users"></i></div>
+          <div class="kpi-info">
+            <h4>Sĩ Số Lớp</h4>
+            <div class="kpi-number">${filteredStudents.length} em</div>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-amber"><i class="fa-solid fa-calculator"></i></div>
+          <div class="kpi-info">
+            <h4>ĐTB Cả Năm Lớp</h4>
+            <div class="kpi-number">${classAvg} / 10</div>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-green"><i class="fa-solid fa-circle-check"></i></div>
+          <div class="kpi-info">
+            <h4>Tỷ Lệ Đạt (TB ≥ 5.0)</h4>
+            <div class="kpi-number">${passRate}% (${passedCount}/${filteredStudents.length})</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom: 20px; border-top: 4px solid var(--primary);">
+        <div class="card-body" style="padding: 20px 24px;">
+          <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap; justify-content: space-between;">
+            <div style="flex: 2; min-width: 300px;">
+              <label style="font-weight: 800; font-size: 13.5px; margin-bottom: 8px; display: block; color: var(--slate-dark);">
+                <i class="fa-solid fa-calculator text-primary"></i> CHỌN CHẾ ĐỘ XEM & NHẬP ĐIỂM HỌC KỲ / CẢ NĂM:
+              </label>
+              <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button type="button" class="btn ${selectedSemester === 'semester1' ? 'btn-primary' : 'btn-outline-primary'}" onclick="window.changeGradeSemester('semester1')" style="font-weight: 700; padding: 10px 18px; border-radius: 8px; cursor: pointer;">
+                  📘 Học Kỳ I
+                </button>
+                <button type="button" class="btn ${selectedSemester === 'semester2' ? 'btn-primary' : 'btn-outline-primary'}" onclick="window.changeGradeSemester('semester2')" style="font-weight: 700; padding: 10px 18px; border-radius: 8px; cursor: pointer;">
+                  📙 Học Kỳ II
+                </button>
+                <button type="button" class="btn ${selectedSemester === 'year' ? 'btn-success' : 'btn-outline-success'}" onclick="window.changeGradeSemester('year')" style="font-weight: 800; padding: 10px 22px; border-radius: 8px; cursor: pointer; box-shadow: ${selectedSemester === 'year' ? '0 4px 14px rgba(16, 185, 129, 0.4)' : 'none'};">
+                  🌟 ĐTB CẢ NĂM = (HK1 + HK2) / 2
+                </button>
+              </div>
+            </div>
+
+            <div style="flex: 1; min-width: 240px; max-width: 360px;">
               <label style="font-weight: 700; margin-bottom: 6px; display: block;"><i class="fa-solid fa-layer-group text-primary"></i> Chọn Lớp Học Cần Nhập Điểm:</label>
               <select id="grade-class-select" class="form-control" onchange="window.changeGradeClass(this.value)">
                 ${classes.map(c => `<option value="${c.id}" ${c.id === selectedClassId ? 'selected' : ''}>${c.name} (${c.grade})</option>`).join('')}
-              </select>
-            </div>
-            <div style="flex: 1; min-width: 220px;">
-              <label style="font-weight: 700; margin-bottom: 6px; display: block;"><i class="fa-solid fa-calendar-days text-primary"></i> Chọn Học Kỳ:</label>
-              <select id="grade-semester-select" class="form-control" onchange="window.changeGradeSemester(this.value)">
-                <option value="semester1" ${selectedSemester === 'semester1' ? 'selected' : ''}>📘 Học Kỳ I</option>
-                <option value="semester2" ${selectedSemester === 'semester2' ? 'selected' : ''}>📙 Học Kỳ II</option>
               </select>
             </div>
           </div>
@@ -3066,7 +3088,7 @@
       <div class="card">
         <div class="card-header" style="background: var(--primary-light); display: flex; justify-content: space-between; align-items: center; padding: 14px 24px;">
           <h4 style="font-size: 15px; font-weight: 800; color: var(--primary); margin: 0;">
-            <i class="fa-solid fa-graduation-cap"></i> Sổ Điểm ${semLabel} - ${classes.find(c => c.id === selectedClassId)?.name || 'Toàn bộ'}
+            <i class="fa-solid fa-graduation-cap"></i> Sổ Điểm ${semLabel} - ${targetClass?.name || 'Toàn bộ'}
           </h4>
           <span class="badge badge-primary">${filteredStudents.length} Học Viên</span>
         </div>
@@ -3076,24 +3098,63 @@
               <div style="font-size: 40px; color: var(--slate-border); margin-bottom: 10px;"><i class="fa-solid fa-folder-open"></i></div>
               <p style="color: var(--slate-muted); font-size: 14px; font-weight: 600;">Lớp học này chưa có học viên nào để nhập điểm.</p>
             </div>
+          ` : (selectedSemester === 'year' ? `
+            <div class="table-responsive">
+              <table class="custom-table">
+                <thead>
+                  <tr>
+                    <th style="min-width: 180px;">Họ và Tên Học Viên</th>
+                    <th style="width: 120px; text-align: center;">ĐTB Học Kỳ I</th>
+                    <th style="width: 120px; text-align: center;">ĐTB Học Kỳ II</th>
+                    <th style="width: 160px; text-align: center; background: #f0f9ff; color: #0369a1;">ĐTB Cả Năm = (HK1+HK2)/2</th>
+                    <th style="width: 140px; text-align: center;">Xếp Loại Cả Năm</th>
+                    <th style="width: 150px; text-align: center;">Trạng Thái Lên Lớp</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${filteredStudents.map(s => {
+                    const yearInfo = calculateStudentYearGrade(s);
+                    const defaultAvatar = s.gender === 'Nữ' 
+                      ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80'
+                      : 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80';
+
+                    return `
+                    <tr>
+                      <td>
+                        <img src="${s.photo || defaultAvatar}" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; margin-right: 6px;">
+                        <strong>${s.holyName || ''}</strong> ${s.fullName || s.name || ''}
+                      </td>
+                      <td style="text-align: center;"><span style="font-size: 14.5px; font-weight: 700; color: #2563eb;">${yearInfo.sem1Avg.toFixed(1)}</span></td>
+                      <td style="text-align: center;"><span style="font-size: 14.5px; font-weight: 700; color: #d97706;">${yearInfo.sem2Avg.toFixed(1)}</span></td>
+                      <td style="text-align: center; background: #f0f9ff;"><strong style="font-size: 16px; color: #0284c7; background: #e0f2fe; padding: 4px 12px; border-radius: 8px; border: 1px solid #bae6fd;">${yearInfo.yearAvg.toFixed(1)}</strong></td>
+                      <td style="text-align: center;"><span class="badge ${yearInfo.badgeClass}">${yearInfo.rank}</span></td>
+                      <td style="text-align: center;">${yearInfo.yearAvg >= 5.0 ? '<span class="badge badge-success"><i class="fa-solid fa-circle-check"></i> Đủ ĐK Lên Lớp</span>' : '<span class="badge badge-danger"><i class="fa-solid fa-triangle-exclamation"></i> Cần Phụ Đạo</span>'}</td>
+                    </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
           ` : `
             <div class="table-responsive">
               <table class="custom-table">
                 <thead>
                   <tr>
                     <th style="min-width: 180px;">Họ và Tên Học Viên</th>
-                    <th style="width: 90px; text-align: center;">Miệng</th>
-                    <th style="width: 90px; text-align: center;">15 phút</th>
-                    <th style="width: 90px; text-align: center;">Giữa Kỳ</th>
-                    <th style="width: 90px; text-align: center;">Cuối Kỳ</th>
-                    <th style="width: 130px; text-align: center;">Điểm Trung Bình</th>
-                    <th style="width: 130px; text-align: center;">Xếp Loại Học Lực</th>
+                    <th style="width: 80px; text-align: center;">Miệng</th>
+                    <th style="width: 80px; text-align: center;">15 phút</th>
+                    <th style="width: 80px; text-align: center;">Giữa Kỳ</th>
+                    <th style="width: 80px; text-align: center;">Cuối Kỳ</th>
+                    <th style="width: 110px; text-align: center;">ĐTB ${selectedSemester === 'semester2' ? 'HK II' : 'HK I'}</th>
+                    <th style="width: 140px; text-align: center; background: #f0f9ff; color: #0369a1;">ĐTB Cả Năm (HK1+HK2)/2</th>
+                    <th style="width: 120px; text-align: center;">Xếp Loại Cả Năm</th>
                   </tr>
                 </thead>
                 <tbody>
                   ${filteredStudents.map(s => {
                     const g = getStudentSemesterGrades(s, selectedSemester);
                     const computed = calculateStudentGrade(g.oral, g.min15, g.midterm, g.finalExam);
+                    const yearInfo = calculateStudentYearGrade(s);
 
                     return `
                     <tr>
@@ -3101,19 +3162,20 @@
                         <img src="${s.photo || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80'}" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; margin-right: 6px;">
                         <strong>${s.holyName || ''}</strong> ${s.fullName || s.name || ''}
                       </td>
-                      <td style="text-align: center;"><input type="number" min="0" max="10" step="0.5" id="grade-oral-${s.id}" class="form-control form-control-sm text-center" value="${computed.oral}" style="width: 75px; margin: 0 auto;" oninput="window.updateStudentGradeRow('${s.id}')"></td>
-                      <td style="text-align: center;"><input type="number" min="0" max="10" step="0.5" id="grade-min15-${s.id}" class="form-control form-control-sm text-center" value="${computed.min15}" style="width: 75px; margin: 0 auto;" oninput="window.updateStudentGradeRow('${s.id}')"></td>
-                      <td style="text-align: center;"><input type="number" min="0" max="10" step="0.5" id="grade-midterm-${s.id}" class="form-control form-control-sm text-center" value="${computed.midterm}" style="width: 75px; margin: 0 auto;" oninput="window.updateStudentGradeRow('${s.id}')"></td>
-                      <td style="text-align: center;"><input type="number" min="0" max="10" step="0.5" id="grade-final-${s.id}" class="form-control form-control-sm text-center" value="${computed.finalExam}" style="width: 75px; margin: 0 auto;" oninput="window.updateStudentGradeRow('${s.id}')"></td>
+                      <td style="text-align: center;"><input type="number" min="0" max="10" step="0.5" id="grade-oral-${s.id}" class="form-control form-control-sm text-center" value="${computed.oral}" style="width: 70px; margin: 0 auto;" oninput="window.updateStudentGradeRow('${s.id}')"></td>
+                      <td style="text-align: center;"><input type="number" min="0" max="10" step="0.5" id="grade-min15-${s.id}" class="form-control form-control-sm text-center" value="${computed.min15}" style="width: 70px; margin: 0 auto;" oninput="window.updateStudentGradeRow('${s.id}')"></td>
+                      <td style="text-align: center;"><input type="number" min="0" max="10" step="0.5" id="grade-midterm-${s.id}" class="form-control form-control-sm text-center" value="${computed.midterm}" style="width: 70px; margin: 0 auto;" oninput="window.updateStudentGradeRow('${s.id}')"></td>
+                      <td style="text-align: center;"><input type="number" min="0" max="10" step="0.5" id="grade-final-${s.id}" class="form-control form-control-sm text-center" value="${computed.finalExam}" style="width: 70px; margin: 0 auto;" oninput="window.updateStudentGradeRow('${s.id}')"></td>
                       <td style="text-align: center;"><strong id="grade-avg-${s.id}" style="font-size: 15px; color: var(--primary);">${computed.average.toFixed(1)}</strong></td>
-                      <td style="text-align: center;"><span id="grade-rank-${s.id}" class="badge ${computed.badgeClass}">${computed.rank}</span></td>
+                      <td style="text-align: center; background: #f0f9ff;"><strong id="grade-year-avg-${s.id}" style="font-size: 15px; color: #0284c7; background: #e0f2fe; padding: 4px 10px; border-radius: 6px; font-weight: 800; border: 1px solid #bae6fd;">${yearInfo.yearAvg.toFixed(1)}</strong></td>
+                      <td style="text-align: center;"><span id="grade-rank-${s.id}" class="badge ${yearInfo.badgeClass}">${yearInfo.rank}</span></td>
                     </tr>
                     `;
                   }).join('')}
                 </tbody>
               </table>
             </div>
-          `}
+          `)}
         </div>
         <div class="card-footer" style="padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--slate-border); background: #fafafa;">
           <button class="btn btn-outline-danger" onclick="window.resetCurrentGradebook()"><i class="fa-solid fa-rotate-left"></i> Reset Bảng Điểm Lớp</button>
@@ -4707,7 +4769,8 @@
               'Tên Cha/Mẹ': s.parentName || s.phone || '',
               'Điểm TB HK1': s.grades && s.grades.semester1 ? s.grades.semester1.average : '0.0',
               'Điểm TB HK2': s.grades && s.grades.semester2 ? s.grades.semester2.average : '0.0',
-              'Đánh Giá/Xếp Loại': s.grades && s.grades.semester2 ? s.grades.semester2.rank : 'Chưa xếp loại'
+              'Điểm TB Cả Năm': s.grades ? (typeof s.grades.average === 'number' ? s.grades.average : Math.round((((s.grades.semester1?.average || 0) + (s.grades.semester2?.average || 0)) / 2) * 10) / 10) : '0.0',
+              'Đánh Giá/Xếp Loại Cả Năm': s.grades ? (s.grades.rank || 'Yếu') : 'Chưa xếp loại'
             });
           });
         }

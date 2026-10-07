@@ -2855,6 +2855,44 @@
     };
   }
 
+  function calculateStudentYearGrade(student) {
+    if (!student.grades) student.grades = {};
+    const sem1 = getStudentSemesterGrades(student, 'semester1');
+    const sem2 = getStudentSemesterGrades(student, 'semester2');
+    const sem1Avg = typeof sem1.average === 'number' ? sem1.average : 0;
+    const sem2Avg = typeof sem2.average === 'number' ? sem2.average : 0;
+
+    // Formula: Điểm trung bình cộng cả năm = (Học kỳ 1 + Học kỳ 2) / 2
+    const yearAvg = Math.round(((sem1Avg + sem2Avg) / 2) * 10) / 10;
+
+    let rank = 'Yếu';
+    let badgeClass = 'badge-danger';
+    if (yearAvg >= 9.0) {
+      rank = 'Xuất sắc';
+      badgeClass = 'badge-success';
+    } else if (yearAvg >= 8.0) {
+      rank = 'Giỏi';
+      badgeClass = 'badge-success';
+    } else if (yearAvg >= 6.5) {
+      rank = 'Khá';
+      badgeClass = 'badge-info';
+    } else if (yearAvg >= 5.0) {
+      rank = 'Trung bình';
+      badgeClass = 'badge-warning';
+    } else {
+      rank = 'Yếu';
+      badgeClass = 'badge-danger';
+    }
+
+    return {
+      sem1Avg,
+      sem2Avg,
+      yearAvg,
+      rank,
+      badgeClass
+    };
+  }
+
   function getStudentSemesterGrades(student, semesterKey) {
     if (!student.grades) student.grades = {};
     const g = student.grades;
@@ -2876,6 +2914,7 @@
   }
 
   window.calculateStudentGrade = calculateStudentGrade;
+  window.calculateStudentYearGrade = calculateStudentYearGrade;
 
   window.updateStudentGradeRow = function (stdId) {
     const semesterKey = window._selectedGradeSemester || 'semester1';
@@ -2889,32 +2928,38 @@
     const student = (appData.students || []).find(s => s.id === stdId || String(s.id) === String(stdId));
     if (student) {
       if (!student.grades) student.grades = {};
-      student.grades[semesterKey] = {
-        oral: computed.oral,
-        min15: computed.min15,
-        midterm: computed.midterm,
-        finalExam: computed.finalExam,
-        average: computed.average,
-        rank: computed.rank
-      };
+      if (semesterKey !== 'year') {
+        student.grades[semesterKey] = {
+          oral: computed.oral,
+          min15: computed.min15,
+          midterm: computed.midterm,
+          finalExam: computed.finalExam,
+          average: computed.average,
+          rank: computed.rank
+        };
+      }
 
-      // Calculate overall year average
-      const sem1Avg = student.grades.semester1 ? student.grades.semester1.average : computed.average;
-      const sem2Avg = student.grades.semester2 ? student.grades.semester2.average : computed.average;
-      const yearAvg = Math.round(((sem1Avg + sem2Avg) / 2) * 10) / 10;
-      student.grades.average = yearAvg;
-      student.grades.rank = yearAvg >= 9.0 ? 'Xuất sắc' : (yearAvg >= 8.0 ? 'Giỏi' : (yearAvg >= 6.5 ? 'Khá' : (yearAvg >= 5.0 ? 'Trung bình' : 'Yếu')));
+      // Calculate overall year average: (Học kỳ 1 + Học kỳ 2) / 2
+      const yearInfo = calculateStudentYearGrade(student);
+      student.grades.average = yearInfo.yearAvg;
+      student.grades.rank = yearInfo.rank;
 
       saveUserData();
-    }
 
-    const avgEl = document.getElementById(`grade-avg-${stdId}`);
-    if (avgEl) avgEl.textContent = computed.average.toFixed(1);
+      // Update HK average element
+      const avgEl = document.getElementById(`grade-avg-${stdId}`);
+      if (avgEl) avgEl.textContent = computed.average.toFixed(1);
 
-    const rankEl = document.getElementById(`grade-rank-${stdId}`);
-    if (rankEl) {
-      rankEl.textContent = computed.rank;
-      rankEl.className = `badge ${computed.badgeClass}`;
+      // Update Year average element
+      const yearAvgEl = document.getElementById(`grade-year-avg-${stdId}`);
+      if (yearAvgEl) yearAvgEl.textContent = yearInfo.yearAvg.toFixed(1);
+
+      // Update rank element
+      const rankEl = document.getElementById(`grade-rank-${stdId}`);
+      if (rankEl) {
+        rankEl.textContent = yearInfo.rank;
+        rankEl.className = `badge ${yearInfo.badgeClass}`;
+      }
     }
   };
 
@@ -2932,21 +2977,30 @@
     );
 
     filteredStudents.forEach(s => {
-      const oralVal = document.getElementById(`grade-oral-${s.id}`)?.value;
-      const min15Val = document.getElementById(`grade-min15-${s.id}`)?.value;
-      const midtermVal = document.getElementById(`grade-midterm-${s.id}`)?.value;
-      const finalVal = document.getElementById(`grade-final-${s.id}`)?.value;
+      if (semesterKey !== 'year') {
+        const oralVal = document.getElementById(`grade-oral-${s.id}`)?.value;
+        const min15Val = document.getElementById(`grade-min15-${s.id}`)?.value;
+        const midtermVal = document.getElementById(`grade-midterm-${s.id}`)?.value;
+        const finalVal = document.getElementById(`grade-final-${s.id}`)?.value;
 
-      const computed = calculateStudentGrade(oralVal, min15Val, midtermVal, finalVal);
-      if (!s.grades) s.grades = {};
-      s.grades[semesterKey] = {
-        oral: computed.oral,
-        min15: computed.min15,
-        midterm: computed.midterm,
-        finalExam: computed.finalExam,
-        average: computed.average,
-        rank: computed.rank
-      };
+        if (oralVal !== undefined || min15Val !== undefined) {
+          const computed = calculateStudentGrade(oralVal, min15Val, midtermVal, finalVal);
+          if (!s.grades) s.grades = {};
+          s.grades[semesterKey] = {
+            oral: computed.oral,
+            min15: computed.min15,
+            midterm: computed.midterm,
+            finalExam: computed.finalExam,
+            average: computed.average,
+            rank: computed.rank
+          };
+        }
+      }
+
+      // Recalculate full year average for student
+      const yearInfo = calculateStudentYearGrade(s);
+      s.grades.average = yearInfo.yearAvg;
+      s.grades.rank = yearInfo.rank;
     });
 
     saveUserData();
@@ -2967,13 +3021,6 @@
       delete s.grades.midterm;
       delete s.grades.finalExam;
       delete s.grades.oral15;
-      delete s.grades.average;
-      delete s.grades.rank;
-      delete s.oral;
-      delete s.min15;
-      delete s.midterm;
-      delete s.finalExam;
-      delete s.oral15;
 
       s.grades.average = 0.0;
       s.grades.rank = 'Yếu';
@@ -2983,6 +3030,7 @@
       const midtermInput = document.getElementById(`grade-midterm-${s.id}`);
       const finalInput = document.getElementById(`grade-final-${s.id}`);
       const avgEl = document.getElementById(`grade-avg-${s.id}`);
+      const yearAvgEl = document.getElementById(`grade-year-avg-${s.id}`);
       const rankEl = document.getElementById(`grade-rank-${s.id}`);
 
       if (oralInput) oralInput.value = 0;
@@ -2990,6 +3038,7 @@
       if (midtermInput) midtermInput.value = 0;
       if (finalInput) finalInput.value = 0;
       if (avgEl) avgEl.textContent = '0.0';
+      if (yearAvgEl) yearAvgEl.textContent = '0.0';
       if (rankEl) {
         rankEl.textContent = 'Yếu';
         rankEl.className = 'badge badge-danger';
@@ -3024,7 +3073,10 @@
     const classes = appData.classes || [];
     const selectedClassId = window._selectedGradeClassId || (classes.length > 0 ? classes[0].id : '');
     const selectedSemester = window._selectedGradeSemester || 'semester1';
-    const semLabel = selectedSemester === 'semester2' ? 'Học Kỳ II' : 'Học Kỳ I';
+
+    let semLabel = 'Học Kỳ I';
+    if (selectedSemester === 'semester2') semLabel = 'Học Kỳ II';
+    else if (selectedSemester === 'year') semLabel = '🌟 Cả Năm (Tổng Kết)';
 
     const targetClass = classes.find(c => c.id === selectedClassId || String(c.id) === String(selectedClassId));
     const targetClassName = targetClass ? targetClass.name : '';
@@ -3035,28 +3087,74 @@
       (targetClassName && s.className === targetClassName)
     );
 
+    // Compute class stats
+    let totalYearAvg = 0;
+    let passedCount = 0;
+    filteredStudents.forEach(s => {
+      const yInfo = calculateStudentYearGrade(s);
+      totalYearAvg += yInfo.yearAvg;
+      if (yInfo.yearAvg >= 5.0) passedCount++;
+    });
+    const classAvg = filteredStudents.length > 0 ? (Math.round((totalYearAvg / filteredStudents.length) * 10) / 10).toFixed(1) : '0.0';
+    const passRate = filteredStudents.length > 0 ? Math.round((passedCount / filteredStudents.length) * 100) : 0;
+
     container.innerHTML = `
       <div class="page-header">
         <div>
           <h2 class="page-title"><i class="fa-solid fa-trophy"></i> Bảng Điểm & Kết Quả Học Tập</h2>
-          <p class="page-subtitle">Quản lý điểm số theo Học Kỳ (HK I & HK II). Tự động tính Trung bình = (Miệng + 15 phút + Giữa Kỳ + Cuối Kỳ) / 4</p>
+          <p class="page-subtitle">Quản lý điểm số Học Kỳ (HK I & HK II). Tự động tính <strong>Điểm Trung Bình Cộng Cả Năm = (HK 1 + HK 2) / 2</strong></p>
         </div>
       </div>
 
-      <div class="card">
-        <div class="card-body" style="padding: 16px 24px;">
-          <div class="form-row" style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
-            <div style="flex: 1; min-width: 220px;">
+      <!-- Quick KPI Stats Banner for Gradebook -->
+      <div class="kpi-grid" style="margin-bottom: 20px;">
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-blue"><i class="fa-solid fa-users"></i></div>
+          <div class="kpi-info">
+            <h4>Sĩ Số Lớp</h4>
+            <div class="kpi-number">${filteredStudents.length} em</div>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-amber"><i class="fa-solid fa-calculator"></i></div>
+          <div class="kpi-info">
+            <h4>ĐTB Cả Năm Lớp</h4>
+            <div class="kpi-number">${classAvg} / 10</div>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-green"><i class="fa-solid fa-circle-check"></i></div>
+          <div class="kpi-info">
+            <h4>Tỷ Lệ Đạt (TB ≥ 5.0)</h4>
+            <div class="kpi-number">${passRate}% (${passedCount}/${filteredStudents.length})</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom: 20px; border-top: 4px solid var(--primary);">
+        <div class="card-body" style="padding: 20px 24px;">
+          <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap; justify-content: space-between;">
+            <div style="flex: 2; min-width: 300px;">
+              <label style="font-weight: 800; font-size: 13.5px; margin-bottom: 8px; display: block; color: var(--slate-dark);">
+                <i class="fa-solid fa-calculator text-primary"></i> CHỌN CHẾ ĐỘ XEM & NHẬP ĐIỂM HỌC KỲ / CẢ NĂM:
+              </label>
+              <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button type="button" class="btn ${selectedSemester === 'semester1' ? 'btn-primary' : 'btn-outline-primary'}" onclick="window.changeGradeSemester('semester1')" style="font-weight: 700; padding: 10px 18px; border-radius: 8px; cursor: pointer;">
+                  📘 Học Kỳ I
+                </button>
+                <button type="button" class="btn ${selectedSemester === 'semester2' ? 'btn-primary' : 'btn-outline-primary'}" onclick="window.changeGradeSemester('semester2')" style="font-weight: 700; padding: 10px 18px; border-radius: 8px; cursor: pointer;">
+                  📙 Học Kỳ II
+                </button>
+                <button type="button" class="btn ${selectedSemester === 'year' ? 'btn-success' : 'btn-outline-success'}" onclick="window.changeGradeSemester('year')" style="font-weight: 800; padding: 10px 22px; border-radius: 8px; cursor: pointer; box-shadow: ${selectedSemester === 'year' ? '0 4px 14px rgba(16, 185, 129, 0.4)' : 'none'};">
+                  🌟 ĐTB CẢ NĂM = (HK1 + HK2) / 2
+                </button>
+              </div>
+            </div>
+
+            <div style="flex: 1; min-width: 240px; max-width: 360px;">
               <label style="font-weight: 700; margin-bottom: 6px; display: block;"><i class="fa-solid fa-layer-group text-primary"></i> Chọn Lớp Học Cần Nhập Điểm:</label>
               <select id="grade-class-select" class="form-control" onchange="window.changeGradeClass(this.value)">
                 ${classes.map(c => `<option value="${c.id}" ${c.id === selectedClassId ? 'selected' : ''}>${c.name} (${c.grade})</option>`).join('')}
-              </select>
-            </div>
-            <div style="flex: 1; min-width: 220px;">
-              <label style="font-weight: 700; margin-bottom: 6px; display: block;"><i class="fa-solid fa-calendar-days text-primary"></i> Chọn Học Kỳ:</label>
-              <select id="grade-semester-select" class="form-control" onchange="window.changeGradeSemester(this.value)">
-                <option value="semester1" ${selectedSemester === 'semester1' ? 'selected' : ''}>📘 Học Kỳ I</option>
-                <option value="semester2" ${selectedSemester === 'semester2' ? 'selected' : ''}>📙 Học Kỳ II</option>
               </select>
             </div>
           </div>
@@ -3066,7 +3164,7 @@
       <div class="card">
         <div class="card-header" style="background: var(--primary-light); display: flex; justify-content: space-between; align-items: center; padding: 14px 24px;">
           <h4 style="font-size: 15px; font-weight: 800; color: var(--primary); margin: 0;">
-            <i class="fa-solid fa-graduation-cap"></i> Sổ Điểm ${semLabel} - ${classes.find(c => c.id === selectedClassId)?.name || 'Toàn bộ'}
+            <i class="fa-solid fa-graduation-cap"></i> Sổ Điểm ${semLabel} - ${targetClass?.name || 'Toàn bộ'}
           </h4>
           <span class="badge badge-primary">${filteredStudents.length} Học Viên</span>
         </div>
@@ -3076,24 +3174,63 @@
               <div style="font-size: 40px; color: var(--slate-border); margin-bottom: 10px;"><i class="fa-solid fa-folder-open"></i></div>
               <p style="color: var(--slate-muted); font-size: 14px; font-weight: 600;">Lớp học này chưa có học viên nào để nhập điểm.</p>
             </div>
+          ` : (selectedSemester === 'year' ? `
+            <div class="table-responsive">
+              <table class="custom-table">
+                <thead>
+                  <tr>
+                    <th style="min-width: 180px;">Họ và Tên Học Viên</th>
+                    <th style="width: 120px; text-align: center;">ĐTB Học Kỳ I</th>
+                    <th style="width: 120px; text-align: center;">ĐTB Học Kỳ II</th>
+                    <th style="width: 160px; text-align: center; background: #f0f9ff; color: #0369a1;">ĐTB Cả Năm = (HK1+HK2)/2</th>
+                    <th style="width: 140px; text-align: center;">Xếp Loại Cả Năm</th>
+                    <th style="width: 150px; text-align: center;">Trạng Thái Lên Lớp</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${filteredStudents.map(s => {
+                    const yearInfo = calculateStudentYearGrade(s);
+                    const defaultAvatar = s.gender === 'Nữ' 
+                      ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80'
+                      : 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80';
+
+                    return `
+                    <tr>
+                      <td>
+                        <img src="${s.photo || defaultAvatar}" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; margin-right: 6px;">
+                        <strong>${s.holyName || ''}</strong> ${s.fullName || s.name || ''}
+                      </td>
+                      <td style="text-align: center;"><span style="font-size: 14.5px; font-weight: 700; color: #2563eb;">${yearInfo.sem1Avg.toFixed(1)}</span></td>
+                      <td style="text-align: center;"><span style="font-size: 14.5px; font-weight: 700; color: #d97706;">${yearInfo.sem2Avg.toFixed(1)}</span></td>
+                      <td style="text-align: center; background: #f0f9ff;"><strong style="font-size: 16px; color: #0284c7; background: #e0f2fe; padding: 4px 12px; border-radius: 8px; border: 1px solid #bae6fd;">${yearInfo.yearAvg.toFixed(1)}</strong></td>
+                      <td style="text-align: center;"><span class="badge ${yearInfo.badgeClass}">${yearInfo.rank}</span></td>
+                      <td style="text-align: center;">${yearInfo.yearAvg >= 5.0 ? '<span class="badge badge-success"><i class="fa-solid fa-circle-check"></i> Đủ ĐK Lên Lớp</span>' : '<span class="badge badge-danger"><i class="fa-solid fa-triangle-exclamation"></i> Cần Phụ Đạo</span>'}</td>
+                    </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
           ` : `
             <div class="table-responsive">
               <table class="custom-table">
                 <thead>
                   <tr>
                     <th style="min-width: 180px;">Họ và Tên Học Viên</th>
-                    <th style="width: 90px; text-align: center;">Miệng</th>
-                    <th style="width: 90px; text-align: center;">15 phút</th>
-                    <th style="width: 90px; text-align: center;">Giữa Kỳ</th>
-                    <th style="width: 90px; text-align: center;">Cuối Kỳ</th>
-                    <th style="width: 130px; text-align: center;">Điểm Trung Bình</th>
-                    <th style="width: 130px; text-align: center;">Xếp Loại Học Lực</th>
+                    <th style="width: 80px; text-align: center;">Miệng</th>
+                    <th style="width: 80px; text-align: center;">15 phút</th>
+                    <th style="width: 80px; text-align: center;">Giữa Kỳ</th>
+                    <th style="width: 80px; text-align: center;">Cuối Kỳ</th>
+                    <th style="width: 110px; text-align: center;">ĐTB ${selectedSemester === 'semester2' ? 'HK II' : 'HK I'}</th>
+                    <th style="width: 140px; text-align: center; background: #f0f9ff; color: #0369a1;">ĐTB Cả Năm (HK1+HK2)/2</th>
+                    <th style="width: 120px; text-align: center;">Xếp Loại Cả Năm</th>
                   </tr>
                 </thead>
                 <tbody>
                   ${filteredStudents.map(s => {
                     const g = getStudentSemesterGrades(s, selectedSemester);
                     const computed = calculateStudentGrade(g.oral, g.min15, g.midterm, g.finalExam);
+                    const yearInfo = calculateStudentYearGrade(s);
 
                     return `
                     <tr>
@@ -3101,19 +3238,20 @@
                         <img src="${s.photo || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80'}" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; margin-right: 6px;">
                         <strong>${s.holyName || ''}</strong> ${s.fullName || s.name || ''}
                       </td>
-                      <td style="text-align: center;"><input type="number" min="0" max="10" step="0.5" id="grade-oral-${s.id}" class="form-control form-control-sm text-center" value="${computed.oral}" style="width: 75px; margin: 0 auto;" oninput="window.updateStudentGradeRow('${s.id}')"></td>
-                      <td style="text-align: center;"><input type="number" min="0" max="10" step="0.5" id="grade-min15-${s.id}" class="form-control form-control-sm text-center" value="${computed.min15}" style="width: 75px; margin: 0 auto;" oninput="window.updateStudentGradeRow('${s.id}')"></td>
-                      <td style="text-align: center;"><input type="number" min="0" max="10" step="0.5" id="grade-midterm-${s.id}" class="form-control form-control-sm text-center" value="${computed.midterm}" style="width: 75px; margin: 0 auto;" oninput="window.updateStudentGradeRow('${s.id}')"></td>
-                      <td style="text-align: center;"><input type="number" min="0" max="10" step="0.5" id="grade-final-${s.id}" class="form-control form-control-sm text-center" value="${computed.finalExam}" style="width: 75px; margin: 0 auto;" oninput="window.updateStudentGradeRow('${s.id}')"></td>
+                      <td style="text-align: center;"><input type="number" min="0" max="10" step="0.5" id="grade-oral-${s.id}" class="form-control form-control-sm text-center" value="${computed.oral}" style="width: 70px; margin: 0 auto;" oninput="window.updateStudentGradeRow('${s.id}')"></td>
+                      <td style="text-align: center;"><input type="number" min="0" max="10" step="0.5" id="grade-min15-${s.id}" class="form-control form-control-sm text-center" value="${computed.min15}" style="width: 70px; margin: 0 auto;" oninput="window.updateStudentGradeRow('${s.id}')"></td>
+                      <td style="text-align: center;"><input type="number" min="0" max="10" step="0.5" id="grade-midterm-${s.id}" class="form-control form-control-sm text-center" value="${computed.midterm}" style="width: 70px; margin: 0 auto;" oninput="window.updateStudentGradeRow('${s.id}')"></td>
+                      <td style="text-align: center;"><input type="number" min="0" max="10" step="0.5" id="grade-final-${s.id}" class="form-control form-control-sm text-center" value="${computed.finalExam}" style="width: 70px; margin: 0 auto;" oninput="window.updateStudentGradeRow('${s.id}')"></td>
                       <td style="text-align: center;"><strong id="grade-avg-${s.id}" style="font-size: 15px; color: var(--primary);">${computed.average.toFixed(1)}</strong></td>
-                      <td style="text-align: center;"><span id="grade-rank-${s.id}" class="badge ${computed.badgeClass}">${computed.rank}</span></td>
+                      <td style="text-align: center; background: #f0f9ff;"><strong id="grade-year-avg-${s.id}" style="font-size: 15px; color: #0284c7; background: #e0f2fe; padding: 4px 10px; border-radius: 6px; font-weight: 800; border: 1px solid #bae6fd;">${yearInfo.yearAvg.toFixed(1)}</strong></td>
+                      <td style="text-align: center;"><span id="grade-rank-${s.id}" class="badge ${yearInfo.badgeClass}">${yearInfo.rank}</span></td>
                     </tr>
                     `;
                   }).join('')}
                 </tbody>
               </table>
             </div>
-          `}
+          `)}
         </div>
         <div class="card-footer" style="padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--slate-border); background: #fafafa;">
           <button class="btn btn-outline-danger" onclick="window.resetCurrentGradebook()"><i class="fa-solid fa-rotate-left"></i> Reset Bảng Điểm Lớp</button>
@@ -4707,7 +4845,8 @@
               'Tên Cha/Mẹ': s.parentName || s.phone || '',
               'Điểm TB HK1': s.grades && s.grades.semester1 ? s.grades.semester1.average : '0.0',
               'Điểm TB HK2': s.grades && s.grades.semester2 ? s.grades.semester2.average : '0.0',
-              'Đánh Giá/Xếp Loại': s.grades && s.grades.semester2 ? s.grades.semester2.rank : 'Chưa xếp loại'
+              'Điểm TB Cả Năm': s.grades ? (typeof s.grades.average === 'number' ? s.grades.average : Math.round((((s.grades.semester1?.average || 0) + (s.grades.semester2?.average || 0)) / 2) * 10) / 10) : '0.0',
+              'Đánh Giá/Xếp Loại Cả Năm': s.grades ? (s.grades.rank || 'Yếu') : 'Chưa xếp loại'
             });
           });
         }
