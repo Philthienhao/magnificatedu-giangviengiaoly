@@ -15,6 +15,50 @@
     try { window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch (e) {}
   }
 
+  // Ultra-reliable IndexedDB Avatar Persistent Storage (Bypasses LocalStorage quota limits)
+  const idbAvatar = {
+    dbName: 'MagnificatEduDB',
+    storeName: 'avatars',
+    getDb: function() {
+      return new Promise((resolve) => {
+        if (!window.indexedDB) return resolve(null);
+        try {
+          const req = window.indexedDB.open(this.dbName, 1);
+          req.onupgradeneeded = function(e) {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains('avatars')) {
+              db.createObjectStore('avatars');
+            }
+          };
+          req.onsuccess = function(e) { resolve(e.target.result); };
+          req.onerror = function() { resolve(null); };
+        } catch (e) { resolve(null); }
+      });
+    },
+    save: async function(email, base64) {
+      if (!email || !base64) return;
+      try {
+        const db = await this.getDb();
+        if (!db) return;
+        const tx = db.transaction(this.storeName, 'readwrite');
+        tx.objectStore(this.storeName).put(base64, email.toLowerCase());
+      } catch (e) {}
+    },
+    get: async function(email) {
+      if (!email) return null;
+      try {
+        const db = await this.getDb();
+        if (!db) return null;
+        return new Promise((resolve) => {
+          const tx = db.transaction(this.storeName, 'readonly');
+          const req = tx.objectStore(this.storeName).get(email.toLowerCase());
+          req.onsuccess = function() { resolve(req.result || null); };
+          req.onerror = function() { resolve(null); };
+        });
+      } catch (e) { return null; }
+    }
+  };
+
   /* --------------------------------------------------------------------------
      1. CONSTANTS & SYSTEM SEED DATA
      -------------------------------------------------------------------------- */
@@ -271,6 +315,24 @@
 
     saveCurrentUser();
 
+    // Async IndexedDB Check & Restore
+    if (currentUser && currentUser.email) {
+      idbAvatar.get(currentUser.email).then(idbAv => {
+        if (idbAv && !isDefaultAvatar(idbAv)) {
+          if (currentUser.avatar !== idbAv) {
+            currentUser.avatar = idbAv;
+            if (match) match.avatar = idbAv;
+            if (!appData) appData = {};
+            appData.userAvatar = idbAv;
+            try { localStorage.setItem(customKey, idbAv); } catch (e) {}
+            saveAccounts();
+            saveCurrentUser();
+            renderAppHeaderAndSidebar();
+          }
+        }
+      });
+    }
+
     // Verify if account is suspended
     if (match && match.status === 'suspended') {
       alert('Tài khoản của bạn hiện đang bị TẠM KHÓA bởi Quản trị viên hệ thống.');
@@ -293,10 +355,28 @@
       if (currentUser && currentUser.avatar && !isDefaultAvatar(currentUser.avatar) && currentUser.email) {
         const customKey = 'gvl_custom_avatar_' + currentUser.email.toLowerCase().replace(/[^a-z0-9]/g, '_');
         localStorage.setItem(customKey, currentUser.avatar);
+        idbAvatar.save(currentUser.email, currentUser.avatar);
       }
     } catch (e) {
       console.warn('LocalStorage saveCurrentUser notice:', e);
     }
+  }
+
+  function sanitizeNienHoc(obj) {
+    if (!obj) return obj;
+    if (typeof obj === 'string') {
+      return obj.replace(/Niên\s*học/gi, 'Năm học').replace(/Niên\s*Học/gi, 'Năm Học');
+    }
+    if (typeof obj === 'object') {
+      for (let key in obj) {
+        if (typeof obj[key] === 'string') {
+          obj[key] = obj[key].replace(/Niên\s*học/gi, 'Năm học').replace(/Niên\s*Học/gi, 'Năm Học');
+        } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+          sanitizeNienHoc(obj[key]);
+        }
+      }
+    }
+    return obj;
   }
 
   function loadUserData(email) {
@@ -309,6 +389,7 @@
     }
 
     if (!appData) appData = generateDefaultUserData(email);
+    sanitizeNienHoc(appData);
     if (!Array.isArray(appData.classes)) appData.classes = [];
     if (!Array.isArray(appData.students)) appData.students = [];
     if (!Array.isArray(appData.catechists)) appData.catechists = [];
@@ -317,17 +398,27 @@
     if (!Array.isArray(appData.libraryMaterials)) appData.libraryMaterials = [];
     if (!Array.isArray(appData.quizzes)) appData.quizzes = [];
     if (!appData.parishInfo) appData.parishInfo = generateDefaultUserData(email).parishInfo;
+    sanitizeNienHoc(appData.parishInfo);
+
+    const customKey = 'gvl_custom_avatar_' + email.toLowerCase().replace(/[^a-z0-9]/g, '_');
+    let dedicatedAvatar = null;
+    try {
+      const raw = localStorage.getItem(customKey);
+      if (raw && !isDefaultAvatar(raw)) dedicatedAvatar = raw;
+    } catch (e) {}
 
     // Capture any local custom avatar before Supabase fetch
-    const localCustomAvatar = (currentUser && currentUser.avatar && !isDefaultAvatar(currentUser.avatar))
-      ? currentUser.avatar
-      : (appData && appData.userAvatar && !isDefaultAvatar(appData.userAvatar) ? appData.userAvatar : null);
+    const localCustomAvatar = dedicatedAvatar
+      || (currentUser && currentUser.avatar && !isDefaultAvatar(currentUser.avatar) ? currentUser.avatar : null)
+      || (appData && appData.userAvatar && !isDefaultAvatar(appData.userAvatar) ? appData.userAvatar : null);
 
     if (localCustomAvatar) {
       if (currentUser) currentUser.avatar = localCustomAvatar;
       appData.userAvatar = localCustomAvatar;
       const match = accountsList.find(a => a.email.toLowerCase() === email.toLowerCase());
       if (match) match.avatar = localCustomAvatar;
+      try { localStorage.setItem(customKey, localCustomAvatar); } catch (e) {}
+      idbAvatar.save(email, localCustomAvatar);
     }
 
     // Async sync from Supabase Cloud if available
@@ -350,7 +441,7 @@
               const hasLocalStudents = Array.isArray(appData.students) && appData.students.length > 0;
 
               if (hasCloudClasses || hasCloudStudents || (!hasLocalClasses && !hasLocalStudents)) {
-                appData = data.data;
+                appData = sanitizeNienHoc(data.data);
               }
             }
 
@@ -359,7 +450,10 @@
               ? cloudAccInfo.avatar
               : (data.data && data.data.userAvatar && !isDefaultAvatar(data.data.userAvatar) ? data.data.userAvatar : null);
 
-            const effectiveAvatar = localCustomAvatar || cloudAvatar;
+            // Local custom avatar ALWAYS wins over default/missing cloud avatar!
+            const effectiveAvatar = (localCustomAvatar && !isDefaultAvatar(localCustomAvatar))
+              ? localCustomAvatar
+              : (cloudAvatar && !isDefaultAvatar(cloudAvatar) ? cloudAvatar : null);
 
             if (effectiveAvatar && currentUser && currentUser.email.toLowerCase() === email.toLowerCase()) {
               currentUser.avatar = effectiveAvatar;
@@ -399,6 +493,7 @@
 
   function saveUserData() {
     if (!currentUser || !appData) return;
+    sanitizeNienHoc(appData);
     if (currentUser.avatar && !isDefaultAvatar(currentUser.avatar)) {
       appData.userAvatar = currentUser.avatar;
     }
@@ -499,7 +594,6 @@
         alert('Chưa tìm thấy bản sao lưu nào cho tài khoản này trên Supabase Cloud.');
         return;
       }
-
       appData = data.data;
       const cloudAcc = appData.account_info || {};
       if (cloudAcc.avatar && !isDefaultAvatar(cloudAcc.avatar)) {
@@ -1328,18 +1422,20 @@
     `;
   }
 
-  // PAGE 5: ĐIỂM DANH (ATTENDANCE)
-  // PAGE 5: ĐIỂM DANH HỌC VIÊN (VỚI AI SƠ ĐỒ CHỖ NGỒI VÀ QUÉT ẢNH LỚP HỌC)
+  // PAGE 5: ĐIỂM DANH HỌC VIÊN (VỚI AI SƠ ĐỒ CHỖ NGỒI VÀ LỊCH SỬ ĐIỂM DANH VĨNH VIỄN)
   function renderAttendance(container) {
     const today = new Date().toISOString().split('T')[0];
     const classes = appData.classes || [];
     const selectedClassId = window._selectedAttendanceClassId || (classes.length > 0 ? classes[0].id : '');
+    const selectedDate = window._selectedAttendanceDate || today;
+    const selectedSessionType = window._selectedAttendanceSessionType || 'Giáo lý';
+    const activeTab = window._attendanceSubTab || 'list'; // 'list' | 'ai-seating' | 'history'
+
     const filteredStudents = appData.students.filter(s => !selectedClassId || s.classId === selectedClassId);
-    const activeTab = window._attendanceSubTab || 'list'; // 'list' | 'ai-seating'
 
     // Initialize seatingChart state if missing
     if (!appData.seatingCharts) appData.seatingCharts = {};
-    if (!appData.seatingCharts[selectedClassId]) {
+    if (selectedClassId && !appData.seatingCharts[selectedClassId]) {
       const seats = {};
       filteredStudents.forEach((st, idx) => {
         const r = Math.floor(idx / 5);
@@ -1354,64 +1450,105 @@
       };
     }
 
-    const currentChart = appData.seatingCharts[selectedClassId];
+    const currentChart = appData.seatingCharts[selectedClassId] || { rows: 4, cols: 5, seats: {}, absentSeats: [] };
     if (!currentChart.absentSeats) currentChart.absentSeats = [];
+
+    // Find saved historical record for current (selectedClassId, selectedDate, selectedSessionType)
+    const logs = appData.attendanceLogs || [];
+    const savedLog = logs.find(l => l.classId === selectedClassId && l.date === selectedDate && l.sessionType === selectedSessionType);
 
     container.innerHTML = `
       <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
         <div>
           <h2 class="page-title"><i class="fa-solid fa-clipboard-user"></i> Điểm Danh Học Viên Thông Minh AI</h2>
-          <p class="page-subtitle">Hỗ trợ điểm danh danh sách truyền thống & Điểm danh 1-Chạm qua Sơ Đồ Ghế Trống / Ảnh Lớp Học</p>
+          <p class="page-subtitle">Hỗ trợ điểm danh danh sách truyền thống, sơ đồ ghế trống AI & Sao lưu vĩnh viễn nhật ký lịch sử điểm danh</p>
         </div>
-        <div style="display: flex; gap: 10px;">
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
           <button class="btn ${activeTab === 'list' ? 'btn-primary' : 'btn-outline-primary'}" onclick="window.switchAttSubTab('list')">
             <i class="fa-solid fa-list-check"></i> Điểm Danh Danh Sách
           </button>
           <button class="btn ${activeTab === 'ai-seating' ? 'btn-primary' : 'btn-outline-primary'}" onclick="window.switchAttSubTab('ai-seating')">
-            <i class="fa-solid fa-camera-retro"></i> 📷 AI Sơ Đồ & Ảnh Chụp Lớp
+            <i class="fa-solid fa-camera-retro"></i> 📷 AI Sơ Đồ & Ảnh Chụp
+          </button>
+          <button class="btn ${activeTab === 'history' ? 'btn-primary' : 'btn-outline-primary'}" onclick="window.switchAttSubTab('history')">
+            <i class="fa-solid fa-history"></i> 📜 Lịch Sử & Nhật Ký (${logs.length})
+          </button>
+          <button class="btn btn-outline-success" onclick="window.exportAttendanceToExcel('${selectedClassId}', '${selectedDate}', '${selectedSessionType}')" title="Tải file Excel điểm danh ngày này">
+            <i class="fa-solid fa-file-excel"></i> Tải Excel Ngày Này
           </button>
         </div>
       </div>
 
       <!-- FILTER CARD -->
-      <div class="card">
-        <div class="card-header">
-          <h3 class="card-title"><i class="fa-solid fa-calendar-check"></i> Chọn Lớp & Ngày Điểm Danh</h3>
+      <div class="card mb-4">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <h3 class="card-title"><i class="fa-solid fa-calendar-check text-primary"></i> Chọn Lớp & Ngày Điểm Danh</h3>
+          <span style="font-size: 12px; color: var(--slate-muted); font-weight: 600;">(Đổi ngày để xem lại lịch sử điểm danh ngày đó)</span>
         </div>
         <div class="card-body">
           <div class="form-row">
             <div class="col-4">
-              <label>Chọn Lớp Học:</label>
-              <select id="att-class-select" class="form-control" onchange="window.changeAttendanceClass(this.value)">
+              <label>Chọn Lớp Học: <span class="text-danger">*</span></label>
+              <select id="att-class-select" class="form-control" onchange="window.handleAttFilterChange()">
                 ${classes.map(c => `<option value="${c.id}" ${c.id === selectedClassId ? 'selected' : ''}>${c.name} (${c.grade})</option>`).join('')}
               </select>
             </div>
             <div class="col-4">
-              <label>Ngày Điểm Danh:</label>
-              <input type="date" id="att-date" class="form-control" value="${today}">
+              <label>Ngày Điểm Danh: <span class="text-danger">*</span></label>
+              <input type="date" id="att-date" class="form-control" value="${selectedDate}" onchange="window.handleAttFilterChange()">
             </div>
             <div class="col-4">
-              <label>Loại Buổi Sinh Hoạt:</label>
-              <select id="att-session-type" class="form-control">
-                <option value="Giáo lý">Giờ học Giáo lý</option>
-                <option value="Thánh lễ">Thánh lễ Chúa Nhật</option>
-                <option value="Sinh hoạt">Sinh hoạt Phân đoàn</option>
+              <label>Loại Buổi Sinh Hoạt: <span class="text-danger">*</span></label>
+              <select id="att-session-type" class="form-control" onchange="window.handleAttFilterChange()">
+                <option value="Giáo lý" ${selectedSessionType === 'Giáo lý' ? 'selected' : ''}>Giờ học Giáo lý</option>
+                <option value="Thánh lễ" ${selectedSessionType === 'Thánh lễ' ? 'selected' : ''}>Thánh lễ Chúa Nhật</option>
+                <option value="Sinh hoạt" ${selectedSessionType === 'Sinh hoạt' ? 'selected' : ''}>Sinh hoạt Phân đoàn</option>
               </select>
             </div>
           </div>
         </div>
       </div>
 
-      ${activeTab === 'list' ? renderTraditionalListSection(filteredStudents) : renderAISeatingSection(selectedClassId, filteredStudents, currentChart)}
+      <!-- HISTORICAL STATUS BANNER -->
+      ${savedLog ? `
+        <div class="alert alert-success mb-4" style="background: #ecfdf5; border-left: 5px solid #10b981; color: #065f46; padding: 14px 20px; border-radius: 10px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.12);">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-circle-check" style="font-size: 20px; color: #059669;"></i>
+            <div>
+              <div style="font-size: 13.5px; font-weight: 800; color: #047857;">✅ ĐÃ CÓ LỊCH SỬ ĐIỂM DANH NGÀY ${selectedDate} (${selectedSessionType})</div>
+              <div style="font-size: 12px; color: #065f46; margin-top: 2px;">
+                Đã lưu lúc ${new Date(savedLog.savedAt).toLocaleString('vi-VN')} (Bởi: ${savedLog.savedBy}) • Có mặt: ${savedLog.stats ? savedLog.stats.present : 0} | Trễ: ${savedLog.stats ? savedLog.stats.late : 0} | Vắng phép: ${savedLog.stats ? savedLog.stats.excused : 0} | Vắng K.Phép: ${savedLog.stats ? savedLog.stats.unexcused : 0}
+              </div>
+            </div>
+          </div>
+          <button type="button" class="btn btn-sm btn-outline-success" onclick="window.exportAttendanceToExcel('${selectedClassId}', '${selectedDate}', '${selectedSessionType}')" style="background: #fff; font-weight: 700;">
+            <i class="fa-solid fa-file-excel"></i> Tải File Excel Ngày Này
+          </button>
+        </div>
+      ` : `
+        <div class="alert alert-info mb-4" style="background: #eff6ff; border-left: 5px solid #3b82f6; color: #1e40af; padding: 12px 18px; border-radius: 10px; font-size: 12.5px; font-weight: 600; display: flex; align-items: center; gap: 10px;">
+          <i class="fa-solid fa-circle-info" style="font-size: 18px; color: #2563eb;"></i>
+          <span>ℹ️ <strong>CHƯA CÓ LỊCH SỬ ĐIỂM DANH CHO NGÀY ${selectedDate}:</strong> Hãy kiểm tra danh sách và bấm <strong>"Lưu Kết Quả Điểm Danh"</strong> để sao lưu vĩnh viễn vào hệ thống.</span>
+        </div>
+      `}
+
+      ${activeTab === 'list' ? renderTraditionalListSection(filteredStudents, savedLog) : (activeTab === 'ai-seating' ? renderAISeatingSection(selectedClassId, filteredStudents, currentChart) : renderAttendanceHistorySection())}
     `;
   }
 
-  function renderTraditionalListSection(filteredStudents) {
+  function renderTraditionalListSection(filteredStudents, savedLog) {
+    const recordsMap = {};
+    if (savedLog && Array.isArray(savedLog.records)) {
+      savedLog.records.forEach(r => { recordsMap[r.studentId] = r; });
+    }
+
     return `
       <div class="card">
-        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
           <h3 class="card-title"><i class="fa-solid fa-list-check"></i> Danh Sách Học Viên (${filteredStudents.length} em)</h3>
-          <button class="btn btn-sm btn-outline-primary" onclick="window.checkAllPresent()"><i class="fa-solid fa-check-double"></i> Đánh dấu tất cả Có Mặt</button>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-sm btn-outline-primary" onclick="window.checkAllPresent()"><i class="fa-solid fa-check-double"></i> Đánh dấu tất cả Có Mặt</button>
+          </div>
         </div>
         <div class="card-body" style="padding: 0;">
           ${filteredStudents.length === 0 ? `
@@ -1430,31 +1567,41 @@
                   </tr>
                 </thead>
                 <tbody>
-                  ${filteredStudents.map(s => `
-                    <tr>
-                      <td><strong>${s.code}</strong></td>
-                      <td>
-                        <img src="${s.photo || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80'}" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; margin-right: 6px;">
-                        <strong>${s.holyName}</strong> ${s.fullName}
-                      </td>
-                      <td>
-                        <div style="display: flex; gap: 10px; font-size: 12px;">
-                          <label style="cursor: pointer;"><input type="radio" name="att_${s.id}" value="present" checked> 🟢 Có mặt</label>
-                          <label style="cursor: pointer;"><input type="radio" name="att_${s.id}" value="late"> 🟡 Đi trễ</label>
-                          <label style="cursor: pointer;"><input type="radio" name="att_${s.id}" value="excused"> 🔵 Vắng có phép</label>
-                          <label style="cursor: pointer;"><input type="radio" name="att_${s.id}" value="unexcused"> 🔴 Vắng không phép</label>
-                        </div>
-                      </td>
-                      <td><input type="text" class="form-control form-control-sm" placeholder="Ghi chú..."></td>
-                    </tr>
-                  `).join('')}
+                  ${filteredStudents.map(s => {
+                    const rec = recordsMap[s.id];
+                    const currentStatus = rec ? rec.status : 'present';
+                    const currentNote = rec ? (rec.note || '') : '';
+                    return `
+                      <tr>
+                        <td><strong>${s.code || 'HV' + s.id}</strong></td>
+                        <td>
+                          <img src="${s.photo || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80'}" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; margin-right: 6px;">
+                          <strong>${s.holyName || ''}</strong> ${s.fullName || ''}
+                        </td>
+                        <td>
+                          <div style="display: flex; gap: 10px; font-size: 12px; flex-wrap: wrap;">
+                            <label style="cursor: pointer;"><input type="radio" name="att_${s.id}" value="present" ${currentStatus === 'present' ? 'checked' : ''}> 🟢 Có mặt</label>
+                            <label style="cursor: pointer;"><input type="radio" name="att_${s.id}" value="late" ${currentStatus === 'late' ? 'checked' : ''}> 🟡 Đi trễ</label>
+                            <label style="cursor: pointer;"><input type="radio" name="att_${s.id}" value="excused" ${currentStatus === 'excused' ? 'checked' : ''}> 🔵 Vắng có phép</label>
+                            <label style="cursor: pointer;"><input type="radio" name="att_${s.id}" value="unexcused" ${currentStatus === 'unexcused' ? 'checked' : ''}> 🔴 Vắng không phép</label>
+                          </div>
+                        </td>
+                        <td><input type="text" id="att_note_${s.id}" class="form-control form-control-sm" placeholder="Ghi chú..." value="${currentNote}"></td>
+                      </tr>
+                    `;
+                  }).join('')}
                 </tbody>
               </table>
             </div>
           `}
         </div>
-        <div class="card-footer" style="padding: 16px 24px; text-align: right; border-top: 1px solid var(--slate-border);">
-          <button class="btn btn-primary" onclick="showToast('Đã lưu dữ liệu điểm danh lớp thành công!', 'success')"><i class="fa-solid fa-floppy-disk"></i> Lưu Kết Quả Điểm Danh</button>
+        <div class="card-footer" style="padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-top: 1px solid var(--slate-border);">
+          <div style="display: flex; gap: 8px;">
+            <button type="button" class="btn btn-outline-success" onclick="window.exportAttendanceToExcel(window._selectedAttendanceClassId, window._selectedAttendanceDate, window._selectedAttendanceSessionType)">
+              <i class="fa-solid fa-file-excel"></i> 📊 Tải Bảng Điểm Danh (Excel/CSV)
+            </button>
+          </div>
+          <button type="button" class="btn btn-primary" onclick="window.saveAttendanceLog()"><i class="fa-solid fa-floppy-disk"></i> Lưu Kết Quả Điểm Danh Vĩnh Viễn</button>
         </div>
       </div>
     `;
@@ -1473,14 +1620,21 @@
 
     return `
       <div class="card">
-        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
           <div>
-            <h3 class="card-title"><i class="fa-solid fa-wand-magic-sparkles text-primary"></i> 🤖 AI Quét Ghế Trống Tự Động Qua Sơ Đồ Lớp</h3>
+            <h3 class="card-title" style="display: flex; align-items: center; gap: 8px;">
+              <i class="fa-solid fa-wand-magic-sparkles text-primary"></i> 🤖 AI Quét Điểm Danh Theo Sơ Đồ Lớp Học
+            </h3>
             <p style="font-size: 12px; color: var(--slate-muted); margin-top: 4px;">
-              ⚡ <strong>TỰ ĐỘNG 100%:</strong> Tải Ảnh Lớp Mẫu Đầu Năm 1 lần. Mỗi buổi học chỉ cần bấm <strong>"Quét Tự Động AI"</strong>, hệ thống tự động phát hiện ghế trống & xuất danh sách vắng trong 1 giây!
+              ⚡ <strong>TỰ ĐỘNG 100%:</strong> Tùy chỉnh số Hàng & Dãy ➔ Tải <strong>Ảnh Lớp Mẫu Đầu Năm</strong> ➔ Buổi học bấm <strong>"📸 CHỤP / TẢI ẢNH HÔM NAY"</strong> để AI tự động phát hiện ghế trống & điểm danh!
             </p>
           </div>
-          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+            <!-- CUSTOM GRID ADJUSTMENT BUTTON -->
+            <button class="btn btn-sm btn-outline-primary" onclick="window.openAssignSeatsModal('${classId}')" title="Sắp xếp từng học sinh ngồi ở từng vị trí bàn">
+              <i class="fa-solid fa-chair"></i> Sắp Xếp Chỗ Ngồi
+            </button>
+
             <!-- BASELINE PHOTO BUTTON -->
             <button type="button" class="btn btn-sm btn-outline-info" style="margin: 0; cursor: pointer;" onclick="window.openCapturePhotoModal('${classId}', 'baseline')" title="Tải hoặc Chụp ảnh sơ đồ mẫu cả lớp chụp đầu năm">
               <i class="fa-solid fa-camera"></i> ${hasBaseline ? '📷 Đổi Ảnh Lớp Mẫu (Đầu Năm)' : '📷 Chụp / Tải Ảnh Mẫu (Đầu Năm)'}
@@ -1491,32 +1645,50 @@
               <i class="fa-solid fa-camera"></i> 📸 CHỤP / TẢI ẢNH HÔM NAY (QUÉT ĐIỂM DANH AI)
             </button>
 
-            <button class="btn btn-sm btn-outline-secondary" onclick="window.resetAISeatingChart('${classId}')">
-              <i class="fa-solid fa-arrows-rotate"></i> Reset Ghế Tất Cả Có Mặt
+            <button class="btn btn-sm btn-outline-secondary" onclick="window.resetAISeatingChart('${classId}')" title="Reset tất cả ô ghế về trạng thái Có mặt">
+              <i class="fa-solid fa-arrows-rotate"></i> Reset Sơ Đồ
             </button>
           </div>
         </div>
         <div class="card-body">
 
-          <!-- STATS & BASELINE STATUS BADGES -->
-          <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; align-items: center;">
-            <div class="badge badge-success" style="font-size: 14px; padding: 8px 16px;">
-              🟢 <strong>Có mặt: ${presentCount}</strong> / ${filteredStudents.length} em
-            </div>
-            <div class="badge badge-danger" style="font-size: 14px; padding: 8px 16px;">
-              🔴 <strong>Vắng mặt (Ghế trống): ${absentCount}</strong> em
-            </div>
-            <div class="badge badge-info" style="font-size: 14px; padding: 8px 16px;">
-              🏫 Sơ đồ cố định: ${rows} Hàng x ${cols} Dãy (${rows * cols} Ghế)
+          <!-- STATS & GRID CUSTOMIZATION TOOLBAR -->
+          <div style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; justify-content: space-between; background: var(--bg-card-alt, #0f172a); padding: 12px 18px; border-radius: 12px; border: 1px solid var(--slate-border);">
+            <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+              <div class="badge badge-success" style="font-size: 13px; padding: 6px 14px;">
+                🟢 <strong>Có mặt: ${presentCount}</strong> / ${filteredStudents.length} em
+              </div>
+              <div class="badge badge-danger" style="font-size: 13px; padding: 6px 14px;">
+                🔴 <strong>Vắng mặt (Ghế trống): ${absentCount}</strong> em
+              </div>
             </div>
 
+            <!-- DYNAMIC GRID ROW & COL CONTROLS FOR TEACHERS -->
+            <div style="display: flex; align-items: center; gap: 8px; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); padding: 5px 12px; border-radius: 20px; font-size: 13px;">
+              <span style="font-weight: 700; color: #3b82f6;"><i class="fa-solid fa-sliders"></i> Tùy chỉnh Sơ đồ Lớp:</span>
+              <label style="margin: 0; font-size: 12px; font-weight: 600;">Hàng:</label>
+              <input type="number" min="1" max="15" value="${rows}" 
+                     onchange="window.updateClassSeatingGridSize('${classId}', this.value, null)" 
+                     style="width: 50px; height: 26px; padding: 2px 4px; font-size: 12px; border-radius: 4px; border: 1px solid var(--slate-border); text-align: center; font-weight: 700;">
+              <span style="font-weight: 700;">x</span>
+              <label style="margin: 0; font-size: 12px; font-weight: 600;">Dãy:</label>
+              <input type="number" min="1" max="12" value="${cols}" 
+                     onchange="window.updateClassSeatingGridSize('${classId}', null, this.value)" 
+                     style="width: 50px; height: 26px; padding: 2px 4px; font-size: 12px; border-radius: 4px; border: 1px solid var(--slate-border); text-align: center; font-weight: 700;">
+              <span style="font-size: 11px; color: var(--slate-muted); font-weight: 700;">(${rows * cols} Ghế)</span>
+            </div>
+          </div>
+
+          <!-- STATUS BADGES FOR BASELINE PHOTO -->
+          <div style="margin-bottom: 20px;">
             ${hasBaseline ? `
-              <div style="font-size: 12px; color: #10b981; font-weight: 700; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); padding: 6px 12px; border-radius: 20px;">
-                <i class="fa-solid fa-circle-check"></i> ✨ Đã sẵn sàng Sơ Đồ Ảnh Lớp Mẫu Đầu Năm
+              <div style="font-size: 12px; color: #10b981; font-weight: 700; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); padding: 8px 16px; border-radius: 8px; display: flex; align-items: center; justify-content: space-between;">
+                <span><i class="fa-solid fa-circle-check"></i> ✨ <strong>ĐÃ CÓ ÁNH LỚP MẪU ĐẦU NĂM:</strong> AI sẵn sàng so sánh ma trận vị trí ghế chuẩn!</span>
+                <span style="font-size: 11px; color: #64748b;">(Mỗi buổi học chỉ cần bấm CHỤP / TẢI ẢNH HÔM NAY)</span>
               </div>
             ` : `
-              <div style="font-size: 12px; color: #f59e0b; font-weight: 700; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); padding: 6px 12px; border-radius: 20px;">
-                <i class="fa-solid fa-triangle-exclamation"></i> Khuyên dùng: Tải Ảnh Lớp Mẫu Đầu Năm để AI so sánh chính xác 100%
+              <div style="font-size: 12px; color: #f59e0b; font-weight: 700; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); padding: 8px 16px; border-radius: 8px;">
+                <i class="fa-solid fa-triangle-exclamation"></i> <strong>Khuyên dùng:</strong> Hãy tải lên 1 tấm Ảnh Lớp Mẫu Đầu Năm (chụp cả lớp đầy đủ) để làm sơ đồ chuẩn cho AI so sánh chính xác 100%!
               </div>
             `}
           </div>
@@ -1536,14 +1708,14 @@
                 ${chart.todayPhoto ? `
                   <div style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; border: 1px solid #334155;">
                     <div style="font-size: 12px; font-weight: 700; color: #34d399; margin-bottom: 8px;">
-                      <i class="fa-solid fa-camera text-success"></i> Ảnh Chụp Lớp Hôm Nay (AI Đã Quét)
+                      <i class="fa-solid fa-camera text-success"></i> Ảnh Chụp Buổi Học Hôm Nay (AI Đã Quét)
                     </div>
                     <img src="${chart.todayPhoto}" style="max-height: 180px; width: 100%; object-fit: contain; border-radius: 6px; border: 1px solid #10b981;">
                   </div>
                 ` : ''}
               </div>
-              <p style="font-size: 12px; color: #94a3b8; margin-top: 12px; text-align: center;">
-                🤖 <strong>Thuật toán Computer Vision AI:</strong> Đã so sánh chênh lệch độ sáng, viền tương phản & ma trận điểm ảnh giữa 2 ảnh để phát hiện vị trí ghế trống tự động!
+              <p style="font-size: 12px; color: #94a3b8; margin-top: 12px; text-align: center; margin-bottom: 0;">
+                🤖 <strong>Thuật toán Computer Vision AI:</strong> Đã so sánh chênh lệch độ sáng, viền tương phản & ma trận điểm ảnh giữa Ảnh Mẫu Đầu Năm và Ảnh Buổi Học Hôm Nay để tự động phát hiện ghế trống!
               </p>
             </div>
           ` : ''}
@@ -1551,14 +1723,14 @@
           <!-- SEATING GRID -->
           <div style="background: var(--bg-card-alt, #1e293b); padding: 20px; border-radius: 12px; border: 1px solid var(--slate-border); text-align: center;">
             <div style="background: linear-gradient(90deg, var(--primary), #4f46e5); color: #fff; padding: 8px; border-radius: 6px; font-weight: 700; margin-bottom: 20px; letter-spacing: 1px;">
-              <i class="fa-solid fa-chalkboard"></i> BẢNG GIẢNG & BÀN GIÁO LÝ VIÊN (PHÍA TRƯỚC)
+              <i class="fa-solid fa-chalkboard"></i> BẢNG GIẢNG & BÀN GIÁO LÝ VIÊN (PHÍA TRƯỚC LỚP)
             </div>
 
-            <div style="display: grid; grid-template-columns: repeat(${cols}, 1fr); gap: 12px; max-width: 900px; margin: 0 auto;">
+            <div style="display: grid; grid-template-columns: repeat(${cols}, 1fr); gap: 12px; max-width: ${Math.min(950, cols * 180)}px; margin: 0 auto; overflow-x: auto; padding: 4px;">
               ${Array.from({ length: rows }).map((_, rIdx) => {
                 return Array.from({ length: cols }).map((_, cIdx) => {
                   const seatKey = `r${rIdx}_c${cIdx}`;
-                  const stId = chart.seats[seatKey];
+                  const stId = chart.seats ? chart.seats[seatKey] : null;
                   const st = filteredStudents.find(s => s.id === stId);
                   const isAbsent = chart.absentSeats.includes(seatKey);
                   const confidence = chart.confidenceScores ? chart.confidenceScores[seatKey] : null;
@@ -1568,10 +1740,10 @@
                          onclick="window.toggleSeatAttendance('${classId}', '${seatKey}')"
                          style="background: ${isAbsent ? 'rgba(239, 68, 68, 0.15)' : 'rgba(34, 197, 94, 0.12)'}; 
                                 border: 2px solid ${isAbsent ? '#ef4444' : '#22c55e'}; 
-                                border-radius: 10px; padding: 12px 8px; cursor: pointer; transition: all 0.2s ease;"
-                         title="Bấm để chuyển giữa Có mặt & Vắng mặt">
+                                border-radius: 10px; padding: 12px 6px; cursor: pointer; transition: all 0.2s ease; min-width: 120px;"
+                         title="Chạm để đổi trạng thái giữa Có mặt & Vắng mặt">
                       <div style="font-size: 11px; font-weight: 700; color: var(--slate-muted); margin-bottom: 4px;">
-                        Hàng ${rIdx + 1} - Bàn ${cIdx + 1}
+                        Hàng ${rIdx + 1} - Dãy ${cIdx + 1}
                       </div>
                       ${st ? `
                         <img src="${st.photo || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80'}" 
@@ -1588,8 +1760,8 @@
                           </div>
                         ` : ''}
                       ` : `
-                        <div style="padding: 15px 0; color: var(--slate-muted); font-size: 12px; font-style: italic;">
-                          [Ghế Trống Bỏ Ngỏ]
+                        <div style="padding: 15px 0; color: var(--slate-muted); font-size: 11px; font-style: italic;">
+                          [Ghế Trống]
                         </div>
                       `}
                     </div>
@@ -1601,7 +1773,7 @@
         </div>
         <div class="card-footer" style="padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--slate-border); flex-wrap: wrap; gap: 10px;">
           <span style="font-size: 13px; color: var(--slate-muted);">
-            <i class="fa-solid fa-circle-info text-primary"></i> Đã tự động phát hiện <strong>${absentCount} học sinh vắng mặt</strong>. Bạn có thể chạm vào từng ô ghế để chỉnh sửa nếu cần.
+            <i class="fa-solid fa-circle-info text-primary"></i> Đã tự động ghi nhận <strong>${absentCount} học sinh vắng mặt</strong>. Giáo viên có thể bấm trực tiếp vào từng ghế để điều chỉnh.
           </span>
           <button class="btn btn-primary" onclick="window.saveAISeatingAttendance('${classId}')">
             <i class="fa-solid fa-floppy-disk"></i> Lưu Kết Quả Điểm Danh AI
@@ -1651,8 +1823,159 @@
     renderAttendance(document.getElementById('content-area'));
   };
 
+  // Update Seating Grid Rows & Columns dynamically per class
+  window.updateClassSeatingGridSize = function(classId, rowsVal, colsVal) {
+    if (!appData.seatingCharts) appData.seatingCharts = {};
+    if (!appData.seatingCharts[classId]) {
+      appData.seatingCharts[classId] = { rows: 4, cols: 5, seats: {}, absentSeats: [] };
+    }
+    const chart = appData.seatingCharts[classId];
+
+    if (rowsVal !== null && rowsVal !== undefined) {
+      const r = parseInt(rowsVal, 10);
+      if (!isNaN(r) && r >= 1 && r <= 15) chart.rows = r;
+    }
+    if (colsVal !== null && colsVal !== undefined) {
+      const c = parseInt(colsVal, 10);
+      if (!isNaN(c) && c >= 1 && c <= 12) chart.cols = c;
+    }
+
+    // Auto-fill unassigned seats if new seats exist
+    const filteredStudents = appData.students.filter(s => s.classId === classId);
+    if (!chart.seats) chart.seats = {};
+    const assignedIds = Object.values(chart.seats);
+    let unassigned = filteredStudents.filter(st => !assignedIds.includes(st.id));
+
+    for (let r = 0; r < chart.rows; r++) {
+      for (let c = 0; c < chart.cols; c++) {
+        const key = `r${r}_c${c}`;
+        if (!chart.seats[key] && unassigned.length > 0) {
+          chart.seats[key] = unassigned.shift().id;
+        }
+      }
+    }
+
+    saveUserData();
+    renderAttendance(document.getElementById('content-area'));
+    showToast(`Đã điều chỉnh kích thước sơ đồ: ${chart.rows} Hàng x ${chart.cols} Dãy!`, 'info');
+  };
+
+  // Open Interactive Modal to Assign Students to Specific Seats
+  window.openAssignSeatsModal = function(classId) {
+    const cls = (appData.classes || []).find(c => c.id === classId);
+    const filteredStudents = appData.students.filter(s => s.classId === classId);
+    if (!appData.seatingCharts || !appData.seatingCharts[classId]) return;
+    const chart = appData.seatingCharts[classId];
+    const rows = chart.rows || 4;
+    const cols = chart.cols || 5;
+
+    let existingModal = document.getElementById('assign-seats-modal');
+    if (existingModal) existingModal.remove();
+
+    const modalHtml = `
+      <div id="assign-seats-modal" class="modal-backdrop" style="display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.7); z-index: 9999; position: fixed; top: 0; left: 0; right: 0; bottom: 0;">
+        <div style="background: var(--bg-card, #1e293b); color: var(--slate-heading); width: 92%; max-width: 900px; max-height: 90vh; border-radius: 16px; border: 1px solid var(--slate-border); display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);">
+          <div style="padding: 18px 24px; border-bottom: 1px solid var(--slate-border); display: flex; justify-content: space-between; align-items: center; background: var(--bg-card-alt, #0f172a);">
+            <h3 style="margin: 0; font-size: 18px; font-weight: 700; color: var(--primary-light, #60a5fa);">
+              <i class="fa-solid fa-chair"></i> Sắp Xếp Vị Trí Chỗ Ngồi - Lớp ${cls ? cls.name : ''}
+            </h3>
+            <button onclick="document.getElementById('assign-seats-modal').remove()" style="background: none; border: none; color: var(--slate-muted); font-size: 20px; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+          <div style="padding: 20px; overflow-y: auto; flex: 1;">
+            <p style="font-size: 13px; color: var(--slate-muted); margin-bottom: 16px;">
+              💡 <strong>Hướng dẫn:</strong> Chọn vị trí từng học sinh theo ô bàn tương ứng với Ảnh Lớp Mẫu Đầu Năm.
+            </p>
+            <div style="display: grid; grid-template-columns: repeat(${cols}, 1fr); gap: 12px;">
+              ${Array.from({ length: rows }).map((_, rIdx) => {
+                return Array.from({ length: cols }).map((_, cIdx) => {
+                  const seatKey = `r${rIdx}_c${cIdx}`;
+                  const currentStId = chart.seats ? chart.seats[seatKey] : null;
+
+                  return `
+                    <div style="background: var(--bg-main, #0f172a); border: 1px solid var(--slate-border); border-radius: 8px; padding: 10px; text-align: center;">
+                      <div style="font-size: 11px; font-weight: 700; color: #60a5fa; margin-bottom: 6px;">Hàng ${rIdx + 1} - Dãy ${cIdx + 1}</div>
+                      <select class="form-control form-control-sm assign-seat-select" data-seat="${seatKey}" style="font-size: 12px;">
+                        <option value="">-- Ghế Trống --</option>
+                        ${filteredStudents.map(s => `
+                          <option value="${s.id}" ${s.id === currentStId ? 'selected' : ''}>
+                            ${s.holyName ? s.holyName + ' ' : ''}${s.fullName || s.name}
+                          </option>
+                        `).join('')}
+                      </select>
+                    </div>
+                  `;
+                }).join('');
+              }).join('')}
+            </div>
+          </div>
+          <div style="padding: 16px 24px; border-top: 1px solid var(--slate-border); display: flex; justify-content: space-between; align-items: center; background: var(--bg-card-alt, #0f172a); flex-wrap: wrap; gap: 10px;">
+            <button class="btn btn-secondary" onclick="window.autoAssignSeats('${classId}')"><i class="fa-solid fa-wand-magic-sparkles"></i> Sắp Xếp Tự Động Theo Danh Sách</button>
+            <div style="display: flex; gap: 10px;">
+              <button class="btn btn-secondary" onclick="document.getElementById('assign-seats-modal').remove()">Hủy bỏ</button>
+              <button class="btn btn-primary" onclick="window.saveSeatAssignments('${classId}')"><i class="fa-solid fa-floppy-disk"></i> Lưu Sơ Đồ Chỗ Ngồi</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+  };
+
+  window.saveSeatAssignments = function(classId) {
+    if (!appData.seatingCharts || !appData.seatingCharts[classId]) return;
+    const chart = appData.seatingCharts[classId];
+    if (!chart.seats) chart.seats = {};
+
+    document.querySelectorAll('.assign-seat-select').forEach(sel => {
+      const seatKey = sel.getAttribute('data-seat');
+      const stId = sel.value;
+      if (stId) {
+        chart.seats[seatKey] = stId;
+      } else {
+        delete chart.seats[seatKey];
+      }
+    });
+
+    saveUserData();
+    const modal = document.getElementById('assign-seats-modal');
+    if (modal) modal.remove();
+    renderAttendance(document.getElementById('content-area'));
+    showToast('✓ Đã lưu sơ đồ phân vị trí chỗ ngồi học sinh! ✨', 'success');
+  };
+
+  window.autoAssignSeats = function(classId) {
+    const filteredStudents = appData.students.filter(s => s.classId === classId);
+    if (!appData.seatingCharts || !appData.seatingCharts[classId]) return;
+    const chart = appData.seatingCharts[classId];
+    const rows = chart.rows || 4;
+    const cols = chart.cols || 5;
+
+    const selects = document.querySelectorAll('.assign-seat-select');
+    selects.forEach(s => s.value = '');
+
+    let idx = 0;
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const key = `r${r}_c${c}`;
+        const sel = document.querySelector(`.assign-seat-select[data-seat="${key}"]`);
+        if (sel && idx < filteredStudents.length) {
+          sel.value = filteredStudents[idx].id;
+          idx++;
+        }
+      }
+    }
+    showToast('Đã xếp tự động danh sách vào các ô ghế!', 'info');
+  };
+
   // LIVE CAMERA CAPTURE & UPLOAD CONTROLLER
-  window.openCapturePhotoModal = window.openCapturePhotoModal || function(classId, mode) {
+  window._currentCaptureClassId = null;
+  window._currentCaptureMode = 'today';
+  window._currentFacingMode = 'environment';
+  window._pendingCapturedDataUrl = null;
+  window._cameraStream = null;
+
+  window.openCapturePhotoModal = function(classId, mode) {
     window._currentCaptureClassId = classId;
     window._currentCaptureMode = mode || 'today';
     window._currentFacingMode = 'environment';
@@ -1679,7 +2002,194 @@
     window.switchCameraModalTab('live');
   };
 
-  window.processBaselineImage = window.processBaselineImage || function(classId, dataUrl) {
+  window.closeCameraCaptureModal = function() {
+    if (window._cameraStream) {
+      try {
+        window._cameraStream.getTracks().forEach(t => t.stop());
+      } catch (e) {}
+      window._cameraStream = null;
+    }
+    closeModal('camera-capture-modal');
+  };
+
+  window.switchCameraModalTab = function(tab) {
+    const liveContent = document.getElementById('cam-tab-live-content');
+    const uploadContent = document.getElementById('cam-tab-upload-content');
+    const liveBtn = document.getElementById('cam-tab-live-btn');
+    const uploadBtn = document.getElementById('cam-tab-upload-btn');
+
+    if (tab === 'live') {
+      if (liveContent) liveContent.style.display = 'block';
+      if (uploadContent) uploadContent.style.display = 'none';
+      if (liveBtn) { liveBtn.style.background = '#2563eb'; liveBtn.style.color = '#fff'; }
+      if (uploadBtn) { uploadBtn.style.background = 'transparent'; uploadBtn.style.color = '#94a3b8'; }
+      window.startLiveCameraStream();
+    } else {
+      if (liveContent) liveContent.style.display = 'none';
+      if (uploadContent) uploadContent.style.display = 'block';
+      if (uploadBtn) { uploadBtn.style.background = '#2563eb'; uploadBtn.style.color = '#fff'; }
+      if (liveBtn) { liveBtn.style.background = 'transparent'; liveBtn.style.color = '#94a3b8'; }
+      if (window._cameraStream) {
+        try { window._cameraStream.getTracks().forEach(t => t.stop()); } catch (e) {}
+        window._cameraStream = null;
+      }
+    }
+  };
+
+  window.startLiveCameraStream = function() {
+    if (window._cameraStream) {
+      try { window._cameraStream.getTracks().forEach(t => t.stop()); } catch (e) {}
+      window._cameraStream = null;
+    }
+
+    const video = document.getElementById('camera-video-feed');
+    const canvas = document.getElementById('camera-snapshot-canvas');
+    const snapBtn = document.getElementById('cam-snap-btn');
+    const retakeBtn = document.getElementById('cam-retake-btn');
+
+    if (canvas) canvas.style.display = 'none';
+    if (video) video.style.display = 'block';
+    if (snapBtn) snapBtn.style.display = 'inline-flex';
+    if (retakeBtn) retakeBtn.style.display = 'none';
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      showToast('Trình duyệt không hỗ trợ Camera trực tiếp. Đã chuyển sang Tải File.', 'info');
+      window.switchCameraModalTab('upload');
+      return;
+    }
+
+    const constraints = {
+      video: {
+        facingMode: window._currentFacingMode || 'environment',
+        width: { ideal: 1920 },
+        height: { ideal: 1080 }
+      }
+    };
+
+    navigator.mediaDevices.getUserMedia(constraints)
+      .then(stream => {
+        window._cameraStream = stream;
+        if (video) video.srcObject = stream;
+      })
+      .catch(err => {
+        console.warn('Camera error fallback to default:', err);
+        navigator.mediaDevices.getUserMedia({ video: true })
+          .then(stream => {
+            window._cameraStream = stream;
+            if (video) video.srcObject = stream;
+          })
+          .catch(err2 => {
+            console.warn('Camera permission denied or unavailable:', err2);
+            showToast('Không thể mở Camera. Đã chuyển sang Chọn File Tải Ảnh.', 'info');
+            window.switchCameraModalTab('upload');
+          });
+      });
+  };
+
+  window.flipDeviceCamera = function() {
+    window._currentFacingMode = window._currentFacingMode === 'user' ? 'environment' : 'user';
+    window.startLiveCameraStream();
+  };
+
+  window.takeCameraSnapshot = function() {
+    const video = document.getElementById('camera-video-feed');
+    const canvas = document.getElementById('camera-snapshot-canvas');
+    if (!video || !canvas) return;
+
+    canvas.width = video.videoWidth || 1280;
+    canvas.height = video.videoHeight || 720;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    const rawDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+    compressImage(rawDataUrl, 1280, 1024, 0.8, function(compressed) {
+      window._pendingCapturedDataUrl = compressed;
+
+      video.style.display = 'none';
+      canvas.style.display = 'block';
+
+      const snapBtn = document.getElementById('cam-snap-btn');
+      const retakeBtn = document.getElementById('cam-retake-btn');
+      const confirmBtn = document.getElementById('cam-confirm-btn');
+
+      if (snapBtn) snapBtn.style.display = 'none';
+      if (retakeBtn) retakeBtn.style.display = 'inline-flex';
+      if (confirmBtn) {
+        confirmBtn.disabled = false;
+        confirmBtn.style.opacity = '1';
+        confirmBtn.style.cursor = 'pointer';
+      }
+
+      showToast('📸 Đã chụp ảnh thành công! Bấm "✅ Dùng Ảnh Này Để Điểm Danh AI" để hoàn tất.', 'success');
+    });
+  };
+
+  window.retakeCameraSnapshot = function() {
+    window._pendingCapturedDataUrl = null;
+    const video = document.getElementById('camera-video-feed');
+    const canvas = document.getElementById('camera-snapshot-canvas');
+    const snapBtn = document.getElementById('cam-snap-btn');
+    const retakeBtn = document.getElementById('cam-retake-btn');
+    const confirmBtn = document.getElementById('cam-confirm-btn');
+
+    if (canvas) canvas.style.display = 'none';
+    if (video) video.style.display = 'block';
+    if (snapBtn) snapBtn.style.display = 'inline-flex';
+    if (retakeBtn) retakeBtn.style.display = 'none';
+    if (confirmBtn) {
+      confirmBtn.disabled = true;
+      confirmBtn.style.opacity = '0.5';
+      confirmBtn.style.cursor = 'not-allowed';
+    }
+  };
+
+  window.handleModalFileSelected = function(evt) {
+    const file = evt.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      compressImage(e.target.result, 1280, 1024, 0.8, function(compressed) {
+        window._pendingCapturedDataUrl = compressed;
+
+        const img = document.getElementById('modal-file-preview-img');
+        const wrapper = document.getElementById('modal-file-preview-wrapper');
+        const confirmBtn = document.getElementById('cam-confirm-btn');
+
+        if (img) img.src = compressed;
+        if (wrapper) wrapper.style.display = 'block';
+        if (confirmBtn) {
+          confirmBtn.disabled = false;
+          confirmBtn.style.opacity = '1';
+          confirmBtn.style.cursor = 'pointer';
+        }
+        showToast('Đã nén và chọn ảnh thành công!', 'info');
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  window.confirmCameraCapturedPhoto = function() {
+    if (!window._pendingCapturedDataUrl) {
+      showToast('Vui lòng chụp hoặc chọn 1 bức ảnh trước!', 'warning');
+      return;
+    }
+
+    const classId = window._currentCaptureClassId;
+    const mode = window._currentCaptureMode;
+    const dataUrl = window._pendingCapturedDataUrl;
+
+    window.closeCameraCaptureModal();
+
+    if (mode === 'baseline') {
+      window.processBaselineImage(classId, dataUrl);
+    } else {
+      window.processAutoAIScanImage(classId, dataUrl);
+    }
+  };
+
+  window.processBaselineImage = function(classId, dataUrl) {
     showToast('Đang xử lý Ảnh Lớp Mẫu Đầu Năm...', 'info');
     compressImage(dataUrl, 800, 800, 0.75, function(compressed) {
       if (!appData.seatingCharts[classId]) appData.seatingCharts[classId] = {};
@@ -1695,11 +2205,71 @@
     const file = evt.target.files[0];
     if (!file) return;
 
+    showToast('Đang xử lý Ảnh Lớp Mẫu Đầu Năm...', 'info');
     const reader = new FileReader();
     reader.onload = function(e) {
       window.processBaselineImage(classId, e.target.result);
     };
     reader.readAsDataURL(file);
+  };
+
+  window.processAutoAIScanImage = function(classId, dataUrl) {
+    compressImage(dataUrl, 800, 800, 0.75, function(compressedToday) {
+      if (!appData.seatingCharts[classId]) appData.seatingCharts[classId] = {};
+      const chart = appData.seatingCharts[classId];
+      chart.todayPhoto = compressedToday;
+
+      // Show AI Scan Overlay Modal
+      const scanModal = document.createElement('div');
+      scanModal.id = 'ai-scan-modal';
+      scanModal.className = 'modal-backdrop';
+      scanModal.style.cssText = 'display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.85); z-index: 99999; position: fixed; top: 0; left: 0; right: 0; bottom: 0;';
+      scanModal.innerHTML = `
+        <div style="max-width: 480px; width: 90%; background: #0f172a; border-radius: 16px; border: 2px solid #3b82f6; padding: 30px; text-align: center; color: #fff; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
+          <div style="font-size: 54px; color: #60a5fa; margin-bottom: 15px;">
+            <i class="fa-solid fa-microchip fa-spin"></i>
+          </div>
+          <h3 style="color: #60a5fa; margin-bottom: 10px; font-size: 20px;">🔍 AI Đang Quét & So Sánh Sơ Đồ Điểm Ảnh...</h3>
+          <p style="font-size: 13px; color: #94a3b8; margin-bottom: 25px; line-height: 1.5;">
+            Hệ thống đang tự động đối chiếu vị trí từng chiếc ghế trên Ảnh Lớp Mẫu Đầu Năm với Ảnh Hôm Nay để phát hiện các vị trí ghế trống vắng mặt...
+          </p>
+          <div style="background: #1e293b; border-radius: 10px; height: 14px; width: 100%; overflow: hidden; margin-bottom: 12px; border: 1px solid #334155;">
+            <div id="ai-progress-bar" style="background: linear-gradient(90deg, #3b82f6, #10b981); height: 100%; width: 5%; transition: width 0.3s ease;"></div>
+          </div>
+          <div id="ai-scan-status" style="font-size: 13px; font-weight: 700; color: #34d399;">Khởi tạo thuật toán Computer Vision AI...</div>
+        </div>
+      `;
+      document.body.appendChild(scanModal);
+
+      const pBar = document.getElementById('ai-progress-bar');
+      const pStatus = document.getElementById('ai-scan-status');
+
+      setTimeout(() => {
+        if (pBar) pBar.style.width = '45%';
+        if (pStatus) pStatus.textContent = 'Phân tích ma trận độ tương phản & viền màu từng ô ghế...';
+      }, 400);
+
+      setTimeout(() => {
+        if (pBar) pBar.style.width = '85%';
+        if (pStatus) pStatus.textContent = 'Đã phát hiện vị trí ghế trống! Đang đối chiếu danh sách học sinh...';
+      }, 900);
+
+      setTimeout(() => {
+        if (pBar) pBar.style.width = '100%';
+        if (pStatus) pStatus.textContent = 'Hoàn tất quét AI tự động!';
+
+        performAIScanAnalysis(classId, chart);
+
+        setTimeout(() => {
+          const modal = document.getElementById('ai-scan-modal');
+          if (modal) modal.remove();
+
+          renderAttendance(document.getElementById('content-area'));
+          const absentCount = chart.absentSeats ? chart.absentSeats.length : 0;
+          showToast(`✨ AI QUÉT TỰ ĐỘNG HOÀN TẤT: Phát hiện ${absentCount} ghế trống!`, 'success');
+        }, 400);
+      }, 1400);
+    });
   };
 
   // Automated AI Computer Vision Scan Today's Photo
@@ -1709,66 +2279,11 @@
 
     const reader = new FileReader();
     reader.onload = function(e) {
-      compressImage(e.target.result, 800, 800, 0.75, function(compressedToday) {
-        if (!appData.seatingCharts[classId]) appData.seatingCharts[classId] = {};
-        const chart = appData.seatingCharts[classId];
-        chart.todayPhoto = compressedToday;
-
-        // Show AI Scan Overlay Modal
-        const scanModal = document.createElement('div');
-        scanModal.id = 'ai-scan-modal';
-        scanModal.className = 'modal-backdrop';
-        scanModal.style.cssText = 'display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.85); z-index: 99999; position: fixed; top: 0; left: 0; right: 0; bottom: 0;';
-        scanModal.innerHTML = `
-          <div style="max-width: 480px; width: 90%; background: #0f172a; border-radius: 16px; border: 2px solid #3b82f6; padding: 30px; text-align: center; color: #fff; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
-            <div style="font-size: 54px; color: #60a5fa; margin-bottom: 15px;">
-              <i class="fa-solid fa-microchip fa-spin"></i>
-            </div>
-            <h3 style="color: #60a5fa; margin-bottom: 10px; font-size: 20px;">🔍 AI Đang Quét & So Sánh Sơ Đồ Điểm Ảnh...</h3>
-            <p style="font-size: 13px; color: #94a3b8; margin-bottom: 25px; line-height: 1.5;">
-              Hệ thống đang tự động đối chiếu vị trí từng chiếc ghế trên Ảnh Lớp Mẫu Đầu Năm với Ảnh Hôm Nay để phát hiện các vị trí ghế trống vắng mặt...
-            </p>
-            <div style="background: #1e293b; border-radius: 10px; height: 14px; width: 100%; overflow: hidden; margin-bottom: 12px; border: 1px solid #334155;">
-              <div id="ai-progress-bar" style="background: linear-gradient(90deg, #3b82f6, #10b981); height: 100%; width: 5%; transition: width 0.3s ease;"></div>
-            </div>
-            <div id="ai-scan-status" style="font-size: 13px; font-weight: 700; color: #34d399;">Khởi tạo thuật toán Computer Vision AI...</div>
-          </div>
-        `;
-        document.body.appendChild(scanModal);
-
-        const pBar = document.getElementById('ai-progress-bar');
-        const pStatus = document.getElementById('ai-scan-status');
-
-        setTimeout(() => {
-          if (pBar) pBar.style.width = '45%';
-          if (pStatus) pStatus.textContent = 'Phân tích ma trận độ tương phản & viền màu từng ô ghế...';
-        }, 400);
-
-        setTimeout(() => {
-          if (pBar) pBar.style.width = '85%';
-          if (pStatus) pStatus.textContent = 'Đã phát hiện vị trí ghế trống! Đang đối chiếu danh sách học sinh...';
-        }, 900);
-
-        setTimeout(() => {
-          if (pBar) pBar.style.width = '100%';
-          if (pStatus) pStatus.textContent = 'Hoàn tất quét AI tự động!';
-
-          // Run Computer Vision seat comparison algorithm
-          performAIScanAnalysis(classId, chart);
-
-          setTimeout(() => {
-            const modal = document.getElementById('ai-scan-modal');
-            if (modal) modal.remove();
-
-            renderAttendance(document.getElementById('content-area'));
-            const absentCount = chart.absentSeats.length;
-            showToast(`✨ AI QUÉT TỰ ĐỘNG HOÀN TẤT: Phát hiện ${absentCount} ghế trống!`, 'success');
-          }, 400);
-        }, 1400);
-      });
+      window.processAutoAIScanImage(classId, e.target.result);
     };
     reader.readAsDataURL(file);
   };
+
 
   // Perform image pixel difference & contrast variance detection per seat sector
   function performAIScanAnalysis(classId, chart) {
@@ -1840,6 +2355,380 @@
 
     saveUserData();
     showToast(`✓ Đã lưu vĩnh viễn kết quả điểm danh AI cho lớp lên Supabase Cloud! (Vắng ${absentSeats.length} em)`, 'success');
+  };
+
+  // ATTENDANCE SUB-TAB & FILTER CONTROLLER
+  window.switchAttSubTab = function(tab) {
+    window._attendanceSubTab = tab;
+    renderAttendance(document.getElementById('content-area'));
+  };
+
+  window.handleAttFilterChange = function() {
+    const classSelect = document.getElementById('att-class-select');
+    const dateInput = document.getElementById('att-date');
+    const sessionSelect = document.getElementById('att-session-type');
+
+    if (classSelect) window._selectedAttendanceClassId = classSelect.value;
+    if (dateInput) window._selectedAttendanceDate = dateInput.value;
+    if (sessionSelect) window._selectedAttendanceSessionType = sessionSelect.value;
+
+    renderAttendance(document.getElementById('content-area'));
+  };
+
+  // RENDER ATTENDANCE HISTORY SECTION
+  function renderAttendanceHistorySection() {
+    const logs = appData.attendanceLogs || [];
+    const classes = appData.classes || [];
+    const selectedClassId = window._selectedAttendanceClassId || (classes.length > 0 ? classes[0].id : '');
+
+    // Sort logs by date descending (newest first)
+    const sortedLogs = [...logs].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+
+    return `
+      <div class="card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <h3 class="card-title" style="display: flex; align-items: center; gap: 8px;">
+              <i class="fa-solid fa-history text-primary"></i> 📜 Nhật Ký & Lịch Sử Điểm Danh Đã Lưu (${sortedLogs.length} buổi)
+            </h3>
+            <p style="font-size: 12px; color: var(--slate-muted); margin-top: 4px;">
+              Xem lại lịch sử điểm danh của từng buổi học, xuất báo cáo Excel cho từng ngày hoặc tải Bảng tổng hợp cả năm.
+            </p>
+          </div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button type="button" class="btn btn-sm btn-success" onclick="window.exportMonthlyAttendanceMatrixExcel('${selectedClassId}')">
+              <i class="fa-solid fa-file-excel"></i> 📊 Tải Bảng Tổng Hợp Cả Năm (Excel)
+            </button>
+          </div>
+        </div>
+        <div class="card-body" style="padding: 0;">
+          ${sortedLogs.length === 0 ? `
+            <div style="text-align: center; padding: 40px;">
+              <div style="font-size: 48px; color: var(--slate-muted); margin-bottom: 12px;"><i class="fa-solid fa-calendar-xmark"></i></div>
+              <h4 style="font-size: 16px; font-weight: 700; color: var(--dark-navy);">Chưa Có Lịch Sử Điểm Danh Nào Được Lưu</h4>
+              <p style="font-size: 13px; color: var(--slate-muted); margin-top: 4px;">Hãy điểm danh và bấm "Lưu Kết Quả Điểm Danh" để lưu trữ vĩnh viễn vào nhật ký hệ thống!</p>
+            </div>
+          ` : `
+            <div class="table-responsive">
+              <table class="custom-table">
+                <thead>
+                  <tr>
+                    <th>Ngày Điểm Danh</th>
+                    <th>Lớp Học</th>
+                    <th>Loại Buổi Sinh Hoạt</th>
+                    <th>Số Liệu Thống Kê</th>
+                    <th>Thời Gian Lưu</th>
+                    <th>Thao Tác</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${sortedLogs.map(log => `
+                    <tr>
+                      <td><strong style="color: var(--primary); font-size: 14px;"><i class="fa-solid fa-calendar-day"></i> ${log.date}</strong></td>
+                      <td><strong>${log.className || 'Lớp học'}</strong></td>
+                      <td><span class="badge badge-primary">${log.sessionType || 'Giáo lý'}</span></td>
+                      <td>
+                        <div style="display: flex; gap: 6px; flex-wrap: wrap; font-size: 11.5px;">
+                          <span class="badge badge-success">🟢 Có mặt: ${log.stats ? log.stats.present : 0}</span>
+                          <span class="badge badge-warning">🟡 Trễ: ${log.stats ? log.stats.late : 0}</span>
+                          <span class="badge badge-info">🔵 Vắng phép: ${log.stats ? log.stats.excused : 0}</span>
+                          <span class="badge badge-danger">🔴 Vắng K.Phép: ${log.stats ? log.stats.unexcused : 0}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <small style="color: var(--slate-muted); display: block;">${new Date(log.savedAt || Date.now()).toLocaleString('vi-VN')}</small>
+                        <small style="color: var(--slate-muted);">Bởi: ${log.savedBy || 'GLV'}</small>
+                      </td>
+                      <td>
+                        <div style="display: flex; gap: 6px;">
+                          <button type="button" class="btn btn-xs btn-outline-primary" onclick="window.viewHistoricalAttendanceLog('${log.classId}', '${log.date}', '${log.sessionType}')" title="Xem & Chỉnh sửa buổi điểm danh ngày này">
+                            <i class="fa-solid fa-eye"></i> Xem / Sửa
+                          </button>
+                          <button type="button" class="btn btn-xs btn-outline-success" onclick="window.exportAttendanceToExcel('${log.classId}', '${log.date}', '${log.sessionType}')" title="Tải file Excel điểm danh ngày này">
+                            <i class="fa-solid fa-file-excel"></i> Excel
+                          </button>
+                          <button type="button" class="btn btn-xs btn-outline-danger" onclick="window.deleteAttendanceLog('${log.id}')" title="Xóa lịch sử điểm danh buổi này">
+                            <i class="fa-solid fa-trash"></i>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          `}
+        </div>
+      </div>
+    `;
+  }
+
+  // SAVE ATTENDANCE LOG PERMANENTLY TO LOCALSTORAGE & SUPABASE CLOUD
+  window.saveAttendanceLog = function() {
+    const classSelect = document.getElementById('att-class-select');
+    const dateInput = document.getElementById('att-date');
+    const sessionSelect = document.getElementById('att-session-type');
+
+    if (!classSelect || !dateInput) return;
+
+    const classId = classSelect.value;
+    const date = dateInput.value;
+    const sessionType = sessionSelect ? sessionSelect.value : 'Giáo lý';
+    const targetClass = appData.classes.find(c => c.id === classId);
+
+    if (!targetClass) {
+      showToast('Vui lòng chọn lớp học!', 'warning');
+      return;
+    }
+
+    const filteredStudents = appData.students.filter(s => s.classId === classId);
+    if (filteredStudents.length === 0) {
+      showToast('Lớp học này chưa có học viên nào!', 'warning');
+      return;
+    }
+
+    const records = [];
+    let present = 0, late = 0, excused = 0, unexcused = 0;
+
+    filteredStudents.forEach(s => {
+      const radio = document.querySelector(`input[name="att_${s.id}"]:checked`);
+      const noteInput = document.getElementById(`att_note_${s.id}`);
+      const status = radio ? radio.value : 'present';
+      const note = noteInput ? noteInput.value.trim() : '';
+
+      if (status === 'present') present++;
+      else if (status === 'late') late++;
+      else if (status === 'excused') excused++;
+      else if (status === 'unexcused') unexcused++;
+
+      records.push({
+        studentId: s.id,
+        studentCode: s.code || `HV${s.id}`,
+        studentName: `${s.holyName || ''} ${s.fullName || ''}`.trim(),
+        status: status,
+        note: note
+      });
+    });
+
+    if (!Array.isArray(appData.attendanceLogs)) {
+      appData.attendanceLogs = [];
+    }
+
+    // Check if log for classId + date + sessionType already exists
+    const existingIndex = appData.attendanceLogs.findIndex(l => l.classId === classId && l.date === date && l.sessionType === sessionType);
+
+    const logEntry = {
+      id: existingIndex >= 0 ? appData.attendanceLogs[existingIndex].id : 'att_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+      classId: classId,
+      className: targetClass.name,
+      date: date,
+      sessionType: sessionType,
+      savedAt: new Date().toISOString(),
+      savedBy: (currentUser ? (currentUser.holyName ? currentUser.holyName + ' ' : '') + currentUser.name : 'Giáo lý viên'),
+      records: records,
+      stats: {
+        total: filteredStudents.length,
+        present: present,
+        late: late,
+        excused: excused,
+        unexcused: unexcused
+      }
+    };
+
+    if (existingIndex >= 0) {
+      appData.attendanceLogs[existingIndex] = logEntry;
+    } else {
+      appData.attendanceLogs.push(logEntry);
+    }
+
+    saveUserData();
+    renderAttendance(document.getElementById('content-area'));
+    showToast(`✅ Đã lưu vĩnh viễn lịch sử điểm danh ngày ${date} (${sessionType}) lên hệ thống Cloud!`, 'success');
+  };
+
+  // VIEW HISTORICAL ATTENDANCE LOG
+  window.viewHistoricalAttendanceLog = function(classId, date, sessionType) {
+    window._selectedAttendanceClassId = classId;
+    window._selectedAttendanceDate = date;
+    window._selectedAttendanceSessionType = sessionType;
+    window._attendanceSubTab = 'list';
+    renderAttendance(document.getElementById('content-area'));
+    showToast(`Đã tải lịch sử điểm danh ngày ${date} (${sessionType})`, 'info');
+  };
+
+  // DELETE ATTENDANCE LOG
+  window.deleteAttendanceLog = function(logId) {
+    if (!confirm('Bạn có chắc chắn muốn xóa bản ghi lịch sử điểm danh buổi này khỏi hệ thống?')) return;
+    appData.attendanceLogs = (appData.attendanceLogs || []).filter(l => l.id !== logId);
+    saveUserData();
+    renderAttendance(document.getElementById('content-area'));
+    showToast('Đã xóa nhật ký điểm danh thành công!', 'success');
+  };
+
+  // EXPORT SINGLE DAY ATTENDANCE TO EXCEL / CSV
+  window.exportAttendanceToExcel = function(classId, date, sessionType) {
+    const targetClass = appData.classes.find(c => c.id === classId) || { name: 'LopHoc' };
+    const filteredStudents = appData.students.filter(s => s.classId === classId);
+
+    const logs = appData.attendanceLogs || [];
+    const log = logs.find(l => l.classId === classId && l.date === date && (sessionType ? l.sessionType === sessionType : true));
+
+    const recordsMap = {};
+    if (log && Array.isArray(log.records)) {
+      log.records.forEach(r => { recordsMap[r.studentId] = r; });
+    }
+
+    const statusTextMap = {
+      present: '🟢 Có mặt',
+      late: '🟡 Đi trễ',
+      excused: '🔵 Vắng có phép',
+      unexcused: '🔴 Vắng không phép'
+    };
+
+    const rowsData = [
+      ['BẢNG ĐIỂM DANH HỌC VIÊN GIÁO LÝ'],
+      [`Tên Giáo Xứ: ${appData.parishInfo ? appData.parishInfo.name : 'Giáo Xứ Hoà Khánh'}`],
+      [`Tên Lớp Học: ${targetClass.name} (${targetClass.grade || ''})`],
+      [`Ngày Điểm Danh: ${date}`],
+      [`Loại Buổi Sinh Hoạt: ${sessionType || (log ? log.sessionType : 'Giờ học Giáo lý')}`],
+      [''],
+      ['STT', 'Mã Học Viên', 'Tên Thánh & Họ Tên', 'Trạng Thái Điểm Danh', 'Ghi Chú']
+    ];
+
+    let present = 0, late = 0, excused = 0, unexcused = 0;
+
+    filteredStudents.forEach((st, idx) => {
+      const rec = recordsMap[st.id];
+      let statusStr = '🟢 Có mặt';
+      let noteStr = '';
+
+      if (rec) {
+        statusStr = statusTextMap[rec.status] || '🟢 Có mặt';
+        noteStr = rec.note || '';
+        if (rec.status === 'present') present++;
+        else if (rec.status === 'late') late++;
+        else if (rec.status === 'excused') excused++;
+        else if (rec.status === 'unexcused') unexcused++;
+      } else {
+        const radio = document.querySelector(`input[name="att_${st.id}"]:checked`);
+        const noteInput = document.getElementById(`att_note_${st.id}`);
+        if (radio) statusStr = statusTextMap[radio.value] || '🟢 Có mặt';
+        if (noteInput) noteStr = noteInput.value.trim();
+
+        if (radio && radio.value === 'late') late++;
+        else if (radio && radio.value === 'excused') excused++;
+        else if (radio && radio.value === 'unexcused') unexcused++;
+        else present++;
+      }
+
+      rowsData.push([
+        idx + 1,
+        st.code || `HV${st.id}`,
+        `${st.holyName || ''} ${st.fullName || ''}`.trim(),
+        statusStr,
+        noteStr
+      ]);
+    });
+
+    rowsData.push(['']);
+    rowsData.push(['TỔNG HỢP SỐ LIỆU:']);
+    rowsData.push([`Tổng sĩ số: ${filteredStudents.length} em`, `Có mặt: ${present}`, `Đi trễ: ${late}`, `Vắng có phép: ${excused}`, `Vắng không phép: ${unexcused}`]);
+
+    if (typeof XLSX !== 'undefined') {
+      const ws = XLSX.utils.aoa_to_sheet(rowsData);
+      ws['!cols'] = [{ wch: 6 }, { wch: 15 }, { wch: 30 }, { wch: 22 }, { wch: 25 }];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Điểm Danh');
+      const filename = `DiemDanh_${targetClass.name.replace(/[^a-z0-9]/gi, '_')}_${date}.xlsx`;
+      XLSX.writeFile(wb, filename);
+      showToast(`📊 Đã xuất thành công file Excel điểm danh: ${filename}`, 'success');
+    } else {
+      const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + rowsData.map(e => e.map(cell => `"${cell}"`).join(",")).join("\n");
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `DiemDanh_${targetClass.name}_${date}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast('📊 Đã tải file CSV điểm danh thành công!', 'success');
+    }
+  };
+
+  // EXPORT FULL MONTHLY/ANNUAL MATRIX SPREADSHEET TO EXCEL
+  window.exportMonthlyAttendanceMatrixExcel = function(classId) {
+    const targetClass = appData.classes.find(c => c.id === classId) || (appData.classes[0] || { name: 'Toan_Bo_Lop' });
+    const targetClassId = targetClass.id || classId;
+    const students = appData.students.filter(s => s.classId === targetClassId);
+
+    if (students.length === 0) {
+      showToast('Không có dữ liệu học viên trong lớp!', 'warning');
+      return;
+    }
+
+    const logs = (appData.attendanceLogs || []).filter(l => l.classId === targetClassId);
+    const dateSet = new Set();
+    logs.forEach(l => { if (l.date) dateSet.add(l.date); });
+
+    const sortedDates = Array.from(dateSet).sort();
+
+    const headers = ['STT', 'Mã Học Viên', 'Tên Thánh', 'Họ và Tên'];
+    sortedDates.forEach(d => headers.push(d));
+    headers.push('Tổng Có Mặt', 'Tổng Đi Trễ', 'Tổng Vắng', 'Tỷ Lệ Chuyên Cần');
+
+    const rowsData = [
+      [`BẢNG TỔNG HỢP ĐIỂM DANH HỌC VIÊN CẢ NĂM / CẢ THÁNG`],
+      [`Giáo Xứ: ${appData.parishInfo ? appData.parishInfo.name : 'Giáo Xứ Hoà Khánh'}`],
+      [`Lớp Học: ${targetClass.name} (${targetClass.grade || ''})`],
+      [`Thời Gian Xuất Báo Cáo: ${new Date().toLocaleDateString('vi-VN')}`],
+      [''],
+      headers
+    ];
+
+    students.forEach((st, idx) => {
+      let pCount = 0, lCount = 0, vCount = 0;
+      const row = [
+        idx + 1,
+        st.code || `HV${st.id}`,
+        st.holyName || '',
+        st.fullName || ''
+      ];
+
+      sortedDates.forEach(d => {
+        const log = logs.find(l => l.date === d);
+        if (log && Array.isArray(log.records)) {
+          const rec = log.records.find(r => r.studentId === st.id);
+          if (rec) {
+            if (rec.status === 'present') { row.push('P'); pCount++; }
+            else if (rec.status === 'late') { row.push('T'); lCount++; }
+            else if (rec.status === 'excused') { row.push('V (P)'); vCount++; }
+            else if (rec.status === 'unexcused') { row.push('V (KP)'); vCount++; }
+            else { row.push('-'); }
+          } else {
+            row.push('-');
+          }
+        } else {
+          row.push('-');
+        }
+      });
+
+      const totalSessions = sortedDates.length || 1;
+      const rate = Math.round(((pCount + lCount * 0.5) / totalSessions) * 100);
+
+      row.push(pCount, lCount, vCount, `${rate}%`);
+      rowsData.push(row);
+    });
+
+    if (typeof XLSX !== 'undefined') {
+      const ws = XLSX.utils.aoa_to_sheet(rowsData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Bảng Điểm Danh Cả Năm');
+      const filename = `BangTongHop_DiemDanh_${targetClass.name.replace(/[^a-z0-9]/gi, '_')}.xlsx`;
+      XLSX.writeFile(wb, filename);
+      showToast(`📊 Đã tải thành công file Excel tổng hợp điểm danh: ${filename}`, 'success');
+    } else {
+      showToast('Đang xuất báo cáo Excel...', 'info');
+    }
   };
 
   // PAGE 6: BẢNG ĐIỂM (GRADEBOOK)
@@ -3799,8 +4688,8 @@
   }
   window.flashButtonSuccess = flashButtonSuccess;
 
-  // ULTRA-COMPACT HIGH-RES AVATAR COMPRESSION (Crisp 200x200px output for retina displays)
-  function compressImage(base64Str, maxWidth = 200, maxHeight = 200, quality = 0.75, callback) {
+  // ULTRA-COMPACT HIGH-RES AVATAR COMPRESSION (~15KB output to guarantee zero quota errors)
+  function compressImage(base64Str, maxWidth = 150, maxHeight = 150, quality = 0.70, callback) {
     if (!base64Str) { if (callback) callback(base64Str); return; }
     const img = new Image();
     if (base64Str.startsWith('http')) {
@@ -3809,9 +4698,10 @@
     img.onload = () => {
       try {
         const canvas = document.createElement('canvas');
-        const targetSize = Math.min(maxWidth || 200, 300);
-        canvas.width = targetSize;
-        canvas.height = targetSize;
+        const targetWidth = maxWidth || 150;
+        const targetHeight = maxHeight || 150;
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
 
         let width = img.width;
         let height = img.height;
@@ -3821,14 +4711,14 @@
 
         const ctx = canvas.getContext('2d');
         ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, targetSize, targetSize);
+        ctx.fillRect(0, 0, targetWidth, targetHeight);
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
-        ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, targetSize, targetSize);
+        ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, targetWidth, targetHeight);
 
-        let compressed = canvas.toDataURL('image/jpeg', quality || 0.75);
-        if (compressed.length > 50000) {
-          compressed = canvas.toDataURL('image/jpeg', 0.55);
+        let compressed = canvas.toDataURL('image/jpeg', quality || 0.70);
+        if (compressed.length > 40000) {
+          compressed = canvas.toDataURL('image/jpeg', 0.50);
         }
         if (callback) callback(compressed);
       } catch (e) {
@@ -3890,16 +4780,19 @@
     currentUser.role = roleInput ? roleInput.value : currentUser.role;
 
     const avatarPreview = document.getElementById('profile-avatar-preview');
+    const previewSrc = avatarPreview ? avatarPreview.src : null;
     const effectiveNewAvatar = uploadedUserAvatarBase64
-      || (avatarPreview && avatarPreview.src && avatarPreview.src.startsWith('data:image/') ? avatarPreview.src : null);
+      || (previewSrc && previewSrc.startsWith('data:image/') && !isDefaultAvatar(previewSrc) ? previewSrc : null)
+      || currentUser.avatar;
 
-    if (effectiveNewAvatar) {
+    if (effectiveNewAvatar && !isDefaultAvatar(effectiveNewAvatar)) {
       currentUser.avatar = effectiveNewAvatar;
       if (!appData) appData = {};
       appData.userAvatar = effectiveNewAvatar;
       if (currentUser.email) {
         const customKey = 'gvl_custom_avatar_' + currentUser.email.toLowerCase().replace(/[^a-z0-9]/g, '_');
         try { localStorage.setItem(customKey, effectiveNewAvatar); } catch (e) {}
+        idbAvatar.save(currentUser.email, effectiveNewAvatar);
       }
     }
 
@@ -3909,7 +4802,7 @@
       match.name = currentUser.name;
       match.phone = currentUser.phone;
       match.role = currentUser.role;
-      if (effectiveNewAvatar) match.avatar = effectiveNewAvatar;
+      if (currentUser.avatar && !isDefaultAvatar(currentUser.avatar)) match.avatar = currentUser.avatar;
     }
 
     if (appData && Array.isArray(appData.catechists)) {
@@ -3918,16 +4811,15 @@
         catMatch.holyName = currentUser.holyName;
         catMatch.name = currentUser.name;
         catMatch.phone = currentUser.phone;
-        if (effectiveNewAvatar) catMatch.avatar = effectiveNewAvatar;
+        if (currentUser.avatar && !isDefaultAvatar(currentUser.avatar)) catMatch.avatar = currentUser.avatar;
       }
     }
 
     try {
-      if (currentUser.email) {
+      if (currentUser.email && currentUser.avatar && !isDefaultAvatar(currentUser.avatar)) {
         const customKey = 'gvl_custom_avatar_' + currentUser.email.toLowerCase().replace(/[^a-z0-9]/g, '_');
-        if (currentUser.avatar && !isDefaultAvatar(currentUser.avatar)) {
-          try { localStorage.setItem(customKey, currentUser.avatar); } catch (e) {}
-        }
+        try { localStorage.setItem(customKey, currentUser.avatar); } catch (e) {}
+        idbAvatar.save(currentUser.email, currentUser.avatar);
       }
 
       saveAccounts();
@@ -3955,22 +4847,13 @@
       avatarInput.onchange = function(e) {
         const file = e.target.files && e.target.files[0];
         if (file) {
-          showToast('Đang xử lý & lưu ảnh đại diện...', 'info');
+          showToast('Đang nén & lưu ảnh đại diện...', 'info');
           const reader = new FileReader();
           reader.onload = function(evt) {
             const rawBase64 = evt.target.result;
-            // Capture rawBase64 immediately so submit works without waiting
-            uploadedUserAvatarBase64 = rawBase64;
-            if (avatarPreview) avatarPreview.src = rawBase64;
-            if (currentUser) {
-              currentUser.avatar = rawBase64;
-              if (!appData) appData = {};
-              appData.userAvatar = rawBase64;
-            }
-
-            // Perform async high-res compression for permanent storage
-            compressImage(rawBase64, 200, 200, 0.75, function(compressed) {
-              const finalAvatar = compressed || rawBase64;
+            // Compress IMMEDIATELY on file load to ~15KB JPEG
+            compressImage(rawBase64, 150, 150, 0.70, function(compressed) {
+              const finalAvatar = (compressed && compressed.length < rawBase64.length) ? compressed : rawBase64;
               uploadedUserAvatarBase64 = finalAvatar;
               if (avatarPreview) avatarPreview.src = finalAvatar;
               if (currentUser) {
@@ -3982,12 +4865,13 @@
                 if (currentUser.email) {
                   const customKey = 'gvl_custom_avatar_' + currentUser.email.toLowerCase().replace(/[^a-z0-9]/g, '_');
                   try { localStorage.setItem(customKey, finalAvatar); } catch (err) {}
+                  idbAvatar.save(currentUser.email, finalAvatar);
                 }
                 saveAccounts();
                 saveCurrentUser();
                 saveUserData();
                 renderAppHeaderAndSidebar();
-                showToast('✓ Đã lưu ảnh đại diện thành công! ✨', 'success');
+                showToast('✓ Đã nén & cập nhật ảnh đại diện mới! ✨', 'success');
               }
             });
           };

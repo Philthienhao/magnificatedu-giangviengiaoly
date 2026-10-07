@@ -1422,18 +1422,20 @@
     `;
   }
 
-  // PAGE 5: ĐIỂM DANH (ATTENDANCE)
-  // PAGE 5: ĐIỂM DANH HỌC VIÊN (VỚI AI SƠ ĐỒ CHỖ NGỒI VÀ QUÉT ẢNH LỚP HỌC)
+  // PAGE 5: ĐIỂM DANH HỌC VIÊN (VỚI AI SƠ ĐỒ CHỖ NGỒI VÀ LỊCH SỬ ĐIỂM DANH VĨNH VIỄN)
   function renderAttendance(container) {
     const today = new Date().toISOString().split('T')[0];
     const classes = appData.classes || [];
     const selectedClassId = window._selectedAttendanceClassId || (classes.length > 0 ? classes[0].id : '');
+    const selectedDate = window._selectedAttendanceDate || today;
+    const selectedSessionType = window._selectedAttendanceSessionType || 'Giáo lý';
+    const activeTab = window._attendanceSubTab || 'list'; // 'list' | 'ai-seating' | 'history'
+
     const filteredStudents = appData.students.filter(s => !selectedClassId || s.classId === selectedClassId);
-    const activeTab = window._attendanceSubTab || 'list'; // 'list' | 'ai-seating'
 
     // Initialize seatingChart state if missing
     if (!appData.seatingCharts) appData.seatingCharts = {};
-    if (!appData.seatingCharts[selectedClassId]) {
+    if (selectedClassId && !appData.seatingCharts[selectedClassId]) {
       const seats = {};
       filteredStudents.forEach((st, idx) => {
         const r = Math.floor(idx / 5);
@@ -1448,64 +1450,105 @@
       };
     }
 
-    const currentChart = appData.seatingCharts[selectedClassId];
+    const currentChart = appData.seatingCharts[selectedClassId] || { rows: 4, cols: 5, seats: {}, absentSeats: [] };
     if (!currentChart.absentSeats) currentChart.absentSeats = [];
+
+    // Find saved historical record for current (selectedClassId, selectedDate, selectedSessionType)
+    const logs = appData.attendanceLogs || [];
+    const savedLog = logs.find(l => l.classId === selectedClassId && l.date === selectedDate && l.sessionType === selectedSessionType);
 
     container.innerHTML = `
       <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
         <div>
           <h2 class="page-title"><i class="fa-solid fa-clipboard-user"></i> Điểm Danh Học Viên Thông Minh AI</h2>
-          <p class="page-subtitle">Hỗ trợ điểm danh danh sách truyền thống & Điểm danh 1-Chạm qua Sơ Đồ Ghế Trống / Ảnh Lớp Học</p>
+          <p class="page-subtitle">Hỗ trợ điểm danh danh sách truyền thống, sơ đồ ghế trống AI & Sao lưu vĩnh viễn nhật ký lịch sử điểm danh</p>
         </div>
-        <div style="display: flex; gap: 10px;">
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
           <button class="btn ${activeTab === 'list' ? 'btn-primary' : 'btn-outline-primary'}" onclick="window.switchAttSubTab('list')">
             <i class="fa-solid fa-list-check"></i> Điểm Danh Danh Sách
           </button>
           <button class="btn ${activeTab === 'ai-seating' ? 'btn-primary' : 'btn-outline-primary'}" onclick="window.switchAttSubTab('ai-seating')">
-            <i class="fa-solid fa-camera-retro"></i> 📷 AI Sơ Đồ & Ảnh Chụp Lớp
+            <i class="fa-solid fa-camera-retro"></i> 📷 AI Sơ Đồ & Ảnh Chụp
+          </button>
+          <button class="btn ${activeTab === 'history' ? 'btn-primary' : 'btn-outline-primary'}" onclick="window.switchAttSubTab('history')">
+            <i class="fa-solid fa-history"></i> 📜 Lịch Sử & Nhật Ký (${logs.length})
+          </button>
+          <button class="btn btn-outline-success" onclick="window.exportAttendanceToExcel('${selectedClassId}', '${selectedDate}', '${selectedSessionType}')" title="Tải file Excel điểm danh ngày này">
+            <i class="fa-solid fa-file-excel"></i> Tải Excel Ngày Này
           </button>
         </div>
       </div>
 
       <!-- FILTER CARD -->
-      <div class="card">
-        <div class="card-header">
-          <h3 class="card-title"><i class="fa-solid fa-calendar-check"></i> Chọn Lớp & Ngày Điểm Danh</h3>
+      <div class="card mb-4">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <h3 class="card-title"><i class="fa-solid fa-calendar-check text-primary"></i> Chọn Lớp & Ngày Điểm Danh</h3>
+          <span style="font-size: 12px; color: var(--slate-muted); font-weight: 600;">(Đổi ngày để xem lại lịch sử điểm danh ngày đó)</span>
         </div>
         <div class="card-body">
           <div class="form-row">
             <div class="col-4">
-              <label>Chọn Lớp Học:</label>
-              <select id="att-class-select" class="form-control" onchange="window.changeAttendanceClass(this.value)">
+              <label>Chọn Lớp Học: <span class="text-danger">*</span></label>
+              <select id="att-class-select" class="form-control" onchange="window.handleAttFilterChange()">
                 ${classes.map(c => `<option value="${c.id}" ${c.id === selectedClassId ? 'selected' : ''}>${c.name} (${c.grade})</option>`).join('')}
               </select>
             </div>
             <div class="col-4">
-              <label>Ngày Điểm Danh:</label>
-              <input type="date" id="att-date" class="form-control" value="${today}">
+              <label>Ngày Điểm Danh: <span class="text-danger">*</span></label>
+              <input type="date" id="att-date" class="form-control" value="${selectedDate}" onchange="window.handleAttFilterChange()">
             </div>
             <div class="col-4">
-              <label>Loại Buổi Sinh Hoạt:</label>
-              <select id="att-session-type" class="form-control">
-                <option value="Giáo lý">Giờ học Giáo lý</option>
-                <option value="Thánh lễ">Thánh lễ Chúa Nhật</option>
-                <option value="Sinh hoạt">Sinh hoạt Phân đoàn</option>
+              <label>Loại Buổi Sinh Hoạt: <span class="text-danger">*</span></label>
+              <select id="att-session-type" class="form-control" onchange="window.handleAttFilterChange()">
+                <option value="Giáo lý" ${selectedSessionType === 'Giáo lý' ? 'selected' : ''}>Giờ học Giáo lý</option>
+                <option value="Thánh lễ" ${selectedSessionType === 'Thánh lễ' ? 'selected' : ''}>Thánh lễ Chúa Nhật</option>
+                <option value="Sinh hoạt" ${selectedSessionType === 'Sinh hoạt' ? 'selected' : ''}>Sinh hoạt Phân đoàn</option>
               </select>
             </div>
           </div>
         </div>
       </div>
 
-      ${activeTab === 'list' ? renderTraditionalListSection(filteredStudents) : renderAISeatingSection(selectedClassId, filteredStudents, currentChart)}
+      <!-- HISTORICAL STATUS BANNER -->
+      ${savedLog ? `
+        <div class="alert alert-success mb-4" style="background: #ecfdf5; border-left: 5px solid #10b981; color: #065f46; padding: 14px 20px; border-radius: 10px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.12);">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-circle-check" style="font-size: 20px; color: #059669;"></i>
+            <div>
+              <div style="font-size: 13.5px; font-weight: 800; color: #047857;">✅ ĐÃ CÓ LỊCH SỬ ĐIỂM DANH NGÀY ${selectedDate} (${selectedSessionType})</div>
+              <div style="font-size: 12px; color: #065f46; margin-top: 2px;">
+                Đã lưu lúc ${new Date(savedLog.savedAt).toLocaleString('vi-VN')} (Bởi: ${savedLog.savedBy}) • Có mặt: ${savedLog.stats ? savedLog.stats.present : 0} | Trễ: ${savedLog.stats ? savedLog.stats.late : 0} | Vắng phép: ${savedLog.stats ? savedLog.stats.excused : 0} | Vắng K.Phép: ${savedLog.stats ? savedLog.stats.unexcused : 0}
+              </div>
+            </div>
+          </div>
+          <button type="button" class="btn btn-sm btn-outline-success" onclick="window.exportAttendanceToExcel('${selectedClassId}', '${selectedDate}', '${selectedSessionType}')" style="background: #fff; font-weight: 700;">
+            <i class="fa-solid fa-file-excel"></i> Tải File Excel Ngày Này
+          </button>
+        </div>
+      ` : `
+        <div class="alert alert-info mb-4" style="background: #eff6ff; border-left: 5px solid #3b82f6; color: #1e40af; padding: 12px 18px; border-radius: 10px; font-size: 12.5px; font-weight: 600; display: flex; align-items: center; gap: 10px;">
+          <i class="fa-solid fa-circle-info" style="font-size: 18px; color: #2563eb;"></i>
+          <span>ℹ️ <strong>CHƯA CÓ LỊCH SỬ ĐIỂM DANH CHO NGÀY ${selectedDate}:</strong> Hãy kiểm tra danh sách và bấm <strong>"Lưu Kết Quả Điểm Danh"</strong> để sao lưu vĩnh viễn vào hệ thống.</span>
+        </div>
+      `}
+
+      ${activeTab === 'list' ? renderTraditionalListSection(filteredStudents, savedLog) : (activeTab === 'ai-seating' ? renderAISeatingSection(selectedClassId, filteredStudents, currentChart) : renderAttendanceHistorySection())}
     `;
   }
 
-  function renderTraditionalListSection(filteredStudents) {
+  function renderTraditionalListSection(filteredStudents, savedLog) {
+    const recordsMap = {};
+    if (savedLog && Array.isArray(savedLog.records)) {
+      savedLog.records.forEach(r => { recordsMap[r.studentId] = r; });
+    }
+
     return `
       <div class="card">
-        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
           <h3 class="card-title"><i class="fa-solid fa-list-check"></i> Danh Sách Học Viên (${filteredStudents.length} em)</h3>
-          <button class="btn btn-sm btn-outline-primary" onclick="window.checkAllPresent()"><i class="fa-solid fa-check-double"></i> Đánh dấu tất cả Có Mặt</button>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-sm btn-outline-primary" onclick="window.checkAllPresent()"><i class="fa-solid fa-check-double"></i> Đánh dấu tất cả Có Mặt</button>
+          </div>
         </div>
         <div class="card-body" style="padding: 0;">
           ${filteredStudents.length === 0 ? `
@@ -1524,31 +1567,41 @@
                   </tr>
                 </thead>
                 <tbody>
-                  ${filteredStudents.map(s => `
-                    <tr>
-                      <td><strong>${s.code}</strong></td>
-                      <td>
-                        <img src="${s.photo || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80'}" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; margin-right: 6px;">
-                        <strong>${s.holyName}</strong> ${s.fullName}
-                      </td>
-                      <td>
-                        <div style="display: flex; gap: 10px; font-size: 12px;">
-                          <label style="cursor: pointer;"><input type="radio" name="att_${s.id}" value="present" checked> 🟢 Có mặt</label>
-                          <label style="cursor: pointer;"><input type="radio" name="att_${s.id}" value="late"> 🟡 Đi trễ</label>
-                          <label style="cursor: pointer;"><input type="radio" name="att_${s.id}" value="excused"> 🔵 Vắng có phép</label>
-                          <label style="cursor: pointer;"><input type="radio" name="att_${s.id}" value="unexcused"> 🔴 Vắng không phép</label>
-                        </div>
-                      </td>
-                      <td><input type="text" class="form-control form-control-sm" placeholder="Ghi chú..."></td>
-                    </tr>
-                  `).join('')}
+                  ${filteredStudents.map(s => {
+                    const rec = recordsMap[s.id];
+                    const currentStatus = rec ? rec.status : 'present';
+                    const currentNote = rec ? (rec.note || '') : '';
+                    return `
+                      <tr>
+                        <td><strong>${s.code || 'HV' + s.id}</strong></td>
+                        <td>
+                          <img src="${s.photo || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80'}" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; margin-right: 6px;">
+                          <strong>${s.holyName || ''}</strong> ${s.fullName || ''}
+                        </td>
+                        <td>
+                          <div style="display: flex; gap: 10px; font-size: 12px; flex-wrap: wrap;">
+                            <label style="cursor: pointer;"><input type="radio" name="att_${s.id}" value="present" ${currentStatus === 'present' ? 'checked' : ''}> 🟢 Có mặt</label>
+                            <label style="cursor: pointer;"><input type="radio" name="att_${s.id}" value="late" ${currentStatus === 'late' ? 'checked' : ''}> 🟡 Đi trễ</label>
+                            <label style="cursor: pointer;"><input type="radio" name="att_${s.id}" value="excused" ${currentStatus === 'excused' ? 'checked' : ''}> 🔵 Vắng có phép</label>
+                            <label style="cursor: pointer;"><input type="radio" name="att_${s.id}" value="unexcused" ${currentStatus === 'unexcused' ? 'checked' : ''}> 🔴 Vắng không phép</label>
+                          </div>
+                        </td>
+                        <td><input type="text" id="att_note_${s.id}" class="form-control form-control-sm" placeholder="Ghi chú..." value="${currentNote}"></td>
+                      </tr>
+                    `;
+                  }).join('')}
                 </tbody>
               </table>
             </div>
           `}
         </div>
-        <div class="card-footer" style="padding: 16px 24px; text-align: right; border-top: 1px solid var(--slate-border);">
-          <button class="btn btn-primary" onclick="showToast('Đã lưu dữ liệu điểm danh lớp thành công!', 'success')"><i class="fa-solid fa-floppy-disk"></i> Lưu Kết Quả Điểm Danh</button>
+        <div class="card-footer" style="padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-top: 1px solid var(--slate-border);">
+          <div style="display: flex; gap: 8px;">
+            <button type="button" class="btn btn-outline-success" onclick="window.exportAttendanceToExcel(window._selectedAttendanceClassId, window._selectedAttendanceDate, window._selectedAttendanceSessionType)">
+              <i class="fa-solid fa-file-excel"></i> 📊 Tải Bảng Điểm Danh (Excel/CSV)
+            </button>
+          </div>
+          <button type="button" class="btn btn-primary" onclick="window.saveAttendanceLog()"><i class="fa-solid fa-floppy-disk"></i> Lưu Kết Quả Điểm Danh Vĩnh Viễn</button>
         </div>
       </div>
     `;
@@ -2302,6 +2355,380 @@
 
     saveUserData();
     showToast(`✓ Đã lưu vĩnh viễn kết quả điểm danh AI cho lớp lên Supabase Cloud! (Vắng ${absentSeats.length} em)`, 'success');
+  };
+
+  // ATTENDANCE SUB-TAB & FILTER CONTROLLER
+  window.switchAttSubTab = function(tab) {
+    window._attendanceSubTab = tab;
+    renderAttendance(document.getElementById('content-area'));
+  };
+
+  window.handleAttFilterChange = function() {
+    const classSelect = document.getElementById('att-class-select');
+    const dateInput = document.getElementById('att-date');
+    const sessionSelect = document.getElementById('att-session-type');
+
+    if (classSelect) window._selectedAttendanceClassId = classSelect.value;
+    if (dateInput) window._selectedAttendanceDate = dateInput.value;
+    if (sessionSelect) window._selectedAttendanceSessionType = sessionSelect.value;
+
+    renderAttendance(document.getElementById('content-area'));
+  };
+
+  // RENDER ATTENDANCE HISTORY SECTION
+  function renderAttendanceHistorySection() {
+    const logs = appData.attendanceLogs || [];
+    const classes = appData.classes || [];
+    const selectedClassId = window._selectedAttendanceClassId || (classes.length > 0 ? classes[0].id : '');
+
+    // Sort logs by date descending (newest first)
+    const sortedLogs = [...logs].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+
+    return `
+      <div class="card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <h3 class="card-title" style="display: flex; align-items: center; gap: 8px;">
+              <i class="fa-solid fa-history text-primary"></i> 📜 Nhật Ký & Lịch Sử Điểm Danh Đã Lưu (${sortedLogs.length} buổi)
+            </h3>
+            <p style="font-size: 12px; color: var(--slate-muted); margin-top: 4px;">
+              Xem lại lịch sử điểm danh của từng buổi học, xuất báo cáo Excel cho từng ngày hoặc tải Bảng tổng hợp cả năm.
+            </p>
+          </div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button type="button" class="btn btn-sm btn-success" onclick="window.exportMonthlyAttendanceMatrixExcel('${selectedClassId}')">
+              <i class="fa-solid fa-file-excel"></i> 📊 Tải Bảng Tổng Hợp Cả Năm (Excel)
+            </button>
+          </div>
+        </div>
+        <div class="card-body" style="padding: 0;">
+          ${sortedLogs.length === 0 ? `
+            <div style="text-align: center; padding: 40px;">
+              <div style="font-size: 48px; color: var(--slate-muted); margin-bottom: 12px;"><i class="fa-solid fa-calendar-xmark"></i></div>
+              <h4 style="font-size: 16px; font-weight: 700; color: var(--dark-navy);">Chưa Có Lịch Sử Điểm Danh Nào Được Lưu</h4>
+              <p style="font-size: 13px; color: var(--slate-muted); margin-top: 4px;">Hãy điểm danh và bấm "Lưu Kết Quả Điểm Danh" để lưu trữ vĩnh viễn vào nhật ký hệ thống!</p>
+            </div>
+          ` : `
+            <div class="table-responsive">
+              <table class="custom-table">
+                <thead>
+                  <tr>
+                    <th>Ngày Điểm Danh</th>
+                    <th>Lớp Học</th>
+                    <th>Loại Buổi Sinh Hoạt</th>
+                    <th>Số Liệu Thống Kê</th>
+                    <th>Thời Gian Lưu</th>
+                    <th>Thao Tác</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${sortedLogs.map(log => `
+                    <tr>
+                      <td><strong style="color: var(--primary); font-size: 14px;"><i class="fa-solid fa-calendar-day"></i> ${log.date}</strong></td>
+                      <td><strong>${log.className || 'Lớp học'}</strong></td>
+                      <td><span class="badge badge-primary">${log.sessionType || 'Giáo lý'}</span></td>
+                      <td>
+                        <div style="display: flex; gap: 6px; flex-wrap: wrap; font-size: 11.5px;">
+                          <span class="badge badge-success">🟢 Có mặt: ${log.stats ? log.stats.present : 0}</span>
+                          <span class="badge badge-warning">🟡 Trễ: ${log.stats ? log.stats.late : 0}</span>
+                          <span class="badge badge-info">🔵 Vắng phép: ${log.stats ? log.stats.excused : 0}</span>
+                          <span class="badge badge-danger">🔴 Vắng K.Phép: ${log.stats ? log.stats.unexcused : 0}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <small style="color: var(--slate-muted); display: block;">${new Date(log.savedAt || Date.now()).toLocaleString('vi-VN')}</small>
+                        <small style="color: var(--slate-muted);">Bởi: ${log.savedBy || 'GLV'}</small>
+                      </td>
+                      <td>
+                        <div style="display: flex; gap: 6px;">
+                          <button type="button" class="btn btn-xs btn-outline-primary" onclick="window.viewHistoricalAttendanceLog('${log.classId}', '${log.date}', '${log.sessionType}')" title="Xem & Chỉnh sửa buổi điểm danh ngày này">
+                            <i class="fa-solid fa-eye"></i> Xem / Sửa
+                          </button>
+                          <button type="button" class="btn btn-xs btn-outline-success" onclick="window.exportAttendanceToExcel('${log.classId}', '${log.date}', '${log.sessionType}')" title="Tải file Excel điểm danh ngày này">
+                            <i class="fa-solid fa-file-excel"></i> Excel
+                          </button>
+                          <button type="button" class="btn btn-xs btn-outline-danger" onclick="window.deleteAttendanceLog('${log.id}')" title="Xóa lịch sử điểm danh buổi này">
+                            <i class="fa-solid fa-trash"></i>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          `}
+        </div>
+      </div>
+    `;
+  }
+
+  // SAVE ATTENDANCE LOG PERMANENTLY TO LOCALSTORAGE & SUPABASE CLOUD
+  window.saveAttendanceLog = function() {
+    const classSelect = document.getElementById('att-class-select');
+    const dateInput = document.getElementById('att-date');
+    const sessionSelect = document.getElementById('att-session-type');
+
+    if (!classSelect || !dateInput) return;
+
+    const classId = classSelect.value;
+    const date = dateInput.value;
+    const sessionType = sessionSelect ? sessionSelect.value : 'Giáo lý';
+    const targetClass = appData.classes.find(c => c.id === classId);
+
+    if (!targetClass) {
+      showToast('Vui lòng chọn lớp học!', 'warning');
+      return;
+    }
+
+    const filteredStudents = appData.students.filter(s => s.classId === classId);
+    if (filteredStudents.length === 0) {
+      showToast('Lớp học này chưa có học viên nào!', 'warning');
+      return;
+    }
+
+    const records = [];
+    let present = 0, late = 0, excused = 0, unexcused = 0;
+
+    filteredStudents.forEach(s => {
+      const radio = document.querySelector(`input[name="att_${s.id}"]:checked`);
+      const noteInput = document.getElementById(`att_note_${s.id}`);
+      const status = radio ? radio.value : 'present';
+      const note = noteInput ? noteInput.value.trim() : '';
+
+      if (status === 'present') present++;
+      else if (status === 'late') late++;
+      else if (status === 'excused') excused++;
+      else if (status === 'unexcused') unexcused++;
+
+      records.push({
+        studentId: s.id,
+        studentCode: s.code || `HV${s.id}`,
+        studentName: `${s.holyName || ''} ${s.fullName || ''}`.trim(),
+        status: status,
+        note: note
+      });
+    });
+
+    if (!Array.isArray(appData.attendanceLogs)) {
+      appData.attendanceLogs = [];
+    }
+
+    // Check if log for classId + date + sessionType already exists
+    const existingIndex = appData.attendanceLogs.findIndex(l => l.classId === classId && l.date === date && l.sessionType === sessionType);
+
+    const logEntry = {
+      id: existingIndex >= 0 ? appData.attendanceLogs[existingIndex].id : 'att_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+      classId: classId,
+      className: targetClass.name,
+      date: date,
+      sessionType: sessionType,
+      savedAt: new Date().toISOString(),
+      savedBy: (currentUser ? (currentUser.holyName ? currentUser.holyName + ' ' : '') + currentUser.name : 'Giáo lý viên'),
+      records: records,
+      stats: {
+        total: filteredStudents.length,
+        present: present,
+        late: late,
+        excused: excused,
+        unexcused: unexcused
+      }
+    };
+
+    if (existingIndex >= 0) {
+      appData.attendanceLogs[existingIndex] = logEntry;
+    } else {
+      appData.attendanceLogs.push(logEntry);
+    }
+
+    saveUserData();
+    renderAttendance(document.getElementById('content-area'));
+    showToast(`✅ Đã lưu vĩnh viễn lịch sử điểm danh ngày ${date} (${sessionType}) lên hệ thống Cloud!`, 'success');
+  };
+
+  // VIEW HISTORICAL ATTENDANCE LOG
+  window.viewHistoricalAttendanceLog = function(classId, date, sessionType) {
+    window._selectedAttendanceClassId = classId;
+    window._selectedAttendanceDate = date;
+    window._selectedAttendanceSessionType = sessionType;
+    window._attendanceSubTab = 'list';
+    renderAttendance(document.getElementById('content-area'));
+    showToast(`Đã tải lịch sử điểm danh ngày ${date} (${sessionType})`, 'info');
+  };
+
+  // DELETE ATTENDANCE LOG
+  window.deleteAttendanceLog = function(logId) {
+    if (!confirm('Bạn có chắc chắn muốn xóa bản ghi lịch sử điểm danh buổi này khỏi hệ thống?')) return;
+    appData.attendanceLogs = (appData.attendanceLogs || []).filter(l => l.id !== logId);
+    saveUserData();
+    renderAttendance(document.getElementById('content-area'));
+    showToast('Đã xóa nhật ký điểm danh thành công!', 'success');
+  };
+
+  // EXPORT SINGLE DAY ATTENDANCE TO EXCEL / CSV
+  window.exportAttendanceToExcel = function(classId, date, sessionType) {
+    const targetClass = appData.classes.find(c => c.id === classId) || { name: 'LopHoc' };
+    const filteredStudents = appData.students.filter(s => s.classId === classId);
+
+    const logs = appData.attendanceLogs || [];
+    const log = logs.find(l => l.classId === classId && l.date === date && (sessionType ? l.sessionType === sessionType : true));
+
+    const recordsMap = {};
+    if (log && Array.isArray(log.records)) {
+      log.records.forEach(r => { recordsMap[r.studentId] = r; });
+    }
+
+    const statusTextMap = {
+      present: '🟢 Có mặt',
+      late: '🟡 Đi trễ',
+      excused: '🔵 Vắng có phép',
+      unexcused: '🔴 Vắng không phép'
+    };
+
+    const rowsData = [
+      ['BẢNG ĐIỂM DANH HỌC VIÊN GIÁO LÝ'],
+      [`Tên Giáo Xứ: ${appData.parishInfo ? appData.parishInfo.name : 'Giáo Xứ Hoà Khánh'}`],
+      [`Tên Lớp Học: ${targetClass.name} (${targetClass.grade || ''})`],
+      [`Ngày Điểm Danh: ${date}`],
+      [`Loại Buổi Sinh Hoạt: ${sessionType || (log ? log.sessionType : 'Giờ học Giáo lý')}`],
+      [''],
+      ['STT', 'Mã Học Viên', 'Tên Thánh & Họ Tên', 'Trạng Thái Điểm Danh', 'Ghi Chú']
+    ];
+
+    let present = 0, late = 0, excused = 0, unexcused = 0;
+
+    filteredStudents.forEach((st, idx) => {
+      const rec = recordsMap[st.id];
+      let statusStr = '🟢 Có mặt';
+      let noteStr = '';
+
+      if (rec) {
+        statusStr = statusTextMap[rec.status] || '🟢 Có mặt';
+        noteStr = rec.note || '';
+        if (rec.status === 'present') present++;
+        else if (rec.status === 'late') late++;
+        else if (rec.status === 'excused') excused++;
+        else if (rec.status === 'unexcused') unexcused++;
+      } else {
+        const radio = document.querySelector(`input[name="att_${st.id}"]:checked`);
+        const noteInput = document.getElementById(`att_note_${st.id}`);
+        if (radio) statusStr = statusTextMap[radio.value] || '🟢 Có mặt';
+        if (noteInput) noteStr = noteInput.value.trim();
+
+        if (radio && radio.value === 'late') late++;
+        else if (radio && radio.value === 'excused') excused++;
+        else if (radio && radio.value === 'unexcused') unexcused++;
+        else present++;
+      }
+
+      rowsData.push([
+        idx + 1,
+        st.code || `HV${st.id}`,
+        `${st.holyName || ''} ${st.fullName || ''}`.trim(),
+        statusStr,
+        noteStr
+      ]);
+    });
+
+    rowsData.push(['']);
+    rowsData.push(['TỔNG HỢP SỐ LIỆU:']);
+    rowsData.push([`Tổng sĩ số: ${filteredStudents.length} em`, `Có mặt: ${present}`, `Đi trễ: ${late}`, `Vắng có phép: ${excused}`, `Vắng không phép: ${unexcused}`]);
+
+    if (typeof XLSX !== 'undefined') {
+      const ws = XLSX.utils.aoa_to_sheet(rowsData);
+      ws['!cols'] = [{ wch: 6 }, { wch: 15 }, { wch: 30 }, { wch: 22 }, { wch: 25 }];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Điểm Danh');
+      const filename = `DiemDanh_${targetClass.name.replace(/[^a-z0-9]/gi, '_')}_${date}.xlsx`;
+      XLSX.writeFile(wb, filename);
+      showToast(`📊 Đã xuất thành công file Excel điểm danh: ${filename}`, 'success');
+    } else {
+      const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + rowsData.map(e => e.map(cell => `"${cell}"`).join(",")).join("\n");
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `DiemDanh_${targetClass.name}_${date}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast('📊 Đã tải file CSV điểm danh thành công!', 'success');
+    }
+  };
+
+  // EXPORT FULL MONTHLY/ANNUAL MATRIX SPREADSHEET TO EXCEL
+  window.exportMonthlyAttendanceMatrixExcel = function(classId) {
+    const targetClass = appData.classes.find(c => c.id === classId) || (appData.classes[0] || { name: 'Toan_Bo_Lop' });
+    const targetClassId = targetClass.id || classId;
+    const students = appData.students.filter(s => s.classId === targetClassId);
+
+    if (students.length === 0) {
+      showToast('Không có dữ liệu học viên trong lớp!', 'warning');
+      return;
+    }
+
+    const logs = (appData.attendanceLogs || []).filter(l => l.classId === targetClassId);
+    const dateSet = new Set();
+    logs.forEach(l => { if (l.date) dateSet.add(l.date); });
+
+    const sortedDates = Array.from(dateSet).sort();
+
+    const headers = ['STT', 'Mã Học Viên', 'Tên Thánh', 'Họ và Tên'];
+    sortedDates.forEach(d => headers.push(d));
+    headers.push('Tổng Có Mặt', 'Tổng Đi Trễ', 'Tổng Vắng', 'Tỷ Lệ Chuyên Cần');
+
+    const rowsData = [
+      [`BẢNG TỔNG HỢP ĐIỂM DANH HỌC VIÊN CẢ NĂM / CẢ THÁNG`],
+      [`Giáo Xứ: ${appData.parishInfo ? appData.parishInfo.name : 'Giáo Xứ Hoà Khánh'}`],
+      [`Lớp Học: ${targetClass.name} (${targetClass.grade || ''})`],
+      [`Thời Gian Xuất Báo Cáo: ${new Date().toLocaleDateString('vi-VN')}`],
+      [''],
+      headers
+    ];
+
+    students.forEach((st, idx) => {
+      let pCount = 0, lCount = 0, vCount = 0;
+      const row = [
+        idx + 1,
+        st.code || `HV${st.id}`,
+        st.holyName || '',
+        st.fullName || ''
+      ];
+
+      sortedDates.forEach(d => {
+        const log = logs.find(l => l.date === d);
+        if (log && Array.isArray(log.records)) {
+          const rec = log.records.find(r => r.studentId === st.id);
+          if (rec) {
+            if (rec.status === 'present') { row.push('P'); pCount++; }
+            else if (rec.status === 'late') { row.push('T'); lCount++; }
+            else if (rec.status === 'excused') { row.push('V (P)'); vCount++; }
+            else if (rec.status === 'unexcused') { row.push('V (KP)'); vCount++; }
+            else { row.push('-'); }
+          } else {
+            row.push('-');
+          }
+        } else {
+          row.push('-');
+        }
+      });
+
+      const totalSessions = sortedDates.length || 1;
+      const rate = Math.round(((pCount + lCount * 0.5) / totalSessions) * 100);
+
+      row.push(pCount, lCount, vCount, `${rate}%`);
+      rowsData.push(row);
+    });
+
+    if (typeof XLSX !== 'undefined') {
+      const ws = XLSX.utils.aoa_to_sheet(rowsData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Bảng Điểm Danh Cả Năm');
+      const filename = `BangTongHop_DiemDanh_${targetClass.name.replace(/[^a-z0-9]/gi, '_')}.xlsx`;
+      XLSX.writeFile(wb, filename);
+      showToast(`📊 Đã tải thành công file Excel tổng hợp điểm danh: ${filename}`, 'success');
+    } else {
+      showToast('Đang xuất báo cáo Excel...', 'info');
+    }
   };
 
   // PAGE 6: BẢNG ĐIỂM (GRADEBOOK)
