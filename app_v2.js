@@ -1537,52 +1537,77 @@
 
     return `
       <div class="card">
-        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
           <div>
-            <h3 class="card-title"><i class="fa-solid fa-wand-magic-sparkles text-primary"></i> 🤖 AI Quét Ghế Trống Tự Động Qua Sơ Đồ Lớp</h3>
+            <h3 class="card-title" style="display: flex; align-items: center; gap: 8px;">
+              <i class="fa-solid fa-wand-magic-sparkles text-primary"></i> 🤖 AI Quét Điểm Danh Theo Sơ Đồ Lớp Học
+            </h3>
             <p style="font-size: 12px; color: var(--slate-muted); margin-top: 4px;">
-              ⚡ <strong>TỰ ĐỘNG 100%:</strong> Tải Ảnh Lớp Mẫu Đầu Năm 1 lần. Mỗi buổi học chỉ cần bấm <strong>"Quét Tự Động AI"</strong>, hệ thống tự động phát hiện ghế trống & xuất danh sách vắng trong 1 giây!
+              ⚡ <strong>TỰ ĐỘNG 100%:</strong> Tùy chỉnh số Hàng & Dãy ➔ Tải <strong>Ảnh Lớp Mẫu Đầu Năm</strong> ➔ Buổi học bấm <strong>"📸 CHỤP / TẢI ẢNH HÔM NAY"</strong> để AI tự động phát hiện ghế trống & điểm danh!
             </p>
           </div>
-          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+            <!-- CUSTOM GRID ADJUSTMENT BUTTON -->
+            <button class="btn btn-sm btn-outline-primary" onclick="window.openAssignSeatsModal('${classId}')" title="Sắp xếp từng học sinh ngồi ở từng vị trí bàn">
+              <i class="fa-solid fa-chair"></i> Sắp Xếp Chỗ Ngồi
+            </button>
+
             <!-- UPLOAD BASELINE PHOTO (TẢI ẢNH LỚP MẪU ĐẦU NĂM) -->
-            <label for="ai-baseline-photo-input" class="btn btn-sm btn-outline-info" style="margin: 0; cursor: pointer;" title="Tải ảnh sơ đồ mẫu cả lớp đầy đủ đầu năm">
+            <label for="ai-baseline-photo-input" class="btn btn-sm btn-outline-info" style="margin: 0; cursor: pointer;" title="Tải ảnh sơ đồ mẫu cả lớp chụp đầu năm">
               <i class="fa-solid fa-image"></i> ${hasBaseline ? '📷 Đổi Ảnh Lớp Mẫu (Đầu Năm)' : '📷 Tải Ảnh Lớp Mẫu (Đầu Năm)'}
             </label>
             <input type="file" id="ai-baseline-photo-input" accept="image/*" style="display: none;" onchange="window.handleBaselinePhotoUpload(event, '${classId}')">
 
-            <!-- AUTO AI SCANNER TODAY PHOTO (QUÉT TỰ ĐỘNG AI HÔM NAY) -->
-            <label for="ai-today-photo-input" class="btn btn-sm btn-success" style="margin: 0; cursor: pointer; background: linear-gradient(135deg, #10b981, #059669); border: none;">
-              <i class="fa-solid fa-robot"></i> 🤖 QUÉT ẢNH TỰ ĐỘNG AI (Hôm Nay)
+            <!-- SNAP / UPLOAD TODAY PHOTO FOR AUTO AI ATTENDANCE -->
+            <label for="ai-today-photo-input" class="btn btn-sm btn-success" style="margin: 0; cursor: pointer; background: linear-gradient(135deg, #10b981, #059669); border: none; font-weight: 700; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);" title="Chụp hoặc chọn ảnh lớp học hôm nay để AI tự động điểm danh">
+              <i class="fa-solid fa-camera"></i> 📸 CHỤP / TẢI ẢNH HÔM NAY (QUÉT ĐIỂM DANH AI)
             </label>
-            <input type="file" id="ai-today-photo-input" accept="image/*" style="display: none;" onchange="window.handleAutoAIScan(event, '${classId}')">
+            <input type="file" id="ai-today-photo-input" accept="image/*" capture="environment" style="display: none;" onchange="window.handleAutoAIScan(event, '${classId}')">
 
-            <button class="btn btn-sm btn-outline-secondary" onclick="window.resetAISeatingChart('${classId}')">
-              <i class="fa-solid fa-arrows-rotate"></i> Reset Ghế Tất Cả Có Mặt
+            <button class="btn btn-sm btn-outline-secondary" onclick="window.resetAISeatingChart('${classId}')" title="Reset tất cả ô ghế về trạng thái Có mặt">
+              <i class="fa-solid fa-arrows-rotate"></i> Reset Sơ Đồ
             </button>
           </div>
         </div>
         <div class="card-body">
 
-          <!-- STATS & BASELINE STATUS BADGES -->
-          <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; align-items: center;">
-            <div class="badge badge-success" style="font-size: 14px; padding: 8px 16px;">
-              🟢 <strong>Có mặt: ${presentCount}</strong> / ${filteredStudents.length} em
-            </div>
-            <div class="badge badge-danger" style="font-size: 14px; padding: 8px 16px;">
-              🔴 <strong>Vắng mặt (Ghế trống): ${absentCount}</strong> em
-            </div>
-            <div class="badge badge-info" style="font-size: 14px; padding: 8px 16px;">
-              🏫 Sơ đồ cố định: ${rows} Hàng x ${cols} Dãy (${rows * cols} Ghế)
+          <!-- STATS & GRID CUSTOMIZATION TOOLBAR -->
+          <div style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; justify-content: space-between; background: var(--bg-card-alt, #0f172a); padding: 12px 18px; border-radius: 12px; border: 1px solid var(--slate-border);">
+            <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+              <div class="badge badge-success" style="font-size: 13px; padding: 6px 14px;">
+                🟢 <strong>Có mặt: ${presentCount}</strong> / ${filteredStudents.length} em
+              </div>
+              <div class="badge badge-danger" style="font-size: 13px; padding: 6px 14px;">
+                🔴 <strong>Vắng mặt (Ghế trống): ${absentCount}</strong> em
+              </div>
             </div>
 
+            <!-- DYNAMIC GRID ROW & COL CONTROLS FOR TEACHERS -->
+            <div style="display: flex; align-items: center; gap: 8px; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); padding: 5px 12px; border-radius: 20px; font-size: 13px;">
+              <span style="font-weight: 700; color: #3b82f6;"><i class="fa-solid fa-sliders"></i> Tùy chỉnh Sơ đồ Lớp:</span>
+              <label style="margin: 0; font-size: 12px; font-weight: 600;">Hàng:</label>
+              <input type="number" min="1" max="15" value="${rows}" 
+                     onchange="window.updateClassSeatingGridSize('${classId}', this.value, null)" 
+                     style="width: 50px; height: 26px; padding: 2px 4px; font-size: 12px; border-radius: 4px; border: 1px solid var(--slate-border); text-align: center; font-weight: 700;">
+              <span style="font-weight: 700;">x</span>
+              <label style="margin: 0; font-size: 12px; font-weight: 600;">Dãy:</label>
+              <input type="number" min="1" max="12" value="${cols}" 
+                     onchange="window.updateClassSeatingGridSize('${classId}', null, this.value)" 
+                     style="width: 50px; height: 26px; padding: 2px 4px; font-size: 12px; border-radius: 4px; border: 1px solid var(--slate-border); text-align: center; font-weight: 700;">
+              <span style="font-size: 11px; color: var(--slate-muted); font-weight: 700;">(${rows * cols} Ghế)</span>
+            </div>
+          </div>
+
+          <!-- STATUS BADGES FOR BASELINE PHOTO -->
+          <div style="margin-bottom: 20px;">
             ${hasBaseline ? `
-              <div style="font-size: 12px; color: #10b981; font-weight: 700; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); padding: 6px 12px; border-radius: 20px;">
-                <i class="fa-solid fa-circle-check"></i> ✨ Đã sẵn sàng Sơ Đồ Ảnh Lớp Mẫu Đầu Năm
+              <div style="font-size: 12px; color: #10b981; font-weight: 700; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); padding: 8px 16px; border-radius: 8px; display: flex; align-items: center; justify-content: space-between;">
+                <span><i class="fa-solid fa-circle-check"></i> ✨ <strong>ĐÃ CÓ ÁNH LỚP MẪU ĐẦU NĂM:</strong> AI sẵn sàng so sánh ma trận vị trí ghế chuẩn!</span>
+                <span style="font-size: 11px; color: #64748b;">(Mỗi buổi học chỉ cần bấm CHỤP / TẢI ẢNH HÔM NAY)</span>
               </div>
             ` : `
-              <div style="font-size: 12px; color: #f59e0b; font-weight: 700; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); padding: 6px 12px; border-radius: 20px;">
-                <i class="fa-solid fa-triangle-exclamation"></i> Khuyên dùng: Tải Ảnh Lớp Mẫu Đầu Năm để AI so sánh chính xác 100%
+              <div style="font-size: 12px; color: #f59e0b; font-weight: 700; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); padding: 8px 16px; border-radius: 8px;">
+                <i class="fa-solid fa-triangle-exclamation"></i> <strong>Khuyên dùng:</strong> Hãy tải lên 1 tấm Ảnh Lớp Mẫu Đầu Năm (chụp cả lớp đầy đủ) để làm sơ đồ chuẩn cho AI so sánh chính xác 100%!
               </div>
             `}
           </div>
@@ -1602,14 +1627,14 @@
                 ${chart.todayPhoto ? `
                   <div style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; border: 1px solid #334155;">
                     <div style="font-size: 12px; font-weight: 700; color: #34d399; margin-bottom: 8px;">
-                      <i class="fa-solid fa-camera text-success"></i> Ảnh Chụp Lớp Hôm Nay (AI Đã Quét)
+                      <i class="fa-solid fa-camera text-success"></i> Ảnh Chụp Buổi Học Hôm Nay (AI Đã Quét)
                     </div>
                     <img src="${chart.todayPhoto}" style="max-height: 180px; width: 100%; object-fit: contain; border-radius: 6px; border: 1px solid #10b981;">
                   </div>
                 ` : ''}
               </div>
-              <p style="font-size: 12px; color: #94a3b8; margin-top: 12px; text-align: center;">
-                🤖 <strong>Thuật toán Computer Vision AI:</strong> Đã so sánh chênh lệch độ sáng, viền tương phản & ma trận điểm ảnh giữa 2 ảnh để phát hiện vị trí ghế trống tự động!
+              <p style="font-size: 12px; color: #94a3b8; margin-top: 12px; text-align: center; margin-bottom: 0;">
+                🤖 <strong>Thuật toán Computer Vision AI:</strong> Đã so sánh chênh lệch độ sáng, viền tương phản & ma trận điểm ảnh giữa Ảnh Mẫu Đầu Năm và Ảnh Buổi Học Hôm Nay để tự động phát hiện ghế trống!
               </p>
             </div>
           ` : ''}
@@ -1617,14 +1642,14 @@
           <!-- SEATING GRID -->
           <div style="background: var(--bg-card-alt, #1e293b); padding: 20px; border-radius: 12px; border: 1px solid var(--slate-border); text-align: center;">
             <div style="background: linear-gradient(90deg, var(--primary), #4f46e5); color: #fff; padding: 8px; border-radius: 6px; font-weight: 700; margin-bottom: 20px; letter-spacing: 1px;">
-              <i class="fa-solid fa-chalkboard"></i> BẢNG GIẢNG & BÀN GIÁO LÝ VIÊN (PHÍA TRƯỚC)
+              <i class="fa-solid fa-chalkboard"></i> BẢNG GIẢNG & BÀN GIÁO LÝ VIÊN (PHÍA TRƯỚC LỚP)
             </div>
 
-            <div style="display: grid; grid-template-columns: repeat(${cols}, 1fr); gap: 12px; max-width: 900px; margin: 0 auto;">
+            <div style="display: grid; grid-template-columns: repeat(${cols}, 1fr); gap: 12px; max-width: ${Math.min(950, cols * 180)}px; margin: 0 auto; overflow-x: auto; padding: 4px;">
               ${Array.from({ length: rows }).map((_, rIdx) => {
                 return Array.from({ length: cols }).map((_, cIdx) => {
                   const seatKey = `r${rIdx}_c${cIdx}`;
-                  const stId = chart.seats[seatKey];
+                  const stId = chart.seats ? chart.seats[seatKey] : null;
                   const st = filteredStudents.find(s => s.id === stId);
                   const isAbsent = chart.absentSeats.includes(seatKey);
                   const confidence = chart.confidenceScores ? chart.confidenceScores[seatKey] : null;
@@ -1634,10 +1659,10 @@
                          onclick="window.toggleSeatAttendance('${classId}', '${seatKey}')"
                          style="background: ${isAbsent ? 'rgba(239, 68, 68, 0.15)' : 'rgba(34, 197, 94, 0.12)'}; 
                                 border: 2px solid ${isAbsent ? '#ef4444' : '#22c55e'}; 
-                                border-radius: 10px; padding: 12px 8px; cursor: pointer; transition: all 0.2s ease;"
-                         title="Bấm để chuyển giữa Có mặt & Vắng mặt">
+                                border-radius: 10px; padding: 12px 6px; cursor: pointer; transition: all 0.2s ease; min-width: 120px;"
+                         title="Chạm để đổi trạng thái giữa Có mặt & Vắng mặt">
                       <div style="font-size: 11px; font-weight: 700; color: var(--slate-muted); margin-bottom: 4px;">
-                        Hàng ${rIdx + 1} - Bàn ${cIdx + 1}
+                        Hàng ${rIdx + 1} - Dãy ${cIdx + 1}
                       </div>
                       ${st ? `
                         <img src="${st.photo || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80'}" 
@@ -1654,8 +1679,8 @@
                           </div>
                         ` : ''}
                       ` : `
-                        <div style="padding: 15px 0; color: var(--slate-muted); font-size: 12px; font-style: italic;">
-                          [Ghế Trống Bỏ Ngỏ]
+                        <div style="padding: 15px 0; color: var(--slate-muted); font-size: 11px; font-style: italic;">
+                          [Ghế Trống]
                         </div>
                       `}
                     </div>
@@ -1667,7 +1692,7 @@
         </div>
         <div class="card-footer" style="padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--slate-border); flex-wrap: wrap; gap: 10px;">
           <span style="font-size: 13px; color: var(--slate-muted);">
-            <i class="fa-solid fa-circle-info text-primary"></i> Đã tự động phát hiện <strong>${absentCount} học sinh vắng mặt</strong>. Bạn có thể chạm vào từng ô ghế để chỉnh sửa nếu cần.
+            <i class="fa-solid fa-circle-info text-primary"></i> Đã tự động ghi nhận <strong>${absentCount} học sinh vắng mặt</strong>. Giáo viên có thể bấm trực tiếp vào từng ghế để điều chỉnh.
           </span>
           <button class="btn btn-primary" onclick="window.saveAISeatingAttendance('${classId}')">
             <i class="fa-solid fa-floppy-disk"></i> Lưu Kết Quả Điểm Danh AI
@@ -1715,6 +1740,151 @@
     appData.seatingCharts[classId].confidenceScores = {};
     showToast('Đã đặt lại sơ đồ: Tất cả học sinh đều Có Mặt!', 'success');
     renderAttendance(document.getElementById('content-area'));
+  };
+
+  // Update Seating Grid Rows & Columns dynamically per class
+  window.updateClassSeatingGridSize = function(classId, rowsVal, colsVal) {
+    if (!appData.seatingCharts) appData.seatingCharts = {};
+    if (!appData.seatingCharts[classId]) {
+      appData.seatingCharts[classId] = { rows: 4, cols: 5, seats: {}, absentSeats: [] };
+    }
+    const chart = appData.seatingCharts[classId];
+
+    if (rowsVal !== null && rowsVal !== undefined) {
+      const r = parseInt(rowsVal, 10);
+      if (!isNaN(r) && r >= 1 && r <= 15) chart.rows = r;
+    }
+    if (colsVal !== null && colsVal !== undefined) {
+      const c = parseInt(colsVal, 10);
+      if (!isNaN(c) && c >= 1 && c <= 12) chart.cols = c;
+    }
+
+    // Auto-fill unassigned seats if new seats exist
+    const filteredStudents = appData.students.filter(s => s.classId === classId);
+    if (!chart.seats) chart.seats = {};
+    const assignedIds = Object.values(chart.seats);
+    let unassigned = filteredStudents.filter(st => !assignedIds.includes(st.id));
+
+    for (let r = 0; r < chart.rows; r++) {
+      for (let c = 0; c < chart.cols; c++) {
+        const key = `r${r}_c${c}`;
+        if (!chart.seats[key] && unassigned.length > 0) {
+          chart.seats[key] = unassigned.shift().id;
+        }
+      }
+    }
+
+    saveUserData();
+    renderAttendance(document.getElementById('content-area'));
+    showToast(`Đã điều chỉnh kích thước sơ đồ: ${chart.rows} Hàng x ${chart.cols} Dãy!`, 'info');
+  };
+
+  // Open Interactive Modal to Assign Students to Specific Seats
+  window.openAssignSeatsModal = function(classId) {
+    const cls = (appData.classes || []).find(c => c.id === classId);
+    const filteredStudents = appData.students.filter(s => s.classId === classId);
+    if (!appData.seatingCharts || !appData.seatingCharts[classId]) return;
+    const chart = appData.seatingCharts[classId];
+    const rows = chart.rows || 4;
+    const cols = chart.cols || 5;
+
+    let existingModal = document.getElementById('assign-seats-modal');
+    if (existingModal) existingModal.remove();
+
+    const modalHtml = `
+      <div id="assign-seats-modal" class="modal-backdrop" style="display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.7); z-index: 9999; position: fixed; top: 0; left: 0; right: 0; bottom: 0;">
+        <div style="background: var(--bg-card, #1e293b); color: var(--slate-heading); width: 92%; max-width: 900px; max-height: 90vh; border-radius: 16px; border: 1px solid var(--slate-border); display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);">
+          <div style="padding: 18px 24px; border-bottom: 1px solid var(--slate-border); display: flex; justify-content: space-between; align-items: center; background: var(--bg-card-alt, #0f172a);">
+            <h3 style="margin: 0; font-size: 18px; font-weight: 700; color: var(--primary-light, #60a5fa);">
+              <i class="fa-solid fa-chair"></i> Sắp Xếp Vị Trí Chỗ Ngồi - Lớp ${cls ? cls.name : ''}
+            </h3>
+            <button onclick="document.getElementById('assign-seats-modal').remove()" style="background: none; border: none; color: var(--slate-muted); font-size: 20px; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+          <div style="padding: 20px; overflow-y: auto; flex: 1;">
+            <p style="font-size: 13px; color: var(--slate-muted); margin-bottom: 16px;">
+              💡 <strong>Hướng dẫn:</strong> Chọn vị trí từng học sinh theo ô bàn tương ứng với Ảnh Lớp Mẫu Đầu Năm.
+            </p>
+            <div style="display: grid; grid-template-columns: repeat(${cols}, 1fr); gap: 12px;">
+              ${Array.from({ length: rows }).map((_, rIdx) => {
+                return Array.from({ length: cols }).map((_, cIdx) => {
+                  const seatKey = `r${rIdx}_c${cIdx}`;
+                  const currentStId = chart.seats ? chart.seats[seatKey] : null;
+
+                  return `
+                    <div style="background: var(--bg-main, #0f172a); border: 1px solid var(--slate-border); border-radius: 8px; padding: 10px; text-align: center;">
+                      <div style="font-size: 11px; font-weight: 700; color: #60a5fa; margin-bottom: 6px;">Hàng ${rIdx + 1} - Dãy ${cIdx + 1}</div>
+                      <select class="form-control form-control-sm assign-seat-select" data-seat="${seatKey}" style="font-size: 12px;">
+                        <option value="">-- Ghế Trống --</option>
+                        ${filteredStudents.map(s => `
+                          <option value="${s.id}" ${s.id === currentStId ? 'selected' : ''}>
+                            ${s.holyName ? s.holyName + ' ' : ''}${s.fullName || s.name}
+                          </option>
+                        `).join('')}
+                      </select>
+                    </div>
+                  `;
+                }).join('');
+              }).join('')}
+            </div>
+          </div>
+          <div style="padding: 16px 24px; border-top: 1px solid var(--slate-border); display: flex; justify-content: space-between; align-items: center; background: var(--bg-card-alt, #0f172a); flex-wrap: wrap; gap: 10px;">
+            <button class="btn btn-secondary" onclick="window.autoAssignSeats('${classId}')"><i class="fa-solid fa-wand-magic-sparkles"></i> Sắp Xếp Tự Động Theo Danh Sách</button>
+            <div style="display: flex; gap: 10px;">
+              <button class="btn btn-secondary" onclick="document.getElementById('assign-seats-modal').remove()">Hủy bỏ</button>
+              <button class="btn btn-primary" onclick="window.saveSeatAssignments('${classId}')"><i class="fa-solid fa-floppy-disk"></i> Lưu Sơ Đồ Chỗ Ngồi</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+  };
+
+  window.saveSeatAssignments = function(classId) {
+    if (!appData.seatingCharts || !appData.seatingCharts[classId]) return;
+    const chart = appData.seatingCharts[classId];
+    if (!chart.seats) chart.seats = {};
+
+    document.querySelectorAll('.assign-seat-select').forEach(sel => {
+      const seatKey = sel.getAttribute('data-seat');
+      const stId = sel.value;
+      if (stId) {
+        chart.seats[seatKey] = stId;
+      } else {
+        delete chart.seats[seatKey];
+      }
+    });
+
+    saveUserData();
+    const modal = document.getElementById('assign-seats-modal');
+    if (modal) modal.remove();
+    renderAttendance(document.getElementById('content-area'));
+    showToast('✓ Đã lưu sơ đồ phân vị trí chỗ ngồi học sinh! ✨', 'success');
+  };
+
+  window.autoAssignSeats = function(classId) {
+    const filteredStudents = appData.students.filter(s => s.classId === classId);
+    if (!appData.seatingCharts || !appData.seatingCharts[classId]) return;
+    const chart = appData.seatingCharts[classId];
+    const rows = chart.rows || 4;
+    const cols = chart.cols || 5;
+
+    const selects = document.querySelectorAll('.assign-seat-select');
+    selects.forEach(s => s.value = '');
+
+    let idx = 0;
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const key = `r${r}_c${c}`;
+        const sel = document.querySelector(`.assign-seat-select[data-seat="${key}"]`);
+        if (sel && idx < filteredStudents.length) {
+          sel.value = filteredStudents[idx].id;
+          idx++;
+        }
+      }
+    }
+    showToast('Đã xếp tự động danh sách vào các ô ghế!', 'info');
   };
 
   // Upload Baseline Reference Photo (Ảnh Lớp Mẫu Đầu Năm)
