@@ -122,12 +122,29 @@
   let appData = null;
   let activePage = 'overview';
 
+  function startNienHocSanitizer() {
+    const cleanDOM = () => {
+      try {
+        const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+        let node;
+        while ((node = walker.nextNode())) {
+          if (node.nodeValue && /Niên\s*học/i.test(node.nodeValue)) {
+            node.nodeValue = node.nodeValue.replace(/Niên\s*học/gi, 'Năm học').replace(/Niên\s*Học/gi, 'Năm Học');
+          }
+        }
+      } catch (e) {}
+    };
+    cleanDOM();
+    setInterval(cleanDOM, 800);
+  }
+
   // Initialize App
   function initApp() {
     loadAccounts();
     loadCurrentUser();
     bindGlobalEvents();
     renderAppHeaderAndSidebar();
+    startNienHocSanitizer();
 
     const initialHash = window.location.hash.replace('#', '');
     if (initialHash) {

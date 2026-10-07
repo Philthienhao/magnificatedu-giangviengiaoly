@@ -166,12 +166,29 @@
   let appData = null;
   let activePage = 'overview';
 
+  function startNienHocSanitizer() {
+    const cleanDOM = () => {
+      try {
+        const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+        let node;
+        while ((node = walker.nextNode())) {
+          if (node.nodeValue && /Niên\s*học/i.test(node.nodeValue)) {
+            node.nodeValue = node.nodeValue.replace(/Niên\s*học/gi, 'Năm học').replace(/Niên\s*Học/gi, 'Năm Học');
+          }
+        }
+      } catch (e) {}
+    };
+    cleanDOM();
+    setInterval(cleanDOM, 800);
+  }
+
   // Initialize App
   function initApp() {
     loadAccounts();
     loadCurrentUser();
     bindGlobalEvents();
     renderAppHeaderAndSidebar();
+    startNienHocSanitizer();
 
     const initialHash = window.location.hash.replace('#', '');
     if (initialHash) {
@@ -345,6 +362,23 @@
     }
   }
 
+  function sanitizeNienHoc(obj) {
+    if (!obj) return obj;
+    if (typeof obj === 'string') {
+      return obj.replace(/Niên\s*học/gi, 'Năm học').replace(/Niên\s*Học/gi, 'Năm Học');
+    }
+    if (typeof obj === 'object') {
+      for (let key in obj) {
+        if (typeof obj[key] === 'string') {
+          obj[key] = obj[key].replace(/Niên\s*học/gi, 'Năm học').replace(/Niên\s*Học/gi, 'Năm Học');
+        } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+          sanitizeNienHoc(obj[key]);
+        }
+      }
+    }
+    return obj;
+  }
+
   function loadUserData(email) {
     const key = STORAGE_PREFIX_DATA + email.toLowerCase().replace(/[^a-z0-9]/g, '_');
     const storedData = localStorage.getItem(key);
@@ -355,6 +389,7 @@
     }
 
     if (!appData) appData = generateDefaultUserData(email);
+    sanitizeNienHoc(appData);
     if (!Array.isArray(appData.classes)) appData.classes = [];
     if (!Array.isArray(appData.students)) appData.students = [];
     if (!Array.isArray(appData.catechists)) appData.catechists = [];
@@ -363,6 +398,7 @@
     if (!Array.isArray(appData.libraryMaterials)) appData.libraryMaterials = [];
     if (!Array.isArray(appData.quizzes)) appData.quizzes = [];
     if (!appData.parishInfo) appData.parishInfo = generateDefaultUserData(email).parishInfo;
+    sanitizeNienHoc(appData.parishInfo);
 
     const customKey = 'gvl_custom_avatar_' + email.toLowerCase().replace(/[^a-z0-9]/g, '_');
     let dedicatedAvatar = null;
@@ -405,7 +441,7 @@
               const hasLocalStudents = Array.isArray(appData.students) && appData.students.length > 0;
 
               if (hasCloudClasses || hasCloudStudents || (!hasLocalClasses && !hasLocalStudents)) {
-                appData = data.data;
+                appData = sanitizeNienHoc(data.data);
               }
             }
 
@@ -457,6 +493,7 @@
 
   function saveUserData() {
     if (!currentUser || !appData) return;
+    sanitizeNienHoc(appData);
     if (currentUser.avatar && !isDefaultAvatar(currentUser.avatar)) {
       appData.userAvatar = currentUser.avatar;
     }
