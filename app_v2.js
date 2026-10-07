@@ -916,17 +916,10 @@
         if (existingIcon) {
           existingIcon.outerHTML = `<img src="${appData.parishInfo.logoUrl}" alt="Parish Logo" class="parish-logo-img">`;
         }
-      } else {
-        if (existingIcon) {
-          existingIcon.outerHTML = `<i class="fa-solid fa-church parish-icon"></i>`;
-        }
       }
     }
-
-    const topParishName = document.getElementById('topbar-parish-name');
-    const topParishSub = document.getElementById('topbar-parish-sub');
     if (topParishName && appData.parishInfo) topParishName.textContent = appData.parishInfo.name;
-    if (topParishSub && appData.parishInfo) topParishSub.textContent = `${appData.parishInfo.diocese} • Niên học ${appData.parishInfo.academicYear || '2026 - 2027'}`;
+    if (topParishSub && appData.parishInfo) topParishSub.textContent = `${appData.parishInfo.diocese} • Năm học ${appData.parishInfo.academicYear || '2026 - 2027'}`;
 
     // Admin Menu Section Toggle
     const adminBlock = document.getElementById('admin-menu-section');
@@ -986,7 +979,7 @@
           <div class="kpi-info">
             <h4>Tổng Số Học Viên</h4>
             <div class="kpi-number">${totalStudents}</div>
-            <span class="kpi-sub"><i class="fa-solid fa-arrow-up"></i> Niên học 2025-2026</span>
+            <span class="kpi-sub"><i class="fa-solid fa-arrow-up"></i> Năm học 2025-2026</span>
           </div>
         </div>
 
@@ -2616,7 +2609,7 @@
         <div class="kpi-card">
           <div class="kpi-icon kpi-amber"><i class="fa-solid fa-chalkboard-user"></i></div>
           <div class="kpi-info">
-            <h4>${isAdmin ? 'Đội Ngũ Giáo Lý Viên' : 'Niên Học Hiện Tại'}</h4>
+            <h4>${isAdmin ? 'Đội Ngũ Giáo Lý Viên' : 'Năm Học Hiện Tại'}</h4>
             <div class="kpi-number">${isAdmin ? globalData.catechists.length + ' GLV' : appData.parishInfo.academicYear}</div>
           </div>
         </div>
@@ -2721,7 +2714,7 @@
       <div class="page-header">
         <div>
           <h2 class="page-title"><i class="fa-solid fa-church"></i> Thông Tin Giáo Xứ & Quản Lý Dữ Liệu</h2>
-          <p class="page-subtitle">Cập nhật tên Giáo xứ, hình đại diện Giáo xứ, niên học và thiết lập lại dữ liệu</p>
+          <p class="page-subtitle">Cập nhật tên Giáo xứ, hình đại diện Giáo xứ, năm học và thiết lập lại dữ liệu</p>
         </div>
       </div>
 
@@ -2751,7 +2744,7 @@
 
       <div class="card">
         <div class="card-header">
-          <h3 class="card-title"><i class="fa-solid fa-church"></i> Thông Tin Chung & Niên Học</h3>
+          <h3 class="card-title"><i class="fa-solid fa-church"></i> Thông Tin Chung & Năm Học</h3>
         </div>
         <div class="card-body">
           <form id="parish-settings-form">
@@ -2783,11 +2776,11 @@
 
             <div class="form-row">
               <div class="form-group col-6">
-                <label>Chọn Niên Học Giáo Lý: <span class="text-danger">*</span></label>
+                <label>Chọn Năm Học Giáo Lý: <span class="text-danger">*</span></label>
                 <select id="cfg-academic-year" class="form-control" required>
-                  <option value="2026 - 2027" ${p.academicYear === '2026 - 2027' ? 'selected' : ''}>Niên học 2026 - 2027</option>
-                  <option value="2025 - 2026" ${p.academicYear === '2025 - 2026' ? 'selected' : ''}>Niên học 2025 - 2026</option>
-                  <option value="2027 - 2028" ${p.academicYear === '2027 - 2028' ? 'selected' : ''}>Niên học 2027 - 2028</option>
+                  <option value="2026 - 2027" ${p.academicYear === '2026 - 2027' ? 'selected' : ''}>Năm học 2026 - 2027</option>
+                  <option value="2025 - 2026" ${p.academicYear === '2025 - 2026' ? 'selected' : ''}>Năm học 2025 - 2026</option>
+                  <option value="2027 - 2028" ${p.academicYear === '2027 - 2028' ? 'selected' : ''}>Năm học 2027 - 2028</option>
                 </select>
               </div>
               <div class="form-group col-6">
@@ -2797,7 +2790,7 @@
             </div>
 
             <div class="form-group" style="text-align: right; margin-top: 20px;">
-              <button type="submit" id="save-parish-info-btn" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Lưu Thông Tin Giáo Xứ & Niên Học</button>
+              <button type="submit" id="save-parish-info-btn" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Lưu Thông Tin Giáo Xứ & Năm Học</button>
             </div>
           </form>
         </div>
@@ -2839,7 +2832,7 @@
         saveUserData();
         renderAppHeaderAndSidebar();
 
-        const successMsg = `Đã lưu thành công Thông Tin Giáo Xứ & Niên học ${appData.parishInfo.academicYear} lúc ${new Date().toLocaleTimeString('vi-VN')}!`;
+        const successMsg = `Đã lưu thành công Thông Tin Giáo Xứ & Năm học ${appData.parishInfo.academicYear} lúc ${new Date().toLocaleTimeString('vi-VN')}!`;
         window._parishSaveSuccessMsg = successMsg;
 
         renderSettings(document.getElementById('content-area'));
