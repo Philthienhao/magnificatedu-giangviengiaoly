@@ -317,7 +317,7 @@
     if (window.supabaseClient && email) {
       window.supabaseClient
         .from('user_data')
-        .select('data, account_info')
+        .select('data, updated_at')
         .eq('email', email.toLowerCase())
         .maybeSingle()
         .then(({ data, error }) => {
@@ -337,9 +337,9 @@
               }
             }
 
-            // Smart Avatar Merge: Priority to Local Custom Avatar, fallback to Cloud Avatar
-            const cloudAvatar = (data.account_info && data.account_info.avatar && !isDefaultAvatar(data.account_info.avatar))
-              ? data.account_info.avatar
+            const cloudAccInfo = (data.data && data.data.account_info) ? data.data.account_info : {};
+            const cloudAvatar = (cloudAccInfo && cloudAccInfo.avatar && !isDefaultAvatar(cloudAccInfo.avatar))
+              ? cloudAccInfo.avatar
               : (data.data && data.data.userAvatar && !isDefaultAvatar(data.data.userAvatar) ? data.data.userAvatar : null);
 
             const effectiveAvatar = localCustomAvatar || cloudAvatar;
@@ -355,14 +355,13 @@
               renderAppHeaderAndSidebar();
             }
 
-            // If local has custom avatar that differs from Cloud, sync local custom avatar to Cloud
             if (localCustomAvatar && (isDefaultAvatar(cloudAvatar) || cloudAvatar !== localCustomAvatar)) {
               saveUserData();
             }
 
-            if (data.account_info && currentUser && currentUser.email.toLowerCase() === email.toLowerCase()) {
-              currentUser.holyName = data.account_info.holyName || currentUser.holyName;
-              currentUser.name = data.account_info.name || currentUser.name;
+            if (cloudAccInfo && currentUser && currentUser.email.toLowerCase() === email.toLowerCase()) {
+              currentUser.holyName = cloudAccInfo.holyName || currentUser.holyName;
+              currentUser.name = cloudAccInfo.name || currentUser.name;
               const match = accountsList.find(a => a.email.toLowerCase() === currentUser.email.toLowerCase());
               if (match) {
                 match.holyName = currentUser.holyName;
@@ -374,7 +373,6 @@
             }
             if (typeof renderCurrentView === 'function') renderCurrentView();
           } else {
-            // If cloud has no record for this user but local data exists, sync local data up to cloud once
             saveUserData();
           }
         })
@@ -387,6 +385,18 @@
     if (currentUser.avatar && !isDefaultAvatar(currentUser.avatar)) {
       appData.userAvatar = currentUser.avatar;
     }
+    appData.account_info = {
+      id: currentUser.id,
+      email: currentUser.email,
+      name: currentUser.name,
+      holyName: currentUser.holyName,
+      role: currentUser.role,
+      avatar: currentUser.avatar,
+      phone: currentUser.phone,
+      status: currentUser.status,
+      lastLogin: currentUser.lastLogin,
+      loginCount: currentUser.loginCount
+    };
     const key = STORAGE_PREFIX_DATA + currentUser.email.toLowerCase().replace(/[^a-z0-9]/g, '_');
     try {
       localStorage.setItem(key, JSON.stringify(appData));
@@ -400,18 +410,6 @@
         window.supabaseClient.from('user_data').upsert({
           email: currentUser.email.toLowerCase(),
           data: appData,
-          account_info: {
-            id: currentUser.id,
-            email: currentUser.email,
-            name: currentUser.name,
-            holyName: currentUser.holyName,
-            role: currentUser.role,
-            avatar: currentUser.avatar,
-            phone: currentUser.phone,
-            status: currentUser.status,
-            lastLogin: currentUser.lastLogin,
-            loginCount: currentUser.loginCount
-          },
           updated_at: new Date().toISOString()
         }).then(({ error }) => {
           if (error) {
@@ -436,20 +434,22 @@
     }
     showToast('Đang sao lưu dữ liệu cá nhân lên Supabase Cloud...', 'info');
     try {
+      if (currentUser.avatar && !isDefaultAvatar(currentUser.avatar)) {
+        appData.userAvatar = currentUser.avatar;
+      }
+      appData.account_info = {
+        id: currentUser.id,
+        email: currentUser.email,
+        name: currentUser.name,
+        holyName: currentUser.holyName,
+        role: currentUser.role,
+        avatar: currentUser.avatar,
+        phone: currentUser.phone,
+        status: currentUser.status
+      };
       const { error } = await window.supabaseClient.from('user_data').upsert({
         email: currentUser.email.toLowerCase(),
         data: appData,
-        account_info: {
-          id: currentUser.id,
-          email: currentUser.email,
-          name: currentUser.name,
-          holyName: currentUser.holyName,
-          role: currentUser.role,
-          avatar: currentUser.avatar,
-          phone: currentUser.phone,
-          status: currentUser.status,
-          lastLogin: currentUser.lastLogin
-        },
         updated_at: new Date().toISOString()
       });
       if (error) throw error;
@@ -473,7 +473,7 @@
     try {
       const { data, error } = await window.supabaseClient
         .from('user_data')
-        .select('data, account_info')
+        .select('data, updated_at')
         .eq('email', currentUser.email.toLowerCase())
         .maybeSingle();
 
@@ -484,10 +484,18 @@
       }
 
       appData = data.data;
-      const key = STORAGE_PREFIX_DATA + currentUser.email.toLowerCase().replace(/[^a-z0-9]/g, '_');
-      localStorage.setItem(key, JSON.stringify(appData));
-      showToast('✓ KHÔI PHỤC DỮ LIỆU TỪ CLOUD THÀNH CÔNG!', 'success');
+      const cloudAcc = appData.account_info || {};
+      if (cloudAcc.avatar && !isDefaultAvatar(cloudAcc.avatar)) {
+        currentUser.avatar = cloudAcc.avatar;
+      } else if (appData.userAvatar && !isDefaultAvatar(appData.userAvatar)) {
+        currentUser.avatar = appData.userAvatar;
+      }
+      saveAccounts();
+      saveCurrentUser();
+      saveUserData();
+      renderAppHeaderAndSidebar();
       if (typeof renderCurrentView === 'function') renderCurrentView();
+      showToast('✓ Đã khôi phục toàn bộ dữ liệu từ Supabase Cloud!', 'success');
     } catch (e) {
       alert('Lỗi khôi phục đám mây: ' + (e.message || e));
     }
