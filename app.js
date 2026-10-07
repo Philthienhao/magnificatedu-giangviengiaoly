@@ -3751,8 +3751,8 @@
   }
   window.flashButtonSuccess = flashButtonSuccess;
 
-  // ULTRA-COMPACT AVATAR COMPRESSION (Guarantees < 10KB Base64 JPEG output for any file size)
-  function compressImage(base64Str, maxWidth = 100, maxHeight = 100, quality = 0.65, callback) {
+  // ULTRA-COMPACT HIGH-RES AVATAR COMPRESSION (Crisp 200x200px output for retina displays)
+  function compressImage(base64Str, maxWidth = 200, maxHeight = 200, quality = 0.75, callback) {
     if (!base64Str) { if (callback) callback(base64Str); return; }
     const img = new Image();
     if (base64Str.startsWith('http')) {
@@ -3761,7 +3761,7 @@
     img.onload = () => {
       try {
         const canvas = document.createElement('canvas');
-        const targetSize = Math.min(maxWidth || 100, 100); // 100x100px is crisp for UI avatars (~5KB Base64 JPEG)
+        const targetSize = Math.min(maxWidth || 200, 300);
         canvas.width = targetSize;
         canvas.height = targetSize;
 
@@ -3778,9 +3778,9 @@
         ctx.imageSmoothingQuality = 'high';
         ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, targetSize, targetSize);
 
-        let compressed = canvas.toDataURL('image/jpeg', quality || 0.65);
-        if (compressed.length > 30000) {
-          compressed = canvas.toDataURL('image/jpeg', 0.45);
+        let compressed = canvas.toDataURL('image/jpeg', quality || 0.75);
+        if (compressed.length > 50000) {
+          compressed = canvas.toDataURL('image/jpeg', 0.55);
         }
         if (callback) callback(compressed);
       } catch (e) {
@@ -3843,12 +3843,16 @@
 
     const avatarPreview = document.getElementById('profile-avatar-preview');
     const effectiveNewAvatar = uploadedUserAvatarBase64
-      || (avatarPreview && avatarPreview.src && !isDefaultAvatar(avatarPreview.src) ? avatarPreview.src : null);
+      || (avatarPreview && avatarPreview.src && avatarPreview.src.startsWith('data:image/') ? avatarPreview.src : null);
 
     if (effectiveNewAvatar) {
       currentUser.avatar = effectiveNewAvatar;
       if (!appData) appData = {};
       appData.userAvatar = effectiveNewAvatar;
+      if (currentUser.email) {
+        const customKey = 'gvl_custom_avatar_' + currentUser.email.toLowerCase().replace(/[^a-z0-9]/g, '_');
+        try { localStorage.setItem(customKey, effectiveNewAvatar); } catch (e) {}
+      }
     }
 
     const match = accountsList.find(a => a.email.toLowerCase() === currentUser.email.toLowerCase());
@@ -3857,17 +3861,16 @@
       match.name = currentUser.name;
       match.phone = currentUser.phone;
       match.role = currentUser.role;
-      match.avatar = currentUser.avatar;
+      if (effectiveNewAvatar) match.avatar = effectiveNewAvatar;
     }
 
-    // Sync avatar to catechists list if matching email or name
     if (appData && Array.isArray(appData.catechists)) {
       const catMatch = appData.catechists.find(c => (c.email && c.email.toLowerCase() === currentUser.email.toLowerCase()) || c.name === currentUser.name);
       if (catMatch) {
         catMatch.holyName = currentUser.holyName;
         catMatch.name = currentUser.name;
         catMatch.phone = currentUser.phone;
-        catMatch.avatar = currentUser.avatar;
+        if (effectiveNewAvatar) catMatch.avatar = effectiveNewAvatar;
       }
     }
 
@@ -3904,27 +3907,39 @@
       avatarInput.onchange = function(e) {
         const file = e.target.files && e.target.files[0];
         if (file) {
-          showToast('Đang tối ưu nén & lưu ảnh đại diện...', 'info');
+          showToast('Đang xử lý & lưu ảnh đại diện...', 'info');
           const reader = new FileReader();
           reader.onload = function(evt) {
-            compressImage(evt.target.result, 120, 120, 0.70, function(compressed) {
-              uploadedUserAvatarBase64 = compressed;
-              if (avatarPreview) avatarPreview.src = compressed;
+            const rawBase64 = evt.target.result;
+            // Capture rawBase64 immediately so submit works without waiting
+            uploadedUserAvatarBase64 = rawBase64;
+            if (avatarPreview) avatarPreview.src = rawBase64;
+            if (currentUser) {
+              currentUser.avatar = rawBase64;
+              if (!appData) appData = {};
+              appData.userAvatar = rawBase64;
+            }
+
+            // Perform async high-res compression for permanent storage
+            compressImage(rawBase64, 200, 200, 0.75, function(compressed) {
+              const finalAvatar = compressed || rawBase64;
+              uploadedUserAvatarBase64 = finalAvatar;
+              if (avatarPreview) avatarPreview.src = finalAvatar;
               if (currentUser) {
-                currentUser.avatar = compressed;
+                currentUser.avatar = finalAvatar;
                 if (!appData) appData = {};
-                appData.userAvatar = compressed;
+                appData.userAvatar = finalAvatar;
                 const match = accountsList.find(a => a.email.toLowerCase() === currentUser.email.toLowerCase());
-                if (match) match.avatar = compressed;
+                if (match) match.avatar = finalAvatar;
                 if (currentUser.email) {
                   const customKey = 'gvl_custom_avatar_' + currentUser.email.toLowerCase().replace(/[^a-z0-9]/g, '_');
-                  try { localStorage.setItem(customKey, compressed); } catch (err) {}
+                  try { localStorage.setItem(customKey, finalAvatar); } catch (err) {}
                 }
                 saveAccounts();
                 saveCurrentUser();
                 saveUserData();
                 renderAppHeaderAndSidebar();
-                showToast('✓ Đã lưu vĩnh viễn ảnh đại diện mới! ✨', 'success');
+                showToast('✓ Đã lưu ảnh đại diện thành công! ✨', 'success');
               }
             });
           };
