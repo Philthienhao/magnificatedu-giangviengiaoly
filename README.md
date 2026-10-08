@@ -159,6 +159,21 @@ Hệ thống tính điểm được thiết kế minh bạch với các chế đ
 
 ---
 
+### ⚡ Sự cố 9: Reset toàn bộ thông số mẫu tĩnh trên Dashboard sang cơ chế tự động tính toán theo dữ liệu thực tế
+* **Hiện tượng**: Giao diện Tổng quan (Dashboard) hiển thị các thông số mẫu tĩnh từ ban đầu dù hệ thống chưa có dữ liệu thực tế:
+  - 4 ô điểm danh hôm nay cố định: 78 Có mặt, 3 Đi trễ, 2 Vắng có phép, 1 Vắng không phép.
+  - Tỷ lệ chuyên cần cố định: 96.8%.
+  - Lịch học trong tuần hiển thị các lớp mẫu (Khai Tâm 1, Ấu Nhi 2A, Thiếu Nhi 2B...).
+  - Biểu đồ tròn phân bố học lực hiển thị tỷ lệ mẫu cố định [45, 30, 20, 5].
+* **Nguyên nhân**: Mã nguồn `renderOverview` trước đây đặt cứng các giá trị HTML và mảng dữ liệu Chart.js thay vì truy vấn từ đối tượng `appData`.
+* **Cách khắc phục triệt để**:
+  1. **Tình hình điểm danh & Tỷ lệ chuyên cần**: Tự động tính toán từ `appData.attendanceLogs`. Nếu chưa có dữ liệu điểm danh, hiển thị `0` và `0%` kèm thông báo trạng thái "Chưa có dữ liệu". Khi giáo viên điểm danh, số liệu tự động nhảy đúng thực tế.
+  2. **Lịch học trong tuần**: Tự động gom nhóm theo lịch thực tế của các lớp trong `appData.classes`. Nếu chưa có lớp hoặc chưa xếp lịch, hiển thị ô trạng thái tinh gọn hướng dẫn tạo lớp mới.
+  3. **Biểu đồ phân bố học lực**: Tự động phân loại xếp hạng của từng học viên theo điểm số thực tế. Nếu chưa có học viên nào được nhập điểm, hiển thị thông báo hướng dẫn và chỉ vẽ biểu đồ khi có dữ liệu điểm thực tế.
+  4. Đồng bộ logic tính toán giữa `app_v2.js` và `app.js`, nâng cache buster lên `v=20261008_v1000`.
+
+---
+
 ## 🚀 4. Hướng Dẫn Cập Nhật & Deploy Dự Án Chuẩn 4 Bước
 
 Khi có thay đổi mã nguồn, thực hiện đúng quy trình sau:

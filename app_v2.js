@@ -990,6 +990,87 @@
     const totalStudents = appData.students.length;
     const totalCatechists = appData.catechists.length;
 
+    // 1. Compute Attendance Statistics (All-time and Today)
+    const allAttendanceLogs = appData.attendanceLogs || [];
+    let totalAttRecords = 0;
+    let totalPresentAndLate = 0;
+    allAttendanceLogs.forEach(log => {
+      if (log.stats) {
+        totalAttRecords += (log.stats.total || 0);
+        totalPresentAndLate += ((log.stats.present || 0) + (log.stats.late || 0));
+      } else if (Array.isArray(log.records)) {
+        totalAttRecords += log.records.length;
+        totalPresentAndLate += log.records.filter(r => r.status === 'present' || r.status === 'late').length;
+      }
+    });
+
+    const attendanceRate = totalAttRecords > 0 
+      ? (Math.round((totalPresentAndLate / totalAttRecords) * 1000) / 10).toFixed(1) + '%'
+      : '0%';
+    const attendanceSub = totalAttRecords > 0
+      ? `<i class="fa-solid fa-star"></i> Tỷ lệ trung bình`
+      : `<i class="fa-solid fa-clock"></i> Chưa có dữ liệu`;
+
+    // Today's Attendance breakdown
+    const todayStr = new Date().toISOString().split('T')[0];
+    const todayLogs = allAttendanceLogs.filter(l => l.date === todayStr);
+    let todayPresent = 0, todayLate = 0, todayExcused = 0, todayUnexcused = 0;
+
+    if (todayLogs.length > 0) {
+      todayLogs.forEach(l => {
+        if (l.stats) {
+          todayPresent += (l.stats.present || 0);
+          todayLate += (l.stats.late || 0);
+          todayExcused += (l.stats.excused || 0);
+          todayUnexcused += (l.stats.unexcused || 0);
+        } else if (Array.isArray(l.records)) {
+          todayPresent += l.records.filter(r => r.status === 'present').length;
+          todayLate += l.records.filter(r => r.status === 'late').length;
+          todayExcused += l.records.filter(r => r.status === 'excused').length;
+          todayUnexcused += l.records.filter(r => r.status === 'unexcused').length;
+        }
+      });
+    }
+
+    // 2. Group classes by schedule / day for Weekly Timetable
+    const scheduleGroups = {};
+    (appData.classes || []).forEach(cls => {
+      const sched = (cls.schedule || '').trim();
+      if (sched) {
+        if (!scheduleGroups[sched]) scheduleGroups[sched] = [];
+        scheduleGroups[sched].push(cls);
+      }
+    });
+    const hasSchedules = Object.keys(scheduleGroups).length > 0;
+
+    // 3. Calculate Academic Performance Distribution
+    let countXuatSac = 0;
+    let countGioi = 0;
+    let countKha = 0;
+    let countTrungBinh = 0;
+    let countYeu = 0;
+    let totalGradedStudents = 0;
+
+    (appData.students || []).forEach(st => {
+      let rank = null;
+      if (st.grades) {
+        const yearGrade = calculateStudentYearGrade(st);
+        if (yearGrade && typeof yearGrade.average === 'number' && yearGrade.average > 0) {
+          rank = yearGrade.rank;
+        } else if (st.grades.average > 0) {
+          rank = st.grades.rank;
+        } else if (st.grades.semester1 && st.grades.semester1.average > 0) {
+          rank = st.grades.semester1.rank;
+        }
+      }
+
+      if (rank === 'Xuất sắc') { countXuatSac++; totalGradedStudents++; }
+      else if (rank === 'Giỏi') { countGioi++; totalGradedStudents++; }
+      else if (rank === 'Khá') { countKha++; totalGradedStudents++; }
+      else if (rank === 'Trung bình') { countTrungBinh++; totalGradedStudents++; }
+      else if (rank === 'Yếu') { countYeu++; totalGradedStudents++; }
+    });
+
     container.innerHTML = `
       <div class="welcome-slogan-card">
         <div class="slogan-content">
@@ -1035,8 +1116,8 @@
           <div class="kpi-icon kpi-purple"><i class="fa-solid fa-chart-line"></i></div>
           <div class="kpi-info">
             <h4>Tỷ Lệ Chuyên Cần</h4>
-            <div class="kpi-number">96.8%</div>
-            <span class="kpi-sub"><i class="fa-solid fa-star"></i> Xếp loại Tốt</span>
+            <div class="kpi-number">${attendanceRate}</div>
+            <span class="kpi-sub">${attendanceSub}</span>
           </div>
         </div>
       </div>
@@ -1053,19 +1134,19 @@
             <div class="card-body">
               <div class="attendance-summary-grid">
                 <div class="att-status-box att-present">
-                  <div class="num">78</div>
+                  <div class="num">${todayPresent}</div>
                   <div class="lbl">🟢 Có Mặt</div>
                 </div>
                 <div class="att-status-box att-late">
-                  <div class="num">3</div>
+                  <div class="num">${todayLate}</div>
                   <div class="lbl">🟡 Đi Trễ</div>
                 </div>
                 <div class="att-status-box att-excused">
-                  <div class="num">2</div>
+                  <div class="num">${todayExcused}</div>
                   <div class="lbl">🔵 Vắng Có Phép</div>
                 </div>
                 <div class="att-status-box att-unexcused">
-                  <div class="num">1</div>
+                  <div class="num">${todayUnexcused}</div>
                   <div class="lbl">🔴 Vắng Không Phép</div>
                 </div>
               </div>
@@ -1074,23 +1155,23 @@
               <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--dark-navy);">
                 <i class="fa-solid fa-calendar-days text-primary"></i> Lịch Học Trong Tuần
               </h4>
-              <div class="schedule-grid">
-                <div class="schedule-day-card">
-                  <div class="day-name">Chúa Nhật (Sáng)</div>
-                  <div class="class-pill-mini">Khai Tâm 1 (08:00)</div>
-                  <div class="class-pill-mini">Ấu Nhi 2A (08:00)</div>
-                  <div class="class-pill-mini">Thiếu Nhi 2B (08:00)</div>
+              ${!hasSchedules ? `
+                <div style="text-align: center; padding: 24px 12px; color: var(--slate-muted); font-size: 13px; background: rgba(241, 245, 249, 0.5); border-radius: 8px; border: 1px dashed var(--slate-border); margin-bottom: 8px;">
+                  <i class="fa-solid fa-calendar-xmark" style="font-size: 24px; opacity: 0.35; margin-bottom: 8px; display: block;"></i>
+                  Chưa có lịch học (Dữ liệu sẽ tự động hiển thị khi bạn tạo và xếp lịch lớp học).
                 </div>
-                <div class="schedule-day-card">
-                  <div class="day-name">Chúa Nhật (Chiều)</div>
-                  <div class="class-pill-mini">Nghĩa Sĩ 1 (09:30)</div>
-                  <div class="class-pill-mini">Hiệp Sĩ 1 (09:30)</div>
+              ` : `
+                <div class="schedule-grid">
+                  ${Object.keys(scheduleGroups).map(schedName => `
+                    <div class="schedule-day-card">
+                      <div class="day-name">${schedName}</div>
+                      ${scheduleGroups[schedName].map(cls => `
+                        <div class="class-pill-mini">${cls.name} ${cls.room ? '(' + cls.room + ')' : ''}</div>
+                      `).join('')}
+                    </div>
+                  `).join('')}
                 </div>
-                <div class="schedule-day-card">
-                  <div class="day-name">Thứ Bảy</div>
-                  <div class="class-pill-mini">Tập Hát & Nghi Thức (15:00)</div>
-                </div>
-              </div>
+              `}
             </div>
           </div>
 
@@ -1100,7 +1181,14 @@
               <h3 class="card-title"><i class="fa-solid fa-chart-pie"></i> Phân Bố Học Lực Giáo Lý</h3>
             </div>
             <div class="card-body">
-              <canvas id="overviewChart" style="max-height: 240px;"></canvas>
+              ${totalGradedStudents === 0 ? `
+                <div style="text-align: center; padding: 48px 16px; color: var(--slate-muted); font-size: 13px;">
+                  <i class="fa-solid fa-chart-pie" style="font-size: 36px; opacity: 0.3; margin-bottom: 12px; display: block;"></i>
+                  Chưa có dữ liệu học lực (Biểu đồ sẽ tự động cập nhật khi giáo lý viên nhập điểm học viên).
+                </div>
+              ` : `
+                <canvas id="overviewChart" style="max-height: 240px;"></canvas>
+              `}
             </div>
           </div>
         </div>
@@ -1142,29 +1230,31 @@
       </div>
     `;
 
-    // Render Chart.js
-    setTimeout(() => {
-      const ctx = document.getElementById('overviewChart');
-      if (ctx && typeof Chart !== 'undefined') {
-        new Chart(ctx, {
-          type: 'doughnut',
-          data: {
-            labels: ['Xuất sắc', 'Giỏi', 'Khá', 'Trung bình'],
-            datasets: [{
-              data: [45, 30, 20, 5],
-              backgroundColor: ['#10b981', '#2563eb', '#f59e0b', '#ef4444']
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: { position: 'right' }
+    // Render Chart.js only if there is graded student data
+    if (totalGradedStudents > 0) {
+      setTimeout(() => {
+        const ctx = document.getElementById('overviewChart');
+        if (ctx && typeof Chart !== 'undefined') {
+          new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+              labels: ['Xuất sắc', 'Giỏi', 'Khá', 'Trung bình', 'Yếu'],
+              datasets: [{
+                data: [countXuatSac, countGioi, countKha, countTrungBinh, countYeu],
+                backgroundColor: ['#10b981', '#2563eb', '#f59e0b', '#f97316', '#ef4444']
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { position: 'right' }
+              }
             }
-          }
-        });
-      }
-    }, 100);
+          });
+        }
+      }, 100);
+    }
   }
 
   // Helper: Multi-tenant Global Data Aggregation for Admin
