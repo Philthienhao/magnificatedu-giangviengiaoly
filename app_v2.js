@@ -1698,42 +1698,46 @@
             </div>
 
             <!-- DYNAMIC GRID ROW, COL & SEATS-PER-DESK CONTROLS FOR TEACHERS -->
-            <div style="display: flex; align-items: center; gap: 10px; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); padding: 6px 14px; border-radius: 20px; font-size: 13px; flex-wrap: wrap;">
-              <span style="font-weight: 700; color: #3b82f6;"><i class="fa-solid fa-sliders"></i> Tùy chỉnh Sơ đồ Lớp:</span>
+            <div style="display: flex; align-items: center; gap: 12px; background: linear-gradient(135deg, #1e293b, #0f172a); border: 1.5px solid #3b82f6; padding: 8px 18px; border-radius: 30px; font-size: 13px; flex-wrap: wrap; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.15); color: #ffffff;">
+              <span style="font-weight: 800; color: #60a5fa; font-size: 12.5px; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-sliders" style="color: #60a5fa;"></i> Tùy chỉnh Sơ đồ Lớp:
+              </span>
               
-              <div style="display: flex; align-items: center; gap: 4px;">
-                <label style="margin: 0; font-size: 12px; font-weight: 600;">Hàng:</label>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <label style="margin: 0; font-size: 12.5px; font-weight: 700; color: #f8fafc;">Hàng:</label>
                 <input type="number" min="1" max="15" value="${rows}" 
                        onchange="window.updateClassSeatingGridSize('${classId}', this.value, null, null)" 
-                       style="width: 50px; height: 28px; padding: 2px 4px; font-size: 12px; border-radius: 6px; border: 1px solid var(--slate-border); text-align: center; font-weight: 700;">
+                       style="width: 52px; height: 30px; padding: 2px 6px; font-size: 13px; border-radius: 8px; border: 2px solid #3b82f6; text-align: center; font-weight: 800; background: #ffffff; color: #0f172a; box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);">
               </div>
 
-              <span style="font-weight: 700;">x</span>
+              <span style="font-weight: 800; color: #94a3b8; font-size: 14px;">×</span>
 
-              <div style="display: flex; align-items: center; gap: 4px;">
-                <label style="margin: 0; font-size: 12px; font-weight: 600;">Dãy:</label>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <label style="margin: 0; font-size: 12.5px; font-weight: 700; color: #f8fafc;">Dãy:</label>
                 <input type="number" min="1" max="12" value="${cols}" 
                        onchange="window.updateClassSeatingGridSize('${classId}', null, this.value, null)" 
-                       style="width: 50px; height: 28px; padding: 2px 4px; font-size: 12px; border-radius: 6px; border: 1px solid var(--slate-border); text-align: center; font-weight: 700;">
+                       style="width: 52px; height: 30px; padding: 2px 6px; font-size: 13px; border-radius: 8px; border: 2px solid #3b82f6; text-align: center; font-weight: 800; background: #ffffff; color: #0f172a; box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);">
               </div>
 
-              <span style="font-weight: 700; color: rgba(255,255,255,0.2);">|</span>
+              <span style="font-weight: 700; color: #475569; margin: 0 2px;">|</span>
 
-              <div style="display: flex; align-items: center; gap: 4px;">
-                <label style="margin: 0; font-size: 12px; font-weight: 600; color: #60a5fa;"><i class="fa-solid fa-users-rectangle"></i> Số em/bàn:</label>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <label style="margin: 0; font-size: 12.5px; font-weight: 700; color: #38bdf8; display: flex; align-items: gap: 4px;">
+                  <i class="fa-solid fa-users-rectangle"></i> Số em/bàn:
+                </label>
                 <select onchange="window.updateClassSeatingGridSize('${classId}', null, null, this.value)"
-                        style="height: 28px; padding: 2px 6px; font-size: 12px; border-radius: 6px; border: 1px solid var(--slate-border); font-weight: 700; background: var(--bg-card, #1e293b); color: var(--slate-heading);">
-                  <option value="1" ${seatsPerDesk === 1 ? 'selected' : ''}>1 em / bàn</option>
-                  <option value="2" ${seatsPerDesk === 2 ? 'selected' : ''}>2 em / bàn</option>
-                  <option value="3" ${seatsPerDesk === 3 ? 'selected' : ''}>3 em / bàn</option>
-                  <option value="4" ${seatsPerDesk === 4 ? 'selected' : ''}>4 em / bàn</option>
-                  <option value="5" ${seatsPerDesk === 5 ? 'selected' : ''}>5 em / bàn</option>
-                  <option value="6" ${seatsPerDesk === 6 ? 'selected' : ''}>6 em / bàn</option>
+                        style="height: 30px; padding: 2px 10px; font-size: 12.5px; border-radius: 8px; border: 2px solid #0284c7; font-weight: 800; background: #0284c7; color: #ffffff; cursor: pointer; box-shadow: 0 2px 6px rgba(2, 132, 199, 0.3);">
+                  <option value="1" ${seatsPerDesk === 1 ? 'selected' : ''} style="background: #0f172a; color: #ffffff;">1 em / bàn</option>
+                  <option value="2" ${seatsPerDesk === 2 ? 'selected' : ''} style="background: #0f172a; color: #ffffff;">2 em / bàn</option>
+                  <option value="3" ${seatsPerDesk === 3 ? 'selected' : ''} style="background: #0f172a; color: #ffffff;">3 em / bàn</option>
+                  <option value="4" ${seatsPerDesk === 4 ? 'selected' : ''} style="background: #0f172a; color: #ffffff;">4 em / bàn</option>
+                  <option value="5" ${seatsPerDesk === 5 ? 'selected' : ''} style="background: #0f172a; color: #ffffff;">5 em / bàn</option>
+                  <option value="6" ${seatsPerDesk === 6 ? 'selected' : ''} style="background: #0f172a; color: #ffffff;">6 em / bàn</option>
                 </select>
               </div>
 
-              <span style="font-size: 11.5px; color: #60a5fa; font-weight: 700; background: rgba(59, 130, 246, 0.2); padding: 3px 8px; border-radius: 12px;">
-                (${rows * cols} Bàn = ${totalCapacity} Ghế)
+              <span style="font-size: 12px; color: #fef08a; font-weight: 800; background: linear-gradient(135deg, rgba(234, 179, 8, 0.25), rgba(202, 138, 4, 0.25)); border: 1px solid #eab308; padding: 4px 12px; border-radius: 20px; box-shadow: 0 2px 8px rgba(234, 179, 8, 0.2);">
+                <i class="fa-solid fa-calculator" style="margin-right: 4px;"></i> ${rows * cols} Bàn = ${totalCapacity} Ghế
               </span>
             </div>
           </div>
