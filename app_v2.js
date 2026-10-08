@@ -1433,25 +1433,47 @@
 
     const filteredStudents = appData.students.filter(s => !selectedClassId || s.classId === selectedClassId);
 
-    // Initialize seatingChart state if missing
-    if (!appData.seatingCharts) appData.seatingCharts = {};
-    if (selectedClassId && !appData.seatingCharts[selectedClassId]) {
-      const seats = {};
-      filteredStudents.forEach((st, idx) => {
-        const r = Math.floor(idx / 5);
-        const c = idx % 5;
-        seats[`r${r}_c${c}`] = st.id;
-      });
-      appData.seatingCharts[selectedClassId] = {
-        rows: Math.max(4, Math.ceil((filteredStudents.length || 1) / 5)),
-        cols: 5,
-        seats: seats,
-        absentSeats: []
-      };
-    }
+  // Seating chart helper functions for backward compatibility & multi-seat desks
+  function getSeatIdFromChart(chart, r, c, s) {
+    if (!chart || !chart.seats) return null;
+    const keyWithS = `r${r}_c${c}_s${s}`;
+    if (chart.seats[keyWithS] !== undefined) return chart.seats[keyWithS];
+    if (s === 0 && chart.seats[`r${r}_c${c}`] !== undefined) return chart.seats[`r${r}_c${c}`];
+    return null;
+  }
 
-    const currentChart = appData.seatingCharts[selectedClassId] || { rows: 4, cols: 5, seats: {}, absentSeats: [] };
-    if (!currentChart.absentSeats) currentChart.absentSeats = [];
+  function isSeatAbsentInChart(chart, r, c, s) {
+    if (!chart || !chart.absentSeats) return false;
+    const keyWithS = `r${r}_c${c}_s${s}`;
+    if (chart.absentSeats.includes(keyWithS)) return true;
+    if (s === 0 && chart.absentSeats.includes(`r${r}_c${c}`)) return true;
+    return false;
+  }
+
+  // Initialize seatingChart state if missing
+  if (!appData.seatingCharts) appData.seatingCharts = {};
+  if (selectedClassId && !appData.seatingCharts[selectedClassId]) {
+    const seats = {};
+    const defaultSpd = 2; // Default 2 students per desk
+    filteredStudents.forEach((st, idx) => {
+      const deskIdx = Math.floor(idx / defaultSpd);
+      const r = Math.floor(deskIdx / 5);
+      const c = deskIdx % 5;
+      const s = idx % defaultSpd;
+      seats[`r${r}_c${c}_s${s}`] = st.id;
+    });
+    appData.seatingCharts[selectedClassId] = {
+      rows: Math.max(4, Math.ceil((filteredStudents.length || 1) / (5 * defaultSpd))),
+      cols: 5,
+      seatsPerDesk: defaultSpd,
+      seats: seats,
+      absentSeats: []
+    };
+  }
+
+  const currentChart = appData.seatingCharts[selectedClassId] || { rows: 4, cols: 5, seatsPerDesk: 2, seats: {}, absentSeats: [] };
+  if (!currentChart.absentSeats) currentChart.absentSeats = [];
+  if (!currentChart.seatsPerDesk) currentChart.seatsPerDesk = 2;
 
     // Find saved historical record for current (selectedClassId, selectedDate, selectedSessionType)
     const logs = appData.attendanceLogs || [];
@@ -1610,13 +1632,23 @@
   function renderAISeatingSection(classId, filteredStudents, chart) {
     const rows = chart.rows || 4;
     const cols = chart.cols || 5;
+    const seatsPerDesk = chart.seatsPerDesk || 2;
 
     if (!chart.absentSeats) chart.absentSeats = [];
     if (!chart.confidenceScores) chart.confidenceScores = {};
 
-    let absentCount = chart.absentSeats.length;
-    let presentCount = filteredStudents.length - absentCount;
+    let absentCount = 0;
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        for (let s = 0; s < seatsPerDesk; s++) {
+          if (isSeatAbsentInChart(chart, r, c, s)) absentCount++;
+        }
+      }
+    }
+
+    let presentCount = Math.max(0, filteredStudents.length - absentCount);
     const hasBaseline = !!chart.baselinePhoto;
+    const totalCapacity = rows * cols * seatsPerDesk;
 
     return `
       <div class="card">
@@ -1626,7 +1658,7 @@
               <i class="fa-solid fa-wand-magic-sparkles text-primary"></i> 🤖 AI Quét Điểm Danh Theo Sơ Đồ Lớp Học
             </h3>
             <p style="font-size: 12px; color: var(--slate-muted); margin-top: 4px;">
-              ⚡ <strong>TỰ ĐỘNG 100%:</strong> Tùy chỉnh số Hàng & Dãy ➔ Tải <strong>Ảnh Lớp Mẫu Đầu Năm</strong> ➔ Buổi học bấm <strong>"📸 CHỤP / TẢI ẢNH HÔM NAY"</strong> để AI tự động phát hiện ghế trống & điểm danh!
+              ⚡ <strong>TỰ ĐỘNG 100%:</strong> Tùy chỉnh số Hàng & Dãy & Số em/bàn ➔ Tải <strong>Ảnh Lớp Mẫu Đầu Năm</strong> ➔ Buổi học bấm <strong>"📸 CHỤP / TẢI ẢNH HÔM NAY"</strong> để AI tự động phát hiện ghế trống & điểm danh!
             </p>
           </div>
           <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
@@ -1663,19 +1695,44 @@
               </div>
             </div>
 
-            <!-- DYNAMIC GRID ROW & COL CONTROLS FOR TEACHERS -->
-            <div style="display: flex; align-items: center; gap: 8px; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); padding: 5px 12px; border-radius: 20px; font-size: 13px;">
+            <!-- DYNAMIC GRID ROW, COL & SEATS-PER-DESK CONTROLS FOR TEACHERS -->
+            <div style="display: flex; align-items: center; gap: 10px; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); padding: 6px 14px; border-radius: 20px; font-size: 13px; flex-wrap: wrap;">
               <span style="font-weight: 700; color: #3b82f6;"><i class="fa-solid fa-sliders"></i> Tùy chỉnh Sơ đồ Lớp:</span>
-              <label style="margin: 0; font-size: 12px; font-weight: 600;">Hàng:</label>
-              <input type="number" min="1" max="15" value="${rows}" 
-                     onchange="window.updateClassSeatingGridSize('${classId}', this.value, null)" 
-                     style="width: 50px; height: 26px; padding: 2px 4px; font-size: 12px; border-radius: 4px; border: 1px solid var(--slate-border); text-align: center; font-weight: 700;">
+              
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <label style="margin: 0; font-size: 12px; font-weight: 600;">Hàng:</label>
+                <input type="number" min="1" max="15" value="${rows}" 
+                       onchange="window.updateClassSeatingGridSize('${classId}', this.value, null, null)" 
+                       style="width: 50px; height: 28px; padding: 2px 4px; font-size: 12px; border-radius: 6px; border: 1px solid var(--slate-border); text-align: center; font-weight: 700;">
+              </div>
+
               <span style="font-weight: 700;">x</span>
-              <label style="margin: 0; font-size: 12px; font-weight: 600;">Dãy:</label>
-              <input type="number" min="1" max="12" value="${cols}" 
-                     onchange="window.updateClassSeatingGridSize('${classId}', null, this.value)" 
-                     style="width: 50px; height: 26px; padding: 2px 4px; font-size: 12px; border-radius: 4px; border: 1px solid var(--slate-border); text-align: center; font-weight: 700;">
-              <span style="font-size: 11px; color: var(--slate-muted); font-weight: 700;">(${rows * cols} Ghế)</span>
+
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <label style="margin: 0; font-size: 12px; font-weight: 600;">Dãy:</label>
+                <input type="number" min="1" max="12" value="${cols}" 
+                       onchange="window.updateClassSeatingGridSize('${classId}', null, this.value, null)" 
+                       style="width: 50px; height: 28px; padding: 2px 4px; font-size: 12px; border-radius: 6px; border: 1px solid var(--slate-border); text-align: center; font-weight: 700;">
+              </div>
+
+              <span style="font-weight: 700; color: rgba(255,255,255,0.2);">|</span>
+
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <label style="margin: 0; font-size: 12px; font-weight: 600; color: #60a5fa;"><i class="fa-solid fa-users-rectangle"></i> Số em/bàn:</label>
+                <select onchange="window.updateClassSeatingGridSize('${classId}', null, null, this.value)"
+                        style="height: 28px; padding: 2px 6px; font-size: 12px; border-radius: 6px; border: 1px solid var(--slate-border); font-weight: 700; background: var(--bg-card, #1e293b); color: var(--slate-heading);">
+                  <option value="1" ${seatsPerDesk === 1 ? 'selected' : ''}>1 em / bàn</option>
+                  <option value="2" ${seatsPerDesk === 2 ? 'selected' : ''}>2 em / bàn</option>
+                  <option value="3" ${seatsPerDesk === 3 ? 'selected' : ''}>3 em / bàn</option>
+                  <option value="4" ${seatsPerDesk === 4 ? 'selected' : ''}>4 em / bàn</option>
+                  <option value="5" ${seatsPerDesk === 5 ? 'selected' : ''}>5 em / bàn</option>
+                  <option value="6" ${seatsPerDesk === 6 ? 'selected' : ''}>6 em / bàn</option>
+                </select>
+              </div>
+
+              <span style="font-size: 11.5px; color: #60a5fa; font-weight: 700; background: rgba(59, 130, 246, 0.2); padding: 3px 8px; border-radius: 12px;">
+                (${rows * cols} Bàn = ${totalCapacity} Ghế)
+              </span>
             </div>
           </div>
 
@@ -1726,44 +1783,56 @@
               <i class="fa-solid fa-chalkboard"></i> BẢNG GIẢNG & BÀN GIÁO LÝ VIÊN (PHÍA TRƯỚC LỚP)
             </div>
 
-            <div style="display: grid; grid-template-columns: repeat(${cols}, 1fr); gap: 12px; max-width: ${Math.min(950, cols * 180)}px; margin: 0 auto; overflow-x: auto; padding: 4px;">
+            <div style="display: grid; grid-template-columns: repeat(${cols}, 1fr); gap: 14px; max-width: ${Math.min(1200, cols * Math.max(170, seatsPerDesk * 115))}px; margin: 0 auto; overflow-x: auto; padding: 4px;">
               ${Array.from({ length: rows }).map((_, rIdx) => {
                 return Array.from({ length: cols }).map((_, cIdx) => {
-                  const seatKey = `r${rIdx}_c${cIdx}`;
-                  const stId = chart.seats ? chart.seats[seatKey] : null;
-                  const st = filteredStudents.find(s => s.id === stId);
-                  const isAbsent = chart.absentSeats.includes(seatKey);
-                  const confidence = chart.confidenceScores ? chart.confidenceScores[seatKey] : null;
-
                   return `
-                    <div class="seat-card ${isAbsent ? 'seat-absent' : 'seat-present'}" 
-                         onclick="window.toggleSeatAttendance('${classId}', '${seatKey}')"
-                         style="background: ${isAbsent ? 'rgba(239, 68, 68, 0.15)' : 'rgba(34, 197, 94, 0.12)'}; 
-                                border: 2px solid ${isAbsent ? '#ef4444' : '#22c55e'}; 
-                                border-radius: 10px; padding: 12px 6px; cursor: pointer; transition: all 0.2s ease; min-width: 120px;"
-                         title="Chạm để đổi trạng thái giữa Có mặt & Vắng mặt">
-                      <div style="font-size: 11px; font-weight: 700; color: var(--slate-muted); margin-bottom: 4px;">
-                        Hàng ${rIdx + 1} - Dãy ${cIdx + 1}
+                    <div class="desk-box" style="background: rgba(15, 23, 42, 0.7); border: 1.5px solid var(--slate-border); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 8px;">
+                      <div style="font-size: 11px; font-weight: 700; color: #60a5fa; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 4px;">
+                        <span><i class="fa-solid fa-table-cells"></i> Hàng ${rIdx + 1} - Dãy ${cIdx + 1}</span>
+                        <span style="font-size: 10px; color: var(--slate-muted);">${seatsPerDesk} em/bàn</span>
                       </div>
-                      ${st ? `
-                        <img src="${st.photo || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80'}" 
-                             style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 2px solid ${isAbsent ? '#ef4444' : '#22c55e'}; margin-bottom: 4px;">
-                        <div style="font-weight: 700; font-size: 12px; color: ${isAbsent ? '#ef4444' : 'var(--slate-heading)'}; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
-                          ${st.holyName ? st.holyName + ' ' : ''}${st.name || st.fullName || ''}
-                        </div>
-                        <div style="font-size: 11px; margin-top: 4px; font-weight: 700; color: ${isAbsent ? '#ef4444' : '#22c55e'};">
-                          ${isAbsent ? '🔴 GHẾ TRỐNG (VẮNG)' : '🟢 CÓ MẶT'}
-                        </div>
-                        ${(isAbsent && confidence) ? `
-                          <div style="font-size: 10px; margin-top: 2px; color: #f87171; background: rgba(239,68,68,0.2); border-radius: 4px; padding: 2px 4px;">
-                            🤖 AI Quét: ${confidence}%
-                          </div>
-                        ` : ''}
-                      ` : `
-                        <div style="padding: 15px 0; color: var(--slate-muted); font-size: 11px; font-style: italic;">
-                          [Ghế Trống]
-                        </div>
-                      `}
+                      <div style="display: grid; grid-template-columns: repeat(${seatsPerDesk}, 1fr); gap: 8px;">
+                        ${Array.from({ length: seatsPerDesk }).map((_, sIdx) => {
+                          const seatKey = `r${rIdx}_c${cIdx}_s${sIdx}`;
+                          const stId = getSeatIdFromChart(chart, rIdx, cIdx, sIdx);
+                          const st = filteredStudents.find(s => s.id === stId);
+                          const isAbsent = isSeatAbsentInChart(chart, rIdx, cIdx, sIdx);
+                          const confidence = chart.confidenceScores ? (chart.confidenceScores[seatKey] || (sIdx === 0 ? chart.confidenceScores[`r${rIdx}_c${cIdx}`] : null)) : null;
+
+                          return `
+                            <div class="seat-card ${isAbsent ? 'seat-absent' : 'seat-present'}"
+                                 onclick="window.toggleSeatAttendance('${classId}', '${seatKey}')"
+                                 style="background: ${isAbsent ? 'rgba(239, 68, 68, 0.15)' : 'rgba(34, 197, 94, 0.12)'}; 
+                                        border: 2px solid ${isAbsent ? '#ef4444' : '#22c55e'}; 
+                                        border-radius: 8px; padding: 8px 4px; cursor: pointer; transition: all 0.2s ease; text-align: center; min-width: 90px;"
+                                 title="Chạm để đổi trạng thái giữa Có mặt & Vắng mặt">
+                              <div style="font-size: 10px; font-weight: 700; color: var(--slate-muted); margin-bottom: 3px;">
+                                ${seatsPerDesk > 1 ? `Ghế ${sIdx + 1}` : `Chỗ ngồi`}
+                              </div>
+                              ${st ? `
+                                <img src="${st.photo || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80'}" 
+                                     style="width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 2px solid ${isAbsent ? '#ef4444' : '#22c55e'}; margin: 0 auto 4px auto; display: block;">
+                                <div style="font-weight: 700; font-size: 11px; color: ${isAbsent ? '#ef4444' : 'var(--slate-heading)'}; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" title="${st.holyName ? st.holyName + ' ' : ''}${st.fullName || st.name}">
+                                  ${st.holyName ? st.holyName + ' ' : ''}${st.name || st.fullName || ''}
+                                </div>
+                                <div style="font-size: 10px; margin-top: 3px; font-weight: 700; color: ${isAbsent ? '#ef4444' : '#22c55e'};">
+                                  ${isAbsent ? '🔴 VẮNG' : '🟢 CÓ MẶT'}
+                                </div>
+                                ${(isAbsent && confidence) ? `
+                                  <div style="font-size: 9px; margin-top: 2px; color: #f87171; background: rgba(239,68,68,0.2); border-radius: 4px; padding: 1px 3px;">
+                                    🤖 AI: ${confidence}%
+                                  </div>
+                                ` : ''}
+                              ` : `
+                                <div style="padding: 10px 0; color: var(--slate-muted); font-size: 10px; font-style: italic;">
+                                  [Ghế Trống]
+                                </div>
+                              `}
+                            </div>
+                          `;
+                        }).join('')}
+                      </div>
                     </div>
                   `;
                 }).join('');
@@ -1823,11 +1892,11 @@
     renderAttendance(document.getElementById('content-area'));
   };
 
-  // Update Seating Grid Rows & Columns dynamically per class
-  window.updateClassSeatingGridSize = function(classId, rowsVal, colsVal) {
+  // Update Seating Grid Rows, Columns & Seats per desk dynamically per class
+  window.updateClassSeatingGridSize = function(classId, rowsVal, colsVal, seatsPerDeskVal) {
     if (!appData.seatingCharts) appData.seatingCharts = {};
     if (!appData.seatingCharts[classId]) {
-      appData.seatingCharts[classId] = { rows: 4, cols: 5, seats: {}, absentSeats: [] };
+      appData.seatingCharts[classId] = { rows: 4, cols: 5, seatsPerDesk: 2, seats: {}, absentSeats: [] };
     }
     const chart = appData.seatingCharts[classId];
 
@@ -1839,6 +1908,10 @@
       const c = parseInt(colsVal, 10);
       if (!isNaN(c) && c >= 1 && c <= 12) chart.cols = c;
     }
+    if (seatsPerDeskVal !== null && seatsPerDeskVal !== undefined) {
+      const spd = parseInt(seatsPerDeskVal, 10);
+      if (!isNaN(spd) && spd >= 1 && spd <= 6) chart.seatsPerDesk = spd;
+    }
 
     // Auto-fill unassigned seats if new seats exist
     const filteredStudents = appData.students.filter(s => s.classId === classId);
@@ -1846,18 +1919,21 @@
     const assignedIds = Object.values(chart.seats);
     let unassigned = filteredStudents.filter(st => !assignedIds.includes(st.id));
 
+    const spd = chart.seatsPerDesk || 2;
     for (let r = 0; r < chart.rows; r++) {
       for (let c = 0; c < chart.cols; c++) {
-        const key = `r${r}_c${c}`;
-        if (!chart.seats[key] && unassigned.length > 0) {
-          chart.seats[key] = unassigned.shift().id;
+        for (let s = 0; s < spd; s++) {
+          const key = `r${r}_c${c}_s${s}`;
+          if (!chart.seats[key] && unassigned.length > 0) {
+            chart.seats[key] = unassigned.shift().id;
+          }
         }
       }
     }
 
     saveUserData();
     renderAttendance(document.getElementById('content-area'));
-    showToast(`Đã điều chỉnh kích thước sơ đồ: ${chart.rows} Hàng x ${chart.cols} Dãy!`, 'info');
+    showToast(`Đã điều chỉnh sơ đồ: ${chart.rows} Hàng x ${chart.cols} Dãy (${chart.seatsPerDesk || 2} em/bàn)!`, 'info');
   };
 
   // Open Interactive Modal to Assign Students to Specific Seats
@@ -1868,40 +1944,52 @@
     const chart = appData.seatingCharts[classId];
     const rows = chart.rows || 4;
     const cols = chart.cols || 5;
+    const seatsPerDesk = chart.seatsPerDesk || 2;
 
     let existingModal = document.getElementById('assign-seats-modal');
     if (existingModal) existingModal.remove();
 
     const modalHtml = `
       <div id="assign-seats-modal" class="modal-backdrop" style="display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.7); z-index: 9999; position: fixed; top: 0; left: 0; right: 0; bottom: 0;">
-        <div style="background: var(--bg-card, #1e293b); color: var(--slate-heading); width: 92%; max-width: 900px; max-height: 90vh; border-radius: 16px; border: 1px solid var(--slate-border); display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);">
+        <div style="background: var(--bg-card, #1e293b); color: var(--slate-heading); width: 92%; max-width: 950px; max-height: 90vh; border-radius: 16px; border: 1px solid var(--slate-border); display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);">
           <div style="padding: 18px 24px; border-bottom: 1px solid var(--slate-border); display: flex; justify-content: space-between; align-items: center; background: var(--bg-card-alt, #0f172a);">
             <h3 style="margin: 0; font-size: 18px; font-weight: 700; color: var(--primary-light, #60a5fa);">
-              <i class="fa-solid fa-chair"></i> Sắp Xếp Vị Trí Chỗ Ngồi - Lớp ${cls ? cls.name : ''}
+              <i class="fa-solid fa-chair"></i> Sắp Xếp Vị Trí Bàn & Ghế Ngồi - Lớp ${cls ? cls.name : ''} (${seatsPerDesk} em/bàn)
             </h3>
             <button onclick="document.getElementById('assign-seats-modal').remove()" style="background: none; border: none; color: var(--slate-muted); font-size: 20px; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
           </div>
           <div style="padding: 20px; overflow-y: auto; flex: 1;">
             <p style="font-size: 13px; color: var(--slate-muted); margin-bottom: 16px;">
-              💡 <strong>Hướng dẫn:</strong> Chọn vị trí từng học sinh theo ô bàn tương ứng với Ảnh Lớp Mẫu Đầu Năm.
+              💡 <strong>Hướng dẫn:</strong> Chọn vị trí từng học sinh ngồi cùng bàn tương ứng với Ảnh Lớp Mẫu Đầu Năm.
             </p>
-            <div style="display: grid; grid-template-columns: repeat(${cols}, 1fr); gap: 12px;">
+            <div style="display: grid; grid-template-columns: repeat(${cols}, 1fr); gap: 14px;">
               ${Array.from({ length: rows }).map((_, rIdx) => {
                 return Array.from({ length: cols }).map((_, cIdx) => {
-                  const seatKey = `r${rIdx}_c${cIdx}`;
-                  const currentStId = chart.seats ? chart.seats[seatKey] : null;
-
                   return `
-                    <div style="background: var(--bg-main, #0f172a); border: 1px solid var(--slate-border); border-radius: 8px; padding: 10px; text-align: center;">
-                      <div style="font-size: 11px; font-weight: 700; color: #60a5fa; margin-bottom: 6px;">Hàng ${rIdx + 1} - Dãy ${cIdx + 1}</div>
-                      <select class="form-control form-control-sm assign-seat-select" data-seat="${seatKey}" style="font-size: 12px;">
-                        <option value="">-- Ghế Trống --</option>
-                        ${filteredStudents.map(s => `
-                          <option value="${s.id}" ${s.id === currentStId ? 'selected' : ''}>
-                            ${s.holyName ? s.holyName + ' ' : ''}${s.fullName || s.name}
-                          </option>
-                        `).join('')}
-                      </select>
+                    <div style="background: var(--bg-main, #0f172a); border: 1px solid var(--slate-border); border-radius: 10px; padding: 12px; text-align: center;">
+                      <div style="font-size: 12px; font-weight: 700; color: #60a5fa; margin-bottom: 8px; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 4px;">
+                        🪑 Hàng ${rIdx + 1} - Dãy ${cIdx + 1}
+                      </div>
+                      <div style="display: flex; flex-direction: column; gap: 6px;">
+                        ${Array.from({ length: seatsPerDesk }).map((_, sIdx) => {
+                          const seatKey = `r${rIdx}_c${cIdx}_s${sIdx}`;
+                          const currentStId = getSeatIdFromChart(chart, rIdx, cIdx, sIdx);
+
+                          return `
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                              <span style="font-size: 11px; font-weight: 700; color: var(--slate-muted); min-width: 42px; text-align: right;">Ghế ${sIdx + 1}:</span>
+                              <select class="form-control form-control-sm assign-seat-select" data-seat="${seatKey}" style="font-size: 11px; flex: 1;">
+                                <option value="">-- Trống --</option>
+                                ${filteredStudents.map(s => `
+                                  <option value="${s.id}" ${s.id === currentStId ? 'selected' : ''}>
+                                    ${s.holyName ? s.holyName + ' ' : ''}${s.fullName || s.name}
+                                  </option>
+                                `).join('')}
+                              </select>
+                            </div>
+                          `;
+                        }).join('')}
+                      </div>
                     </div>
                   `;
                 }).join('');
@@ -1950,6 +2038,7 @@
     const chart = appData.seatingCharts[classId];
     const rows = chart.rows || 4;
     const cols = chart.cols || 5;
+    const seatsPerDesk = chart.seatsPerDesk || 2;
 
     const selects = document.querySelectorAll('.assign-seat-select');
     selects.forEach(s => s.value = '');
@@ -1957,16 +2046,19 @@
     let idx = 0;
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
-        const key = `r${r}_c${c}`;
-        const sel = document.querySelector(`.assign-seat-select[data-seat="${key}"]`);
-        if (sel && idx < filteredStudents.length) {
-          sel.value = filteredStudents[idx].id;
-          idx++;
+        for (let s = 0; s < seatsPerDesk; s++) {
+          const key = `r${r}_c${c}_s${s}`;
+          const sel = document.querySelector(`.assign-seat-select[data-seat="${key}"]`);
+          if (sel && idx < filteredStudents.length) {
+            sel.value = filteredStudents[idx].id;
+            idx++;
+          }
         }
       }
     }
-    showToast('Đã xếp tự động danh sách vào các ô ghế!', 'info');
+    showToast('Đã xếp tự động danh sách vào từng chỗ ngồi các bàn!', 'info');
   };
+
 
   // LIVE CAMERA CAPTURE & UPLOAD CONTROLLER
   window._currentCaptureClassId = null;

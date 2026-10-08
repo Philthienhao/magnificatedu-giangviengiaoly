@@ -82,6 +82,19 @@ Hệ thống tính điểm được thiết kế minh bạch với các chế đ
 
 ---
 
+### ⚡ Nâng cấp 5: Tùy chỉnh Linh hoạt Sơ đồ Lớp Học (Số Hàng, Số Dãy & 1-6 Em/Bàn)
+* **Yêu cầu & Thực trạng**: Các phòng học có kích thước bàn ghế khác nhau, mỗi bàn ngồi từ 2-3-4-5-6 học sinh cùng nhau.
+* **Cách khắc phục**:
+  1. Bổ sung bộ tùy chọn 3 thông số trên thanh công cụ sơ đồ lớp:
+     - `Số Hàng` (1 - 15 Hàng)
+     - `Số Dãy` (1 - 12 Dãy bàn)
+     - `Số em/bàn` (Tùy chọn 1, 2, 3, 4, 5, 6 em ngồi cùng 1 bàn)
+  2. Mỗi bàn học được dựng khung container chứa đúng `N` ô ghế cho từng học sinh.
+  3. Cập nhật cửa sổ modal "Sắp Xếp Chỗ Ngồi" & thuật toán sắp xếp tự động phân học sinh chính xác theo ma trận `(Hàng x Dãy x Số em/bàn)`.
+  4. Đảm bảo tương thích 100% với dữ liệu sơ đồ cũ.
+
+---
+
 ## 🚀 4. Hướng Dẫn Cập Nhật & Deploy Dự Án
 
 Khi có thay đổi mã nguồn, thực hiện theo các bước sau:
