@@ -947,6 +947,8 @@
 
     // Parish Info & Custom Parish Logo Image
     const parishBranding = document.querySelector('.parish-branding');
+    const topParishName = document.getElementById('topbar-parish-name');
+    const topParishSub = document.getElementById('topbar-parish-sub');
     if (parishBranding && appData.parishInfo) {
       const existingIcon = parishBranding.querySelector('.parish-icon, .parish-logo-img');
       if (appData.parishInfo.logoUrl) {
@@ -1422,17 +1424,6 @@
     `;
   }
 
-  // PAGE 5: ĐIỂM DANH HỌC VIÊN (VỚI AI SƠ ĐỒ CHỖ NGỒI VÀ LỊCH SỬ ĐIỂM DANH VĨNH VIỄN)
-  function renderAttendance(container) {
-    const today = new Date().toISOString().split('T')[0];
-    const classes = appData.classes || [];
-    const selectedClassId = window._selectedAttendanceClassId || (classes.length > 0 ? classes[0].id : '');
-    const selectedDate = window._selectedAttendanceDate || today;
-    const selectedSessionType = window._selectedAttendanceSessionType || 'Giáo lý';
-    const activeTab = window._attendanceSubTab || 'list'; // 'list' | 'ai-seating' | 'history'
-
-    const filteredStudents = appData.students.filter(s => !selectedClassId || s.classId === selectedClassId);
-
   // Seating chart helper functions for backward compatibility & multi-seat desks
   function getSeatIdFromChart(chart, r, c, s) {
     if (!chart || !chart.seats) return null;
@@ -1449,6 +1440,17 @@
     if (s === 0 && chart.absentSeats.includes(`r${r}_c${c}`)) return true;
     return false;
   }
+
+  // PAGE 5: ĐIỂM DANH HỌC VIÊN (VỚI AI SƠ ĐỒ CHỖ NGỒI VÀ LỊCH SỬ ĐIỂM DANH VĨNH VIỄN)
+  function renderAttendance(container) {
+    const today = new Date().toISOString().split('T')[0];
+    const classes = appData.classes || [];
+    const selectedClassId = window._selectedAttendanceClassId || (classes.length > 0 ? classes[0].id : '');
+    const selectedDate = window._selectedAttendanceDate || today;
+    const selectedSessionType = window._selectedAttendanceSessionType || 'Giáo lý';
+    const activeTab = window._attendanceSubTab || 'list'; // 'list' | 'ai-seating' | 'history'
+
+    const filteredStudents = appData.students.filter(s => !selectedClassId || s.classId === selectedClassId);
 
   // Initialize seatingChart state if missing
   if (!appData.seatingCharts) appData.seatingCharts = {};

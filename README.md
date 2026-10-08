@@ -95,6 +95,16 @@ Hệ thống tính điểm được thiết kế minh bạch với các chế đ
 
 ---
 
+### ⚡ Sự cố 6: Lỗi Scope (ReferenceError) không vào được tab "📷 AI Sơ Đồ & Ảnh Chụp"
+* **Nguyên nhân**: Hàm trợ lý sơ đồ chỗ ngồi (`getSeatIdFromChart`, `isSeatAbsentInChart`) bị khai báo bên trong scope cục bộ của `renderAttendance()`, trong khi hàm render tab sơ đồ AI (`renderAISeatingSection()`) và các modal cấu hình lại ở ngoài scope `renderAttendance()`. Khi bấm vào tab "📷 AI Sơ Đồ & Ảnh Chụp", ứng dụng gọi `renderAISeatingSection()` dẫn đến lỗi `ReferenceError: isSeatAbsentInChart is not defined`.
+* **Cách khắc phục**:
+  1. Di chuyển `getSeatIdFromChart` và `isSeatAbsentInChart` lên scope cấp cao (Top-level Module scope) trong cả `app_v2.js` và `app.js`.
+  2. Bổ sung khai báo `topParishName` và `topParishSub` trong `renderAppHeaderAndSidebar()`.
+  3. Cập nhật cache buster `index.html` lên `?v=20261008_v500`.
+  4. Tạo kịch bản kiểm thử Node.js `test_seating_scope.js` để tự động giả lập và xác minh trước khi công bố.
+
+---
+
 ## 🚀 4. Hướng Dẫn Cập Nhật & Deploy Dự Án
 
 Khi có thay đổi mã nguồn, thực hiện theo các bước sau:
