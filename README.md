@@ -38,13 +38,30 @@ Hệ thống tính điểm được thiết kế minh bạch với các chế đ
 
 Để đảm bảo hệ thống vận hành ổn định và không tái diễn các lỗi sai trong quá khứ, dưới đây là bộ quy tắc xử lý:
 
-### ⚡ Sự cố 1: Nhầm lẫn Tên miền / Giao diện hiển thị sai dự án khác
-* **Nguyên nhân**: Vercel Alias bị gán nhầm sang dự án khác (`eduvth`).
-* **Cách khắc phục**:
-  ```bash
-  npx vercel alias set magnificatedu-giangviengiaoly.vercel.app magnificatedu.vercel.app
-  ```
-* **Quy tắc**: Luôn kiểm tra danh sách Alias bằng `npx vercel alias ls` sau mỗi lần triển khai dự án lớn.
+### ⚡ Sự cố 1: Nhầm lẫn Tên miền / Giao diện hiển thị sai dự án khác (`eduvth` / `Gamegiaoduc`)
+* **Nguyên nhân**: 
+  - Tên miền `magnificatedu.vercel.app` trước đây từng bị gán nhầm alias vào project khác (`eduvth` - Hệ thống hỗ trợ dạy và học của Thầy Hảo).
+  - Khi gán alias mới nếu trỏ vào URL tĩnh có thể bị trỏ vào bản build cũ hoặc bị xung đột domain.
+* **Cách khắc phục triệt để**:
+  1. Xóa alias xung đột:
+     ```bash
+     npx vercel alias rm magnificatedu.vercel.app --yes
+     ```
+  2. Triển khai bản build mới nhất của dự án `magnificatedu-giangviengiaoly`:
+     ```bash
+     npx vercel --prod --yes
+     ```
+  3. Gán domain chính thức vào trực tiếp Deployment URL mới nhất:
+     ```bash
+     npx vercel alias set <DEPLOYMENT_URL> magnificatedu.vercel.app
+     npx vercel alias set <DEPLOYMENT_URL> magnificatedu-giangviengiaoly.vercel.app
+     ```
+  4. Kiểm tra bằng `curl`:
+     ```bash
+     curl -sL https://magnificatedu.vercel.app | grep -i "<title>"
+     # Kết quả chuẩn: <title>MagnificatEdu - Hệ Thống Quản Lý Giáo Lý Công Giáo</title>
+     ```
+* **Quy tắc bắt buộc**: Sau mỗi lần deploy Vercel, kiểm tra ngay bằng lệnh `npx vercel alias ls | grep magnificatedu` và `curl -sL https://magnificatedu.vercel.app | grep -i "<title>"` để đảm bảo tuyệt đối không nhầm sang dự án `eduvth`.
 
 ---
 
