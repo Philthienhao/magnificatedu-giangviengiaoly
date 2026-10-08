@@ -19,3 +19,9 @@
   2. Grade Edit Mode (`updateStudentGradeRow`)
   3. Excel Export logic (`exportGradesToExcel`)
   4. Segmented Control UI buttons (`[ 📘 Học Kỳ I ]`, `[ 📙 Học Kỳ II ]`, `[ 🌟 ĐTB CẢ NĂM = (HK1 + HK2) / 2 ]`)
+
+## 4. Automatic README Incident Logging
+* Whenever ANY bug, deployment failure, UI error, domain issue, or calculation bug is resolved:
+  1. Automatically append the new incident entry into `README.md` under Section 3 ("Nhật Ký Sự Cố & Hướng Dẫn Khắc Phục").
+  2. Include Title, Root Cause, Fix Action, and Prevention Guideline.
+  3. Commit and push the updated `README.md` to GitHub alongside the fix code.
