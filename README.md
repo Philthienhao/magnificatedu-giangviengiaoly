@@ -122,4 +122,20 @@ git push origin main
 
 ---
 
+## 🤖 5. Quy Trình Vận Hành & Quy Tắc Điểm Danh AI Sơ Đồ Lớp Học
+
+Để chức năng **Quét Điểm Danh AI qua Ảnh Chụp** đạt độ chính xác 100% và tự động nhận diện tên từng học sinh vắng mặt, Giáo viên thực hiện theo 2 giai đoạn:
+
+### 📌 Giai đoạn 1: Thiết lập Ma trận Đầu Năm (Làm 1 lần duy nhất)
+1. **Cấu hình Sơ đồ Lớp**: Chọn số Hàng x Số Dãy x Số em/bàn phù hợp với thực tế phòng học.
+2. **Chụp Ảnh Lớp Mẫu (Baseline Photo)**: Đứng ở bục giảng chụp 1 tấm ảnh cả lớp đầy đủ đầu năm.
+3. **Ánh xá Tên Học Sinh (Seat Assignment)**: Bấm `🪑 Sắp Xếp Chỗ Ngồi` ➔ Bấm `🪄 Sắp Xếp Tự Động` để gán học sinh vào từng vị trí bàn từ Hàng 1 - Dãy 1 đến hết ➔ Bấm `Lưu Sơ Đồ`.
+
+### 📌 Giai đoạn 2: Điểm danh tự động mỗi buổi học (Chỉ 5 giây)
+1. **Chụp Ảnh Buổi Học**: Đầu giờ học bấm `📸 CHỤP / TẢI ẢNH HÔM NAY`.
+2. **AI Tự Động Phân Tích & Gọi Tên**: AI so sánh vùng ảnh với Ảnh Mẫu Đầu Năm ➔ Tự động phát hiện ghế trống ➔ Truy xuất Ma trận Tọa độ ➔ Đánh dấu `🔴 VẮNG` kèm **Đích Danh Tên Học Sinh** ngồi ghế đó.
+3. **Lưu Nhật Ký**: Giáo viên chạm tay trực tiếp vào sơ đồ để tinh chỉnh nếu cần ➔ Bấm `Lưu Kết Quả Điểm Danh AI`.
+
+---
+
 *Hệ Thống Quản Lý Giáo Lý Công Giáo - MagnificatEdu © 2026*
