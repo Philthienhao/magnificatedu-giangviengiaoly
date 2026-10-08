@@ -170,7 +170,9 @@ Hệ thống tính điểm được thiết kế minh bạch với các chế đ
   1. **Tình hình điểm danh & Tỷ lệ chuyên cần**: Tự động tính toán từ `appData.attendanceLogs`. Nếu chưa có dữ liệu điểm danh, hiển thị `0` và `0%` kèm thông báo trạng thái "Chưa có dữ liệu". Khi giáo viên điểm danh, số liệu tự động nhảy đúng thực tế.
   2. **Lịch học trong tuần**: Tự động gom nhóm theo lịch thực tế của các lớp trong `appData.classes`. Nếu chưa có lớp hoặc chưa xếp lịch, hiển thị ô trạng thái tinh gọn hướng dẫn tạo lớp mới.
   3. **Biểu đồ phân bố học lực**: Tự động phân loại xếp hạng của từng học viên theo điểm số thực tế. Nếu chưa có học viên nào được nhập điểm, hiển thị thông báo hướng dẫn và chỉ vẽ biểu đồ khi có dữ liệu điểm thực tế.
-  4. Đồng bộ logic tính toán giữa `app_v2.js` và `app.js`, nâng cache buster lên `v=20261008_v1000`.
+  4. Đồng bộ logic tính toán giữa `app_v2.js` và `app.js`, nâng cache buster lên `v=20261008_v1100`.
+  5. Đã xử lý giải phóng quota Vercel bằng cách dọn dẹp các deployment rác, triển khai deployment mới `h52x07avo` và gán alias `magnificatedu.vercel.app`.
+  6. Đã kiểm chứng trực tiếp bằng Browser Subagent: toàn bộ số liệu mẫu tĩnh (78, 3, 2, 1, Khai Tâm 1, Ấu Nhi 2A, biểu đồ bánh [45, 30, 20, 5]) đã biến mất 100%, sẵn sàng tự động cập nhật khi có dữ liệu.
 
 ---
 
