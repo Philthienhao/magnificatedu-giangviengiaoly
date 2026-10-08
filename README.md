@@ -107,13 +107,15 @@ Hệ thống tính điểm được thiết kế minh bạch với các chế đ
 
 ---
 
-### ⚡ Sự cố 7: Thay đổi và lưu trữ vĩnh viễn câu Châm ngôn / Slogan hệ thống
-* **Yêu cầu**: Cập nhật câu châm ngôn truyền cảm hứng chính thức cho hệ thống MagnificatEdu:
-  - **Nội dung**: *"Không phải tất cả chúng ta đều làm được những điều vĩ đại. Nhưng chúng ta có thể làm những điều nhỏ nhặt với tình yêu vĩ đại"*
-  - **Tác giả**: *Mẹ Thánh Têrêsa Calcutta*
+### ⚡ Sự cố 7: Cập nhật và phân chia câu Châm ngôn / Slogan theo vị trí giao diện
+* **Yêu cầu**: Phân định chính xác 2 câu châm ngôn ở 2 vị trí khác nhau trong hệ thống:
+  1. **Giao diện Tổng quan (Welcome Banner Overview)**: Sử dụng câu của *Mẹ Thánh Têrêsa Calcutta*:
+     - Nội dung: *"Không phải tất cả chúng ta đều làm được những điều vĩ đại. Nhưng chúng ta có thể làm những điều nhỏ nhặt với tình yêu vĩ đại"*
+  2. **Thanh Sidebar, Footer & Auth Modal**: Giữ nguyên câu châm ngôn truyền thống của *Chân Phước Anrê Phú Yên*:
+     - Nội dung: *"Chúng ta hãy lấy tình yêu để đáp lại tình yêu của Chúa chúng ta, hãy lấy mạng sống đáp lại mạng sống."*
 * **Cách khắc phục**:
-  1. Cập nhật biến hằng số `SLOGAN_TEXT` và `SLOGAN_AUTHOR` trong `app_v2.js` và `app.js`.
-  2. Cập nhật tất cả các vị trí hiển thị tĩnh trong `index.html` (Thanh Sidebar, Chân trang Footer, Modal Đăng nhập Google).
+  1. Giữ nguyên biến hằng số `SLOGAN_TEXT` và `SLOGAN_AUTHOR` trong `app_v2.js` và `app.js` cho Card Tổng quan Overview (`welcome-slogan-card`).
+  2. Trả lại nội dung câu của Chân Phước Anrê Phú Yên tại các vị trí tĩnh trong `index.html` (Sidebar Box, Footer, Auth Modal).
   3. Cập nhật cache buster `index.html` lên `?v=20261008_v800`.
 
 ---
