@@ -104,6 +104,18 @@ Hệ thống tính điểm được thiết kế minh bạch với các chế đ
   4. Cập nhật cache buster `index.html` lên `?v=20261008_v600`.
   5. Tạo kịch bản kiểm thử Node.js `test_seating_scope.js` để tự động giả lập và xác minh trước khi công bố.
 
+
+---
+
+### ⚡ Sự cố 7: Thay đổi và lưu trữ vĩnh viễn câu Châm ngôn / Slogan hệ thống
+* **Yêu cầu**: Cập nhật câu châm ngôn truyền cảm hứng chính thức cho hệ thống MagnificatEdu:
+  - **Nội dung**: *"Không phải tất cả chúng ta đều làm được những điều vĩ đại. Nhưng chúng ta có thể làm những điều nhỏ nhặt với tình yêu vĩ đại"*
+  - **Tác giả**: *Mẹ Thánh Têrêsa Calcutta*
+* **Cách khắc phục**:
+  1. Cập nhật biến hằng số `SLOGAN_TEXT` và `SLOGAN_AUTHOR` trong `app_v2.js` và `app.js`.
+  2. Cập nhật tất cả các vị trí hiển thị tĩnh trong `index.html` (Thanh Sidebar, Chân trang Footer, Modal Đăng nhập Google).
+  3. Cập nhật cache buster `index.html` lên `?v=20261008_v800`.
+
 ---
 
 ## 🚀 4. Hướng Dẫn Cập Nhật & Deploy Dự Án

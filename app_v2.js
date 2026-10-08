@@ -67,8 +67,8 @@
   const STORAGE_PREFIX_DATA = 'magnificatedu_user_data_';
 
   // System Slogan
-  const SLOGAN_TEXT = "Chúng ta hãy lấy tình yêu để đáp lại tình yêu của Chúa chúng ta, hãy lấy mạng sống đáp lại mạng sống.";
-  const SLOGAN_AUTHOR = "Chân Phước Anrê Phú Yên";
+  const SLOGAN_TEXT = "Không phải tất cả chúng ta đều làm được những điều vĩ đại. Nhưng chúng ta có thể làm những điều nhỏ nhặt với tình yêu vĩ đại";
+  const SLOGAN_AUTHOR = "Mẹ Thánh Têrêsa Calcutta";
 
   // Pre-configured Accounts (Single Default Admin Account as requested)
   const SEED_ACCOUNTS = [
