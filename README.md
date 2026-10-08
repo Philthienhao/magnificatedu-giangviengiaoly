@@ -137,18 +137,47 @@ Hệ thống tính điểm được thiết kế minh bạch với các chế đ
 
 ---
 
-## 🚀 4. Hướng Dẫn Cập Nhật & Deploy Dự Án
+### ⚡ Sự cố 8: Đóng gói quy tắc cách ly dự án & phòng chống nhầm tên miền Vercel vĩnh viễn
+* **Hiện tượng**: Truy cập `magnificatedu.vercel.app` hiển thị giao diện của dự án khác (`eduvth` / *Hệ thống hỗ trợ dạy và học của Thầy Hảo*).
+* **Nguyên nhân cốt lõi**:
+  1. Tài khoản Vercel quản lý nhiều dự án giáo dục song song.
+  2. Domain `magnificatedu.vercel.app` bị trỏ nhầm alias sang dự án `eduvth`. Lệnh cũ gán alias tĩnh không cập nhật được bản build mới nhất hoặc bị xung đột domain.
+  3. Thiếu bước kiểm tra tiêu đề `<title>` tự động sau khi deploy.
+* **Quy trình chuẩn hóa vĩnh viễn (Bắt buộc thực hiện khi deploy)**:
+  1. Triển khai build mới: `npx vercel --prod --yes` (lấy URL deployment mới nhất `<DEPLOYMENT_URL>`).
+  2. Xóa alias sai nếu bị kẹt: `npx vercel alias rm magnificatedu.vercel.app --yes`.
+  3. Gán alias chính xác vào `<DEPLOYMENT_URL>` mới nhất:
+     ```bash
+     npx vercel alias set <DEPLOYMENT_URL> magnificatedu.vercel.app
+     npx vercel alias set <DEPLOYMENT_URL> magnificatedu-giangviengiaoly.vercel.app
+     ```
+  4. **Bắt buộc kiểm tra đối chiếu (Sanity Check)**:
+     ```bash
+     curl -sL https://magnificatedu.vercel.app | grep -i "<title>"
+     # Kết quả hợp lệ duy nhất: <title>MagnificatEdu - Hệ Thống Quản Lý Giáo Lý Công Giáo</title>
+     ```
 
-Khi có thay đổi mã nguồn, thực hiện theo các bước sau:
+---
+
+## 🚀 4. Hướng Dẫn Cập Nhật & Deploy Dự Án Chuẩn 4 Bước
+
+Khi có thay đổi mã nguồn, thực hiện đúng quy trình sau:
 ```bash
-# 1. Thêm thay đổi
+# 1. Thêm thay đổi & Commit
 git add .
+git commit -m "feat/fix: mô tả chi tiết thay đổi"
 
-# 2. Commit kèm mô tả rõ ràng
-git commit -m "feat: cập nhật phiên bản mới v2026.10.08"
-
-# 3. Push lên GitHub (Vercel sẽ tự động Build & Deploy)
+# 2. Push lên GitHub (main & gh-pages)
 git push origin main
+git push origin main:gh-pages --force
+
+# 3. Triển khai Vercel Production & Gán Alias
+npx vercel --prod --yes
+npx vercel alias set <DEPLOYMENT_URL> magnificatedu.vercel.app
+npx vercel alias set <DEPLOYMENT_URL> magnificatedu-giangviengiaoly.vercel.app
+
+# 4. Kiểm tra đối chiếu tiêu đề trang (Sanity Check)
+curl -sL https://magnificatedu.vercel.app | grep -i "<title>"
 ```
 
 ---
