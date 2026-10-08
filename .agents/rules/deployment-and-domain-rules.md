@@ -18,7 +18,7 @@
 
 ## 2. Cache-Busting Standards
 * Whenever modifying `app_v2.js`, `app.js`, or `styles.css`, ALWAYS update the cache-buster query parameter in `index.html` (e.g., `app_v2.js?v=YYYYMMDD_vXXX`).
-* Update the visual version badge in `index.html` (e.g., `Giáo Lý Số v2026.10.08`) so users can immediately confirm fresh deployments.
+* Keep the brand logo area clean and uncluttered (do NOT display intrusive version badges under the brand title).
 
 ## 3. Gradebook Calculations & Consistency
 * The full-year average score MUST strictly equal:

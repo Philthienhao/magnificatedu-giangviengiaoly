@@ -76,7 +76,7 @@ Hệ thống tính điểm được thiết kế minh bạch với các chế đ
      ```html
      <script src="app_v2.js?v=v20261008_v300"></script>
      ```
-  3. Cập nhật Badge phiên bản ở góc màn hình (ví dụ: `Giáo Lý Số v2026.10.08`).
+  3. Sử dụng thông số phiên bản cache-buster để đảm bảo tính thẩm mỹ tối giản cho thanh Sidebar/Header.
 
 ---
 
