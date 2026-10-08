@@ -1688,3 +1688,180 @@ input, select, textarea {
     display: none !important;
   }
 }
+
+/* --------------------------------------------------------------------------
+   14. TEACHER AUTH PORTAL & MULTI-PARISH ADMIN HUB STYLES
+   -------------------------------------------------------------------------- */
+.auth-tabs-nav {
+  display: flex;
+  background: var(--slate-bg);
+  border-radius: var(--radius-md);
+  padding: 4px;
+  margin-bottom: 20px;
+  gap: 4px;
+  border: 1px solid var(--slate-border);
+}
+
+.auth-tab-btn {
+  flex: 1;
+  padding: 9px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  border: none;
+  background: transparent;
+  color: var(--slate-muted);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
+.auth-tab-btn.active {
+  background: var(--white);
+  color: var(--primary);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-input-wrapper input {
+  padding-right: 42px;
+}
+
+.toggle-pw-btn {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  color: var(--slate-muted);
+  cursor: pointer;
+  padding: 6px;
+  font-size: 14px;
+  transition: var(--transition);
+}
+
+.toggle-pw-btn:hover {
+  color: var(--primary);
+}
+
+.parish-filter-toolbar {
+  background: var(--white);
+  border: 1px solid var(--slate-border);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 15px;
+  box-shadow: var(--shadow-sm);
+}
+
+.parish-filter-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.parish-select-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--slate-bg);
+  padding: 6px 14px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--primary-border);
+}
+
+.parish-select-wrapper select {
+  border: none;
+  background: transparent;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--primary-hover);
+  cursor: pointer;
+  outline: none;
+  padding: 2px 4px;
+}
+
+.parish-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 700;
+  background: rgba(37, 99, 235, 0.08);
+  color: #1d4ed8;
+  border: 1px solid rgba(37, 99, 235, 0.2);
+}
+
+.parish-badge.badge-hk {
+  background: rgba(16, 185, 129, 0.08);
+  color: #047857;
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+.parish-badge.badge-other {
+  background: rgba(147, 51, 234, 0.08);
+  color: #7e22ce;
+  border-color: rgba(147, 51, 234, 0.2);
+}
+
+.pw-mask {
+  font-family: monospace;
+  font-size: 13px;
+  letter-spacing: 2px;
+  color: var(--slate-muted);
+}
+
+.pw-reveal-btn {
+  background: none;
+  border: none;
+  color: var(--slate-muted);
+  cursor: pointer;
+  padding: 2px 5px;
+  font-size: 11px;
+  margin-left: 4px;
+  border-radius: 4px;
+  transition: var(--transition);
+}
+
+.pw-reveal-btn:hover {
+  color: var(--primary);
+  background: var(--slate-bg);
+}
+
+.impersonate-banner {
+  background: linear-gradient(90deg, #f59e0b, #d97706);
+  color: var(--white);
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 999;
+  box-shadow: 0 2px 10px rgba(217, 119, 6, 0.25);
+  font-size: 13px;
+}
+
+.impersonate-banner strong {
+  font-weight: 800;
+}
+
+.inspect-modal-dialog {
+  max-width: 860px;
+  width: 95%;
+}
+

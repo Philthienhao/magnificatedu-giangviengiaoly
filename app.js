@@ -75,13 +75,15 @@
     {
       id: 'acc_001',
       email: 'philthienhao@gmail.com',
+      password: '123',
       name: 'Võ Thiện Hảo',
       holyName: 'Philiphê',
+      parish: 'Giáo Xứ Hoà Khánh',
       role: 'Admin', // Single Default Admin Account
       avatar: 'admin_avatar.png',
       status: 'active',
       createdDate: '2026-01-15',
-      lastLogin: '2026-10-03 19:45',
+      lastLogin: '2026-10-08 22:50',
       loginCount: 50
     }
   ];
@@ -473,10 +475,14 @@
             if (cloudAccInfo && currentUser && currentUser.email.toLowerCase() === email.toLowerCase()) {
               currentUser.holyName = cloudAccInfo.holyName || currentUser.holyName;
               currentUser.name = cloudAccInfo.name || currentUser.name;
+              if (cloudAccInfo.parish) currentUser.parish = cloudAccInfo.parish;
+              if (cloudAccInfo.password) currentUser.password = cloudAccInfo.password;
               const match = accountsList.find(a => a.email.toLowerCase() === currentUser.email.toLowerCase());
               if (match) {
                 match.holyName = currentUser.holyName;
                 match.name = currentUser.name;
+                if (currentUser.parish) match.parish = currentUser.parish;
+                if (currentUser.password) match.password = currentUser.password;
               }
               saveAccounts();
               saveCurrentUser();
@@ -497,6 +503,7 @@
     if (currentUser.avatar && !isDefaultAvatar(currentUser.avatar)) {
       appData.userAvatar = currentUser.avatar;
     }
+    const userParish = currentUser.parish || (appData.parishInfo ? appData.parishInfo.name : 'Giáo Xứ Hoà Khánh');
     appData.account_info = {
       id: currentUser.id,
       email: currentUser.email,
@@ -505,10 +512,15 @@
       role: currentUser.role,
       avatar: currentUser.avatar,
       phone: currentUser.phone,
+      parish: userParish,
+      password: currentUser.password || '123456',
       status: currentUser.status,
       lastLogin: currentUser.lastLogin,
       loginCount: currentUser.loginCount
     };
+    if (appData.parishInfo) {
+      appData.parishInfo.name = userParish;
+    }
     const key = STORAGE_PREFIX_DATA + currentUser.email.toLowerCase().replace(/[^a-z0-9]/g, '_');
     try {
       localStorage.setItem(key, JSON.stringify(appData));
@@ -706,40 +718,157 @@
       });
     });
 
-    // Toggle Custom Google Login Form
-    const toggleCustomBtn = document.getElementById('toggle-custom-google-btn');
-    const customForm = document.getElementById('custom-google-form');
-    if (toggleCustomBtn && customForm) {
-      toggleCustomBtn.addEventListener('click', () => {
-        const isHidden = customForm.style.display === 'none';
-        customForm.style.display = isHidden ? 'block' : 'none';
-      });
-    }
+    // Global Auth Navigation & Visibility Utilities
+    window.switchAuthTab = function(tabName) {
+      const tabLoginBtn = document.getElementById('tab-btn-login');
+      const tabRegBtn = document.getElementById('tab-btn-register');
+      const paneLogin = document.getElementById('auth-pane-login');
+      const paneReg = document.getElementById('auth-pane-register');
 
-    // Custom Google Login Form Submit
-    const customGoogleForm = document.getElementById('custom-google-form');
-    if (customGoogleForm) {
-      customGoogleForm.addEventListener('submit', (e) => {
+      if (tabName === 'login') {
+        if (tabLoginBtn) tabLoginBtn.classList.add('active');
+        if (tabRegBtn) tabRegBtn.classList.remove('active');
+        if (paneLogin) paneLogin.style.display = 'block';
+        if (paneReg) paneReg.style.display = 'none';
+      } else {
+        if (tabLoginBtn) tabLoginBtn.classList.remove('active');
+        if (tabRegBtn) tabRegBtn.classList.add('active');
+        if (paneLogin) paneLogin.style.display = 'none';
+        if (paneReg) paneReg.style.display = 'block';
+      }
+    };
+
+    window.togglePasswordVisibility = function(inputId, btn) {
+      const input = document.getElementById(inputId);
+      if (!input) return;
+      const isPassword = input.type === 'password';
+      input.type = isPassword ? 'text' : 'password';
+      if (btn) {
+        btn.innerHTML = isPassword ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
+      }
+    };
+
+    window.handleRegisterParishChange = function(val) {
+      const customWrap = document.getElementById('teacher-reg-custom-parish-wrap');
+      if (customWrap) {
+        customWrap.style.display = (val === 'OTHER') ? 'block' : 'none';
+        const customInput = document.getElementById('teacher-reg-custom-parish');
+        if (val === 'OTHER' && customInput) customInput.focus();
+      }
+    };
+
+    // Teacher Login Form Submit
+    const teacherLoginForm = document.getElementById('teacher-login-form');
+    if (teacherLoginForm) {
+      teacherLoginForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        const email = document.getElementById('custom-email').value.trim();
-        const fullname = document.getElementById('custom-fullname').value.trim();
-        const holyname = document.getElementById('custom-holyname').value.trim();
+        const emailInput = document.getElementById('teacher-login-email');
+        const passInput = document.getElementById('teacher-login-password');
+        if (!emailInput || !passInput) return;
 
-        if (email && fullname) {
-          loginWithAccount({
+        const email = emailInput.value.trim().toLowerCase();
+        const password = passInput.value.trim();
+
+        if (!email || !password) {
+          alert('Vui lòng nhập đầy đủ Gmail và Mật khẩu!');
+          return;
+        }
+
+        let match = accountsList.find(a => a.email && a.email.toLowerCase() === email);
+        if (match) {
+          if (match.status === 'suspended') {
+            alert('Tài khoản này đang bị TẠM KHÓA bởi Admin.');
+            return;
+          }
+          if (match.password && match.password !== password) {
+            alert('Mật khẩu không chính xác! Vui lòng kiểm tra lại hoặc liên hệ Admin Master.');
+            return;
+          }
+          if (!match.password) match.password = password;
+        } else {
+          // Seamless Auto-Registration: User logs in successfully on first try!
+          match = {
             id: 'acc_' + Date.now(),
             email: email,
-            name: fullname,
-            holyName: holyname || 'T. Giuse',
+            password: password,
+            name: email.split('@')[0].replace(/[._-]/g, ' ').toUpperCase(),
+            holyName: 'T. Giuse',
+            phone: '',
+            parish: 'Giáo Xứ Hoà Khánh',
             role: accountsList.length === 0 ? 'Admin' : 'Giáo lý viên',
             avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80',
             status: 'active',
             createdDate: new Date().toISOString().split('T')[0],
             lastLogin: new Date().toLocaleString(),
             loginCount: 1
-          });
-          closeModal('google-auth-modal');
+          };
+          accountsList.push(match);
         }
+
+        loginWithAccount(match);
+        closeModal('google-auth-modal');
+      });
+    }
+
+    // Teacher Register Form Submit
+    const teacherRegForm = document.getElementById('teacher-register-form');
+    if (teacherRegForm) {
+      teacherRegForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const emailInput = document.getElementById('teacher-reg-email');
+        const passInput = document.getElementById('teacher-reg-password');
+        const holyInput = document.getElementById('teacher-reg-holyname');
+        const nameInput = document.getElementById('teacher-reg-fullname');
+        const phoneInput = document.getElementById('teacher-reg-phone');
+        const parishSelect = document.getElementById('teacher-reg-parish');
+
+        if (!emailInput || !passInput || !nameInput) return;
+
+        const email = emailInput.value.trim().toLowerCase();
+        const password = passInput.value.trim();
+        const holyName = (holyInput && holyInput.value.trim()) || 'T. Giuse';
+        const fullName = nameInput.value.trim();
+        const phone = phoneInput ? phoneInput.value.trim() : '';
+
+        let parishName = parishSelect ? parishSelect.value : 'Giáo Xứ Hoà Khánh';
+        if (parishName === 'OTHER') {
+          const customP = document.getElementById('teacher-reg-custom-parish');
+          parishName = (customP && customP.value.trim()) ? customP.value.trim() : 'Giáo Xứ Hoà Khánh';
+        }
+
+        if (!email || !password || !fullName) {
+          alert('Vui lòng điền đầy đủ Gmail, Mật khẩu và Họ tên!');
+          return;
+        }
+
+        let match = accountsList.find(a => a.email && a.email.toLowerCase() === email);
+        if (match) {
+          match.password = password;
+          match.name = fullName;
+          match.holyName = holyName;
+          match.phone = phone;
+          match.parish = parishName;
+        } else {
+          match = {
+            id: 'acc_' + Date.now(),
+            email: email,
+            password: password,
+            name: fullName,
+            holyName: holyName,
+            phone: phone,
+            parish: parishName,
+            role: accountsList.length === 0 ? 'Admin' : 'Giáo lý viên',
+            avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80',
+            status: 'active',
+            createdDate: new Date().toISOString().split('T')[0],
+            lastLogin: new Date().toLocaleString(),
+            loginCount: 1
+          };
+          accountsList.push(match);
+        }
+
+        loginWithAccount(match);
+        closeModal('google-auth-modal');
       });
     }
 
@@ -1540,11 +1669,6 @@
     const selectedSessionType = window._selectedAttendanceSessionType || 'Giáo lý';
     const activeTab = window._attendanceSubTab || 'list'; // 'list' | 'ai-seating' | 'history'
 
-    // Synchronize window global state
-    window._selectedAttendanceClassId = selectedClassId;
-    window._selectedAttendanceDate = selectedDate;
-    window._selectedAttendanceSessionType = selectedSessionType;
-
     const filteredStudents = appData.students.filter(s => !selectedClassId || String(s.classId) === String(selectedClassId));
 
   // Initialize seatingChart state if missing
@@ -1574,7 +1698,7 @@
 
     // Find saved historical record for current (selectedClassId, selectedDate, selectedSessionType)
     const logs = appData.attendanceLogs || [];
-    const savedLog = logs.find(l => String(l.classId) === String(selectedClassId) && l.date === selectedDate && l.sessionType === selectedSessionType);
+    const savedLog = logs.find(l => l.classId === selectedClassId && l.date === selectedDate && l.sessionType === selectedSessionType);
 
     container.innerHTML = `
       <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
@@ -1593,28 +1717,23 @@
             <i class="fa-solid fa-history"></i> 📜 Lịch Sử & Nhật Ký (${logs.length})
           </button>
           <button class="btn btn-outline-success" onclick="window.exportAttendanceToExcel('${selectedClassId}', '${selectedDate}', '${selectedSessionType}')" title="Tải file Excel điểm danh ngày này">
-            <i class="fa-solid fa-file-excel"></i> 📊 Tải Excel Ngày Này
+            <i class="fa-solid fa-file-excel"></i> Tải Excel Ngày Này
           </button>
         </div>
       </div>
 
       <!-- FILTER CARD -->
       <div class="card mb-4">
-        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-          <div>
-            <h3 class="card-title" style="margin: 0;"><i class="fa-solid fa-calendar-check text-primary"></i> Chọn Lớp & Ngày Điểm Danh</h3>
-            <span style="font-size: 12px; color: var(--slate-muted); font-weight: 600; display: block; margin-top: 2px;">(Thay đổi ngày hoặc lớp học để tự động hiển thị lịch sử điểm danh ngày đó)</span>
-          </div>
-          <button type="button" class="btn btn-sm btn-success" onclick="window.exportAttendanceToExcel(window._selectedAttendanceClassId, window._selectedAttendanceDate, window._selectedAttendanceSessionType)" style="font-weight: 700; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);">
-            <i class="fa-solid fa-file-excel"></i> 📊 Tải Bảng Điểm Danh (Excel/CSV)
-          </button>
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <h3 class="card-title"><i class="fa-solid fa-calendar-check text-primary"></i> Chọn Lớp & Ngày Điểm Danh</h3>
+          <span style="font-size: 12px; color: var(--slate-muted); font-weight: 600;">(Đổi ngày để xem lại lịch sử điểm danh ngày đó)</span>
         </div>
         <div class="card-body">
           <div class="form-row">
             <div class="col-4">
               <label>Chọn Lớp Học: <span class="text-danger">*</span></label>
               <select id="att-class-select" class="form-control" onchange="window.handleAttFilterChange()">
-                ${classes.map(c => `<option value="${c.id}" ${String(c.id) === String(selectedClassId) ? 'selected' : ''}>${c.name} (${c.grade})</option>`).join('')}
+                ${classes.map(c => `<option value="${c.id}" ${c.id === selectedClassId ? 'selected' : ''}>${c.name} (${c.grade})</option>`).join('')}
               </select>
             </div>
             <div class="col-4">
@@ -1652,7 +1771,7 @@
       ` : `
         <div class="alert alert-info mb-4" style="background: #eff6ff; border-left: 5px solid #3b82f6; color: #1e40af; padding: 12px 18px; border-radius: 10px; font-size: 12.5px; font-weight: 600; display: flex; align-items: center; gap: 10px;">
           <i class="fa-solid fa-circle-info" style="font-size: 18px; color: #2563eb;"></i>
-          <span>ℹ️ <strong>CHƯA CÓ LỊCH SỬ ĐIỂM DANH CHO NGÀY ${selectedDate}:</strong> Hãy kiểm tra danh sách và bấm <strong>"Lưu Kết Quả Điểm Danh Vĩnh Viễn"</strong> để sao lưu vĩnh viễn vào hệ thống.</span>
+          <span>ℹ️ <strong>CHƯA CÓ LỊCH SỬ ĐIỂM DANH CHO NGÀY ${selectedDate}:</strong> Hãy kiểm tra danh sách và bấm <strong>"Lưu Kết Quả Điểm Danh"</strong> để sao lưu vĩnh viễn vào hệ thống.</span>
         </div>
       `}
 
@@ -1663,7 +1782,7 @@
   function renderTraditionalListSection(filteredStudents, savedLog) {
     const recordsMap = {};
     if (savedLog && Array.isArray(savedLog.records)) {
-      savedLog.records.forEach(r => { recordsMap[String(r.studentId)] = r; });
+      savedLog.records.forEach(r => { recordsMap[r.studentId] = r; });
     }
 
     return `
@@ -1692,7 +1811,7 @@
                 </thead>
                 <tbody>
                   ${filteredStudents.map(s => {
-                    const rec = recordsMap[String(s.id)];
+                    const rec = recordsMap[s.id];
                     const currentStatus = rec ? rec.status : 'present';
                     const currentNote = rec ? (rec.note || '') : '';
                     return `
@@ -1724,13 +1843,8 @@
             <button type="button" class="btn btn-outline-success" onclick="window.exportAttendanceToExcel(window._selectedAttendanceClassId, window._selectedAttendanceDate, window._selectedAttendanceSessionType)">
               <i class="fa-solid fa-file-excel"></i> 📊 Tải Bảng Điểm Danh (Excel/CSV)
             </button>
-            <button type="button" class="btn btn-outline-primary" onclick="window.exportMonthlyAttendanceMatrixExcel(window._selectedAttendanceClassId)">
-              <i class="fa-solid fa-table-cells"></i> 📊 Tải Bảng Tổng Hợp Cả Năm
-            </button>
           </div>
-          <button type="button" class="btn btn-primary" onclick="window.saveAttendanceLog()" style="padding: 10px 24px; font-weight: 700; font-size: 14px; border-radius: 8px; background: linear-gradient(135deg, #2563eb, #1d4ed8); border: none; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35); cursor: pointer;">
-            <i class="fa-solid fa-floppy-disk"></i> 💾 Lưu Kết Quả Điểm Danh Vĩnh Viễn
-          </button>
+          <button type="button" class="btn btn-primary" onclick="window.saveAttendanceLog()"><i class="fa-solid fa-floppy-disk"></i> Lưu Kết Quả Điểm Danh Vĩnh Viễn</button>
         </div>
       </div>
     `;
@@ -1963,7 +2077,6 @@
     `;
   }
 
-
   window.switchAttSubTab = function(tab) {
     window._attendanceSubTab = tab;
     renderAttendance(document.getElementById('content-area'));
@@ -2026,7 +2139,7 @@
     }
 
     // Auto-fill unassigned seats if new seats exist
-    const filteredStudents = appData.students.filter(s => String(s.classId) === String(classId));
+    const filteredStudents = appData.students.filter(s => s.classId === classId);
     if (!chart.seats) chart.seats = {};
     const assignedIds = Object.values(chart.seats);
     let unassigned = filteredStudents.filter(st => !assignedIds.includes(st.id));
@@ -2050,8 +2163,8 @@
 
   // Open Interactive Modal to Assign Students to Specific Seats
   window.openAssignSeatsModal = function(classId) {
-    const cls = (appData.classes || []).find(c => String(c.id) === String(classId));
-    const filteredStudents = appData.students.filter(s => String(s.classId) === String(classId));
+    const cls = (appData.classes || []).find(c => c.id === classId);
+    const filteredStudents = appData.students.filter(s => s.classId === classId);
     if (!appData.seatingCharts || !appData.seatingCharts[classId]) return;
     const chart = appData.seatingCharts[classId];
     const rows = chart.rows || 4;
@@ -2145,7 +2258,7 @@
   };
 
   window.autoAssignSeats = function(classId) {
-    const filteredStudents = appData.students.filter(s => String(s.classId) === String(classId));
+    const filteredStudents = appData.students.filter(s => s.classId === classId);
     if (!appData.seatingCharts || !appData.seatingCharts[classId]) return;
     const chart = appData.seatingCharts[classId];
     const rows = chart.rows || 4;
@@ -2527,31 +2640,16 @@
   }
 
   window.saveAISeatingAttendance = function(classId) {
-    const classes = appData.classes || [];
-    const targetClassId = classId || window._selectedAttendanceClassId || (classes[0] ? classes[0].id : '');
-    const targetClass = classes.find(c => String(c.id) === String(targetClassId));
-    if (!targetClass) {
-      showToast('Vui lòng chọn lớp học!', 'warning');
-      return;
-    }
-
-    const chart = (appData.seatingCharts && appData.seatingCharts[targetClassId]) ? appData.seatingCharts[targetClassId] : { absentSeats: [] };
+    if (!appData.seatingCharts || !appData.seatingCharts[classId]) return;
+    const chart = appData.seatingCharts[classId];
     const absentSeats = chart.absentSeats || [];
-    const dateInput = document.getElementById('att-date');
-    const sessionSelect = document.getElementById('att-session-type');
+    const today = document.getElementById('att-date') ? document.getElementById('att-date').value : new Date().toISOString().split('T')[0];
+    const sessionType = document.getElementById('att-session-type') ? document.getElementById('att-session-type').value : 'Giáo lý';
 
-    const date = dateInput ? dateInput.value : (window._selectedAttendanceDate || new Date().toISOString().split('T')[0]);
-    const sessionType = sessionSelect ? sessionSelect.value : (window._selectedAttendanceSessionType || 'Giáo lý');
+    if (!Array.isArray(appData.attendanceLogs)) appData.attendanceLogs = [];
 
-    const filteredStudents = (appData.students || []).filter(s => String(s.classId) === String(targetClassId));
-    if (filteredStudents.length === 0) {
-      showToast('Lớp học này chưa có học viên nào!', 'warning');
-      return;
-    }
-
+    const filteredStudents = appData.students.filter(s => String(s.classId) === String(classId));
     const records = [];
-    let present = 0, unexcused = 0;
-
     filteredStudents.forEach(st => {
       let studentSeatKey = null;
       Object.keys(chart.seats || {}).forEach(k => {
@@ -2560,56 +2658,41 @@
 
       const isAbsent = studentSeatKey && absentSeats.includes(studentSeatKey);
       const status = isAbsent ? 'unexcused' : 'present';
-      if (status === 'present') present++;
-      else unexcused++;
 
       records.push({
         studentId: st.id,
-        studentCode: st.code || `HV${st.id}`,
-        studentName: `${st.holyName || ''} ${st.fullName || ''}`.trim(),
         status: status,
-        note: isAbsent ? 'Vắng qua sơ đồ AI' : ''
+        note: isAbsent ? 'AI phát hiện vắng mặt' : 'Có mặt (AI)'
       });
     });
 
-    if (!Array.isArray(appData.attendanceLogs)) appData.attendanceLogs = [];
-
-    const existingIndex = appData.attendanceLogs.findIndex(l => String(l.classId) === String(targetClassId) && l.date === date && l.sessionType === sessionType);
+    const absentCount = records.filter(r => r.status === 'unexcused').length;
+    const presentCount = records.length - absentCount;
 
     const logEntry = {
-      id: existingIndex >= 0 ? appData.attendanceLogs[existingIndex].id : 'att_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
-      classId: targetClassId,
-      className: targetClass.name,
-      date: date,
+      id: 'att_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+      classId: classId,
+      date: today,
       sessionType: sessionType,
-      savedAt: new Date().toISOString(),
-      savedBy: (currentUser ? (currentUser.holyName ? currentUser.holyName + ' ' : '') + currentUser.name : 'Giáo lý viên (AI Sơ Đồ)'),
       records: records,
-      stats: {
-        total: filteredStudents.length,
-        present: present,
-        late: 0,
-        excused: 0,
-        unexcused: unexcused
-      }
+      savedAt: new Date().toISOString(),
+      savedBy: (window.currentUser ? window.currentUser.name : 'Giáo lý viên'),
+      stats: { total: records.length, present: presentCount, late: 0, excused: 0, unexcused: absentCount },
+      method: 'ai_auto_photo'
     };
 
-    if (existingIndex >= 0) {
-      appData.attendanceLogs[existingIndex] = logEntry;
+    const existingIdx = appData.attendanceLogs.findIndex(l => String(l.classId) === String(classId) && l.date === today && l.sessionType === sessionType);
+    if (existingIdx >= 0) {
+      appData.attendanceLogs[existingIdx] = logEntry;
     } else {
       appData.attendanceLogs.push(logEntry);
     }
 
     saveUserData();
-    renderAttendance(document.getElementById('content-area'));
-    showToast(`✓ Đã lưu vĩnh viễn kết quả điểm danh AI cho lớp ${targetClass.name} ngày ${date}! (Vắng ${unexcused} em)`, 'success');
+    showToast(`✓ Đã lưu vĩnh viễn kết quả điểm danh AI cho lớp lên Supabase Cloud! (Vắng ${absentSeats.length} em)`, 'success');
   };
 
-  // ATTENDANCE SUB-TAB & FILTER CONTROLLER
-  window.switchAttSubTab = function(tab) {
-    window._attendanceSubTab = tab;
-    renderAttendance(document.getElementById('content-area'));
-  };
+  // ATTENDANCE FILTER CONTROLLER
 
   window.handleAttFilterChange = function() {
     const classSelect = document.getElementById('att-class-select');
@@ -2654,7 +2737,7 @@
             <div style="text-align: center; padding: 40px;">
               <div style="font-size: 48px; color: var(--slate-muted); margin-bottom: 12px;"><i class="fa-solid fa-calendar-xmark"></i></div>
               <h4 style="font-size: 16px; font-weight: 700; color: var(--dark-navy);">Chưa Có Lịch Sử Điểm Danh Nào Được Lưu</h4>
-              <p style="font-size: 13px; color: var(--slate-muted); margin-top: 4px;">Hãy điểm danh và bấm "Lưu Kết Quả Điểm Danh Vĩnh Viễn" để lưu trữ vĩnh viễn vào nhật ký hệ thống!</p>
+              <p style="font-size: 13px; color: var(--slate-muted); margin-top: 4px;">Hãy điểm danh và bấm "Lưu Kết Quả Điểm Danh" để lưu trữ vĩnh viễn vào nhật ký hệ thống!</p>
             </div>
           ` : `
             <div class="table-responsive">
@@ -2717,22 +2800,19 @@
     const dateInput = document.getElementById('att-date');
     const sessionSelect = document.getElementById('att-session-type');
 
-    const classId = classSelect ? classSelect.value : (window._selectedAttendanceClassId || (appData.classes[0] ? appData.classes[0].id : ''));
-    const date = dateInput ? dateInput.value : (window._selectedAttendanceDate || new Date().toISOString().split('T')[0]);
-    const sessionType = sessionSelect ? sessionSelect.value : (window._selectedAttendanceSessionType || 'Giáo lý');
+    if (!classSelect || !dateInput) return;
 
-    window._selectedAttendanceClassId = classId;
-    window._selectedAttendanceDate = date;
-    window._selectedAttendanceSessionType = sessionType;
-
-    const targetClass = (appData.classes || []).find(c => String(c.id) === String(classId));
+    const classId = classSelect.value;
+    const date = dateInput.value;
+    const sessionType = sessionSelect ? sessionSelect.value : 'Giáo lý';
+    const targetClass = appData.classes.find(c => c.id === classId);
 
     if (!targetClass) {
       showToast('Vui lòng chọn lớp học!', 'warning');
       return;
     }
 
-    const filteredStudents = (appData.students || []).filter(s => String(s.classId) === String(classId));
+    const filteredStudents = appData.students.filter(s => s.classId === classId);
     if (filteredStudents.length === 0) {
       showToast('Lớp học này chưa có học viên nào!', 'warning');
       return;
@@ -2766,7 +2846,7 @@
     }
 
     // Check if log for classId + date + sessionType already exists
-    const existingIndex = appData.attendanceLogs.findIndex(l => String(l.classId) === String(classId) && l.date === date && l.sessionType === sessionType);
+    const existingIndex = appData.attendanceLogs.findIndex(l => l.classId === classId && l.date === date && l.sessionType === sessionType);
 
     const logEntry = {
       id: existingIndex >= 0 ? appData.attendanceLogs[existingIndex].id : 'att_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
@@ -2794,7 +2874,7 @@
 
     saveUserData();
     renderAttendance(document.getElementById('content-area'));
-    showToast(`✅ Đã lưu vĩnh viễn kết quả điểm danh ngày ${date} (${sessionType}) lên bộ nhớ và Cloud!`, 'success');
+    showToast(`✅ Đã lưu vĩnh viễn lịch sử điểm danh ngày ${date} (${sessionType}) lên hệ thống Cloud!`, 'success');
   };
 
   // VIEW HISTORICAL ATTENDANCE LOG
@@ -2818,25 +2898,15 @@
 
   // EXPORT SINGLE DAY ATTENDANCE TO EXCEL / CSV
   window.exportAttendanceToExcel = function(classId, date, sessionType) {
-    const classes = appData.classes || [];
-    const targetClassId = classId || window._selectedAttendanceClassId || (classes[0] ? classes[0].id : '');
-    const targetDate = date || window._selectedAttendanceDate || new Date().toISOString().split('T')[0];
-    const targetSessionType = sessionType || window._selectedAttendanceSessionType || 'Giáo lý';
-
-    const targetClass = classes.find(c => String(c.id) === String(targetClassId)) || (classes[0] || { name: 'LopHoc' });
-    const filteredStudents = (appData.students || []).filter(s => String(s.classId) === String(targetClass.id || targetClassId));
-
-    if (filteredStudents.length === 0) {
-      showToast('Lớp học này chưa có học viên nào để xuất danh sách!', 'warning');
-      return;
-    }
+    const targetClass = appData.classes.find(c => c.id === classId) || { name: 'LopHoc' };
+    const filteredStudents = appData.students.filter(s => s.classId === classId);
 
     const logs = appData.attendanceLogs || [];
-    const log = logs.find(l => String(l.classId) === String(targetClass.id || targetClassId) && l.date === targetDate && (targetSessionType ? l.sessionType === targetSessionType : true));
+    const log = logs.find(l => l.classId === classId && l.date === date && (sessionType ? l.sessionType === sessionType : true));
 
     const recordsMap = {};
     if (log && Array.isArray(log.records)) {
-      log.records.forEach(r => { recordsMap[String(r.studentId)] = r; });
+      log.records.forEach(r => { recordsMap[r.studentId] = r; });
     }
 
     const statusTextMap = {
@@ -2850,8 +2920,8 @@
       ['BẢNG ĐIỂM DANH HỌC VIÊN GIÁO LÝ'],
       [`Tên Giáo Xứ: ${appData.parishInfo ? appData.parishInfo.name : 'Giáo Xứ Hoà Khánh'}`],
       [`Tên Lớp Học: ${targetClass.name} (${targetClass.grade || ''})`],
-      [`Ngày Điểm Danh: ${targetDate}`],
-      [`Loại Buổi Sinh Hoạt: ${targetSessionType || (log ? log.sessionType : 'Giờ học Giáo lý')}`],
+      [`Ngày Điểm Danh: ${date}`],
+      [`Loại Buổi Sinh Hoạt: ${sessionType || (log ? log.sessionType : 'Giờ học Giáo lý')}`],
       [''],
       ['STT', 'Mã Học Viên', 'Tên Thánh & Họ Tên', 'Trạng Thái Điểm Danh', 'Ghi Chú']
     ];
@@ -2859,7 +2929,7 @@
     let present = 0, late = 0, excused = 0, unexcused = 0;
 
     filteredStudents.forEach((st, idx) => {
-      const rec = recordsMap[String(st.id)];
+      const rec = recordsMap[st.id];
       let statusStr = '🟢 Có mặt';
       let noteStr = '';
 
@@ -2895,22 +2965,20 @@
     rowsData.push(['TỔNG HỢP SỐ LIỆU:']);
     rowsData.push([`Tổng sĩ số: ${filteredStudents.length} em`, `Có mặt: ${present}`, `Đi trễ: ${late}`, `Vắng có phép: ${excused}`, `Vắng không phép: ${unexcused}`]);
 
-    const sanitizedClassName = (targetClass.name || 'LopHoc').replace(/[^a-z0-9]/gi, '_');
-    const filename = `DiemDanh_${sanitizedClassName}_${targetDate}.xlsx`;
-
     if (typeof XLSX !== 'undefined') {
       const ws = XLSX.utils.aoa_to_sheet(rowsData);
       ws['!cols'] = [{ wch: 6 }, { wch: 15 }, { wch: 30 }, { wch: 22 }, { wch: 25 }];
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Điểm Danh');
+      const filename = `DiemDanh_${targetClass.name.replace(/[^a-z0-9]/gi, '_')}_${date}.xlsx`;
       XLSX.writeFile(wb, filename);
-      showToast(`📊 Đã xuất thành công file Excel: ${filename}`, 'success');
+      showToast(`📊 Đã xuất thành công file Excel điểm danh: ${filename}`, 'success');
     } else {
       const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + rowsData.map(e => e.map(cell => `"${cell}"`).join(",")).join("\n");
       const encodedUri = encodeURI(csvContent);
       const link = document.createElement("a");
       link.setAttribute("href", encodedUri);
-      link.setAttribute("download", filename.replace('.xlsx', '.csv'));
+      link.setAttribute("download", `DiemDanh_${targetClass.name}_${date}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -2920,17 +2988,16 @@
 
   // EXPORT FULL MONTHLY/ANNUAL MATRIX SPREADSHEET TO EXCEL
   window.exportMonthlyAttendanceMatrixExcel = function(classId) {
-    const classes = appData.classes || [];
-    const targetClass = classes.find(c => String(c.id) === String(classId)) || (classes[0] || { name: 'Toan_Bo_Lop' });
+    const targetClass = appData.classes.find(c => c.id === classId) || (appData.classes[0] || { name: 'Toan_Bo_Lop' });
     const targetClassId = targetClass.id || classId;
-    const students = (appData.students || []).filter(s => String(s.classId) === String(targetClassId));
+    const students = appData.students.filter(s => s.classId === targetClassId);
 
     if (students.length === 0) {
       showToast('Không có dữ liệu học viên trong lớp!', 'warning');
       return;
     }
 
-    const logs = (appData.attendanceLogs || []).filter(l => String(l.classId) === String(targetClassId));
+    const logs = (appData.attendanceLogs || []).filter(l => l.classId === targetClassId);
     const dateSet = new Set();
     logs.forEach(l => { if (l.date) dateSet.add(l.date); });
 
@@ -2938,30 +3005,36 @@
 
     const headers = ['STT', 'Mã Học Viên', 'Tên Thánh', 'Họ và Tên'];
     sortedDates.forEach(d => headers.push(d));
-    headers.push('Tổng Có Mặt', 'Tổng Trễ', 'Tổng Vắng');
+    headers.push('Tổng Có Mặt', 'Tổng Đi Trễ', 'Tổng Vắng', 'Tỷ Lệ Chuyên Cần');
 
     const rowsData = [
-      ['BẢNG TỔNG HỢP ĐIỂM DANH TOÀN BỘ NĂM HỌC'],
-      [`Tên Giáo Xứ: ${appData.parishInfo ? appData.parishInfo.name : 'Giáo Xứ Hoà Khánh'}`],
-      [`Tên Lớp Học: ${targetClass.name} (${targetClass.grade || ''})`],
+      [`BẢNG TỔNG HỢP ĐIỂM DANH HỌC VIÊN CẢ NĂM / CẢ THÁNG`],
+      [`Giáo Xứ: ${appData.parishInfo ? appData.parishInfo.name : 'Giáo Xứ Hoà Khánh'}`],
+      [`Lớp Học: ${targetClass.name} (${targetClass.grade || ''})`],
+      [`Thời Gian Xuất Báo Cáo: ${new Date().toLocaleDateString('vi-VN')}`],
       [''],
       headers
     ];
 
     students.forEach((st, idx) => {
-      let pCount = 0, lCount = 0, aCount = 0;
-      const row = [idx + 1, st.code || `HV${st.id}`, st.holyName || '', st.fullName || ''];
+      let pCount = 0, lCount = 0, vCount = 0;
+      const row = [
+        idx + 1,
+        st.code || `HV${st.id}`,
+        st.holyName || '',
+        st.fullName || ''
+      ];
 
       sortedDates.forEach(d => {
         const log = logs.find(l => l.date === d);
         if (log && Array.isArray(log.records)) {
-          const rec = log.records.find(r => String(r.studentId) === String(st.id));
+          const rec = log.records.find(r => r.studentId === st.id);
           if (rec) {
-            if (rec.status === 'present') { row.push('✓'); pCount++; }
+            if (rec.status === 'present') { row.push('P'); pCount++; }
             else if (rec.status === 'late') { row.push('T'); lCount++; }
-            else if (rec.status === 'excused') { row.push('P'); aCount++; }
-            else if (rec.status === 'unexcused') { row.push('KP'); aCount++; }
-            else row.push('-');
+            else if (rec.status === 'excused') { row.push('V (P)'); vCount++; }
+            else if (rec.status === 'unexcused') { row.push('V (KP)'); vCount++; }
+            else { row.push('-'); }
           } else {
             row.push('-');
           }
@@ -2970,29 +3043,22 @@
         }
       });
 
-      row.push(pCount, lCount, aCount);
+      const totalSessions = sortedDates.length || 1;
+      const rate = Math.round(((pCount + lCount * 0.5) / totalSessions) * 100);
+
+      row.push(pCount, lCount, vCount, `${rate}%`);
       rowsData.push(row);
     });
-
-    const sanitizedClassName = (targetClass.name || 'LopHoc').replace(/[^a-z0-9]/gi, '_');
-    const filename = `TongHopDiemDanh_${sanitizedClassName}_CaNam.xlsx`;
 
     if (typeof XLSX !== 'undefined') {
       const ws = XLSX.utils.aoa_to_sheet(rowsData);
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Ma Trận Điểm Danh');
+      XLSX.utils.book_append_sheet(wb, ws, 'Bảng Điểm Danh Cả Năm');
+      const filename = `BangTongHop_DiemDanh_${targetClass.name.replace(/[^a-z0-9]/gi, '_')}.xlsx`;
       XLSX.writeFile(wb, filename);
-      showToast(`📊 Đã xuất thành công Bảng tổng hợp cả năm: ${filename}`, 'success');
+      showToast(`📊 Đã tải thành công file Excel tổng hợp điểm danh: ${filename}`, 'success');
     } else {
-      const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + rowsData.map(e => e.map(cell => `"${cell}"`).join(",")).join("\n");
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", filename.replace('.xlsx', '.csv'));
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      showToast('📊 Đã tải file CSV Bảng tổng hợp thành công!', 'success');
+      showToast('Đang xuất báo cáo Excel...', 'info');
     }
   };
 
@@ -3937,42 +4003,205 @@
     }
   }
 
-  // PAGE 14: QUẢN TRỊ TÀI KHOẢN (ADMIN EXCLUSIVE & MASTER DASHBOARD)
+  // NOTIFY ADMIN MASTER OF ANY TEACHER LOGIN / REGISTRATION
+  async function notifyAdminMasterOfLogin(user) {
+    if (!user || user.email.toLowerCase() === 'philthienhao@gmail.com') return;
+    const notifItem = {
+      id: 'notif_login_' + Date.now(),
+      title: '🔔 Giáo viên mới đăng nhập / tham gia hệ thống',
+      content: `Giáo lý viên ${user.holyName ? user.holyName + ' ' : ''}${user.name} (${user.email}) thuộc ${user.parish || 'Giáo Xứ Hoà Khánh'} vừa đăng nhập vào hệ thống lúc ${new Date().toLocaleTimeString('vi-VN')} ngày ${new Date().toLocaleDateString('vi-VN')}.`,
+      category: 'Tài Khoản Giáo Xứ',
+      date: new Date().toLocaleDateString('vi-VN') + ' ' + new Date().toLocaleTimeString('vi-VN')
+    };
+
+    // If current session is already admin (local)
+    if (currentUser && currentUser.email.toLowerCase() === 'philthienhao@gmail.com') {
+      if (appData && Array.isArray(appData.notifications)) {
+        appData.notifications.unshift(notifItem);
+        saveUserData();
+      }
+    }
+
+    // Sync notification to Supabase Cloud for Admin Master (philthienhao@gmail.com)
+    if (window.supabaseClient) {
+      try {
+        const { data: adminRow } = await window.supabaseClient
+          .from('user_data')
+          .select('data')
+          .eq('email', 'philthienhao@gmail.com')
+          .maybeSingle();
+
+        let adminData = (adminRow && adminRow.data) ? adminRow.data : {};
+        if (!Array.isArray(adminData.notifications)) adminData.notifications = [];
+        
+        // Prevent flood of duplicate notifs for same user within 5 mins
+        const isRecent = adminData.notifications.some(n => n.content && n.content.includes(user.email) && (Date.now() - parseInt(n.id.replace('notif_login_', ''))) < 300000);
+        if (!isRecent) {
+          adminData.notifications.unshift(notifItem);
+          await window.supabaseClient.from('user_data').upsert({
+            email: 'philthienhao@gmail.com',
+            data: adminData,
+            updated_at: new Date().toISOString()
+          });
+          console.log('✅ Đã tự động báo thông tin tài khoản giáo viên về Admin Master:', user.email);
+        }
+      } catch (err) {
+        console.warn('Lỗi khi gửi thông báo về admin master:', err);
+      }
+    }
+  }
+
+  // MULTI-PARISH FILTER CONTROLLER FOR ADMIN MASTER
+  window.adminSelectedParish = window.adminSelectedParish || 'Giáo Xứ Hoà Khánh';
+  window.adminSearchQuery = '';
+
+  window.changeAdminParishFilter = function(parishName) {
+    window.adminSelectedParish = parishName;
+    const container = document.getElementById('content-area');
+    if (container) renderAdminUsers(container);
+  };
+
+  window.filterAdminTable = function(query) {
+    window.adminSearchQuery = (query || '').toLowerCase().trim();
+    const rows = document.querySelectorAll('.admin-account-row');
+    rows.forEach(r => {
+      const text = r.textContent.toLowerCase();
+      r.style.display = text.includes(window.adminSearchQuery) ? '' : 'none';
+    });
+  };
+
+  window.toggleAdminPasswordVisibility = function(accId, btn) {
+    const el = document.getElementById('pw-text-' + accId);
+    if (!el) return;
+    const isHidden = el.getAttribute('data-hidden') === 'true';
+    if (isHidden) {
+      el.textContent = el.getAttribute('data-raw');
+      el.setAttribute('data-hidden', 'false');
+      if (btn) btn.innerHTML = '<i class="fa-solid fa-eye-slash"></i>';
+    } else {
+      el.textContent = '••••••';
+      el.setAttribute('data-hidden', 'true');
+      if (btn) btn.innerHTML = '<i class="fa-solid fa-eye"></i>';
+    }
+  };
+
+  // PAGE 14: QUẢN TRỊ ĐA GIÁO XỨ TOÀN HỆ THỐNG (SUPER ADMIN MULTI-PARISH HUB)
   async function renderAdminUsers(container) {
     let cloudDataRows = [];
-    let parishClassesCount = 0;
-    let parishStudentsCount = 0;
 
     if (window.supabaseClient) {
       try {
         const { data, error } = await window.supabaseClient.from('user_data').select('*');
         if (data && Array.isArray(data)) {
           cloudDataRows = data;
-          data.forEach(r => {
-            if (r.data) {
-              if (Array.isArray(r.data.classes)) parishClassesCount += r.data.classes.length;
-              if (Array.isArray(r.data.students)) parishStudentsCount += r.data.students.length;
-            }
-          });
         }
       } catch (e) {
         console.warn('Supabase admin fetch notice:', e);
       }
     }
 
-    const totalUsers = accountsList.length;
-    const activeUsers = accountsList.filter(a => a.status === 'active').length;
-    const suspendedUsers = accountsList.filter(a => a.status === 'suspended').length;
+    // Merge Cloud data with local accountsList
+    const combinedAccounts = accountsList.map(acc => {
+      const cloudMatch = cloudDataRows.find(r => r.email && r.email.toLowerCase() === acc.email.toLowerCase());
+      const uData = (cloudMatch && cloudMatch.data) ? cloudMatch.data : null;
+      const parish = (uData && uData.parishInfo && uData.parishInfo.name)
+        || (uData && uData.account_info && uData.account_info.parish)
+        || acc.parish
+        || 'Giáo Xứ Hoà Khánh';
+      const classes = (uData && Array.isArray(uData.classes)) ? uData.classes : [];
+      const students = (uData && Array.isArray(uData.students)) ? uData.students : [];
+      const attendanceLogs = (uData && Array.isArray(uData.attendanceLogs)) ? uData.attendanceLogs : [];
+      const password = acc.password || (uData && uData.account_info && uData.account_info.password) || '123456';
+      const lastSync = (cloudMatch && cloudMatch.updated_at) ? new Date(cloudMatch.updated_at).toLocaleString('vi-VN') : (acc.lastLogin || 'Mới khởi tạo');
+
+      return {
+        ...acc,
+        parish,
+        password,
+        classes,
+        students,
+        attendanceLogs,
+        lastSync,
+        uData
+      };
+    });
+
+    // Ingest any cloud rows not yet in accountsList
+    cloudDataRows.forEach(r => {
+      if (r.email && !combinedAccounts.some(a => a.email.toLowerCase() === r.email.toLowerCase())) {
+        const uData = r.data || {};
+        const parish = (uData.parishInfo && uData.parishInfo.name) || (uData.account_info && uData.account_info.parish) || 'Giáo Xứ Hoà Khánh';
+        const classes = Array.isArray(uData.classes) ? uData.classes : [];
+        const students = Array.isArray(uData.students) ? uData.students : [];
+        const attendanceLogs = Array.isArray(uData.attendanceLogs) ? uData.attendanceLogs : [];
+        const accInfo = uData.account_info || {};
+
+        combinedAccounts.push({
+          id: accInfo.id || ('acc_' + r.email.replace(/[^a-z0-9]/gi, '_')),
+          email: r.email,
+          password: accInfo.password || '123456',
+          name: accInfo.name || r.email.split('@')[0],
+          holyName: accInfo.holyName || 'T. Giuse',
+          phone: accInfo.phone || '',
+          parish: parish,
+          role: accInfo.role || 'Giáo lý viên',
+          avatar: accInfo.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80',
+          status: 'active',
+          lastLogin: (r.updated_at ? new Date(r.updated_at).toLocaleString('vi-VN') : 'Gần đây'),
+          classes,
+          students,
+          attendanceLogs,
+          lastSync: r.updated_at ? new Date(r.updated_at).toLocaleString('vi-VN') : 'Gần đây',
+          uData
+        });
+      }
+    });
+
+    // Collect all unique Parishes across all accounts
+    const uniqueParishesSet = new Set(['Giáo Xứ Hoà Khánh']);
+    combinedAccounts.forEach(a => {
+      if (a.parish && a.parish.trim()) uniqueParishesSet.add(a.parish.trim());
+    });
+    const allParishes = Array.from(uniqueParishesSet);
+
+    // Apply Parish Selection Filter
+    const activeParish = window.adminSelectedParish || 'Giáo Xứ Hoà Khánh';
+    const filteredAccounts = (activeParish === 'ALL')
+      ? combinedAccounts
+      : combinedAccounts.filter(a => a.parish.toLowerCase().trim() === activeParish.toLowerCase().trim());
+
+    // Aggregate statistics for the filtered parish
+    let allParishClasses = [];
+    let allParishStudents = [];
+    filteredAccounts.forEach(a => {
+      if (Array.isArray(a.classes)) {
+        a.classes.forEach(c => allParishClasses.push({
+          ...c,
+          teacherName: a.name,
+          teacherHoly: a.holyName,
+          teacherEmail: a.email,
+          parish: a.parish
+        }));
+      }
+      if (Array.isArray(a.students)) {
+        a.students.forEach(s => allParishStudents.push({ ...s, teacherEmail: a.email, parish: a.parish }));
+      }
+    });
+
+    const totalAccountsInView = filteredAccounts.length;
+    const totalClassesInView = allParishClasses.length;
+    const totalStudentsInView = allParishStudents.length;
+    const activeUsersCount = filteredAccounts.filter(a => a.status === 'active').length;
 
     container.innerHTML = `
-      <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+      <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 20px;">
         <div>
-          <h2 class="page-title"><i class="fa-solid fa-user-shield text-warning"></i> Quản Trị Hệ Thống Toàn Giáo Xứ (Master Admin)</h2>
-          <p class="page-subtitle">Quản lý tài khoản Giáo lý viên, xem dữ liệu lớp học và xuất báo cáo tổng hợp toàn Giáo xứ</p>
+          <h2 class="page-title"><i class="fa-solid fa-church text-warning"></i> Quản Trị Hệ Thống Đa Giáo Xứ (Super Admin Hub)</h2>
+          <p class="page-subtitle">Quản lý toàn bộ tài khoản giáo viên, mật khẩu, và dữ liệu lớp học phân chia chi tiết theo từng Giáo xứ</p>
         </div>
         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
           <button class="btn btn-success" onclick="window.exportParishMasterExcel()">
-            <i class="fa-solid fa-file-excel"></i> Xuất Báo Cáo Excel Toàn Giáo Xứ
+            <i class="fa-solid fa-file-excel"></i> Xuất Báo Cáo Excel Giáo Xứ
           </button>
           <button class="btn btn-outline-primary" onclick="window.refreshAdminCloudData()">
             <i class="fa-solid fa-arrows-rotate"></i> Tải Lại Dữ Liệu Cloud
@@ -3980,45 +4209,78 @@
         </div>
       </div>
 
-      <!-- ADMIN STATS -->
-      <div class="kpi-grid">
-        <div class="kpi-card">
-          <div class="kpi-icon kpi-blue"><i class="fa-solid fa-users"></i></div>
-          <div class="kpi-info">
-            <h4>Tài Khoản Đã Đăng Nhập</h4>
-            <div class="kpi-number">${totalUsers}</div>
+      <!-- PARISH SELECTION FILTER TOOLBAR -->
+      <div class="parish-filter-toolbar">
+        <div class="parish-filter-left">
+          <label style="font-size: 13.5px; font-weight: 800; color: var(--dark-navy); margin: 0; display: flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-filter text-primary"></i> Xem Dữ Liệu Theo Giáo Xứ:
+          </label>
+          <div class="parish-select-wrapper">
+            <i class="fa-solid fa-church text-primary"></i>
+            <select id="admin-parish-filter" onchange="window.changeAdminParishFilter(this.value)">
+              <option value="ALL" ${activeParish === 'ALL' ? 'selected' : ''}>🌐 Tất Cả Giáo Xứ (${combinedAccounts.length} tài khoản)</option>
+              ${allParishes.map(p => {
+                const count = combinedAccounts.filter(a => a.parish.toLowerCase().trim() === p.toLowerCase().trim()).length;
+                return `<option value="${p}" ${activeParish === p ? 'selected' : ''}>⛪ ${p} (${count} tài khoản)</option>`;
+              }).join('')}
+            </select>
           </div>
         </div>
 
-        <div class="kpi-card">
-          <div class="kpi-icon kpi-green"><i class="fa-solid fa-school"></i></div>
-          <div class="kpi-info">
-            <h4>Tổng Số Lớp Giáo Xứ</h4>
-            <div class="kpi-number">${parishClassesCount}</div>
-          </div>
-        </div>
-
-        <div class="kpi-card">
-          <div class="kpi-icon kpi-purple"><i class="fa-solid fa-graduation-cap"></i></div>
-          <div class="kpi-info">
-            <h4>Tổng Học Viên Giáo Xứ</h4>
-            <div class="kpi-number">${parishStudentsCount}</div>
-          </div>
-        </div>
-
-        <div class="kpi-card">
-          <div class="kpi-icon kpi-amber"><i class="fa-solid fa-user-check"></i></div>
-          <div class="kpi-info">
-            <h4>Đang Hoạt Động</h4>
-            <div class="kpi-number">${activeUsers} / ${totalUsers}</div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="position: relative; width: 260px;">
+            <input type="text" id="admin-search-input" class="form-control form-control-sm" placeholder="🔍 Tìm giáo viên, email, số ĐT..." oninput="window.filterAdminTable(this.value)" style="padding-left: 12px; font-size: 13px;">
           </div>
         </div>
       </div>
 
-      <!-- ACCOUNTS & CLASSES MASTER TABLE -->
-      <div class="card">
+      <!-- DYNAMIC KPI STATS FOR SELECTED PARISH -->
+      <div class="kpi-grid">
+        <div class="kpi-card" style="border-left: 4px solid var(--primary);">
+          <div class="kpi-icon kpi-blue"><i class="fa-solid fa-church"></i></div>
+          <div class="kpi-info">
+            <h4>Giáo Xứ Đang Xem</h4>
+            <div class="kpi-number" style="font-size: 18px; line-height: 1.3;">${activeParish === 'ALL' ? 'Toàn Bộ Hệ Thống' : activeParish}</div>
+            <span class="kpi-sub"><i class="fa-solid fa-check"></i> Đang lọc dữ liệu</span>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-green"><i class="fa-solid fa-users"></i></div>
+          <div class="kpi-info">
+            <h4>Tài Khoản Giáo Lý Viên</h4>
+            <div class="kpi-number">${totalAccountsInView}</div>
+            <span class="kpi-sub"><i class="fa-solid fa-user-check"></i> ${activeUsersCount} đang hoạt động</span>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-purple"><i class="fa-solid fa-school"></i></div>
+          <div class="kpi-info">
+            <h4>Số Lớp Được Lập</h4>
+            <div class="kpi-number">${totalClassesInView}</div>
+            <span class="kpi-sub"><i class="fa-solid fa-chalkboard"></i> Trong giáo xứ này</span>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-amber"><i class="fa-solid fa-graduation-cap"></i></div>
+          <div class="kpi-info">
+            <h4>Tổng Số Học Viên</h4>
+            <div class="kpi-number">${totalStudentsInView}</div>
+            <span class="kpi-sub"><i class="fa-solid fa-book-open"></i> Đang theo học</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACCOUNTS TABLE FILTERED BY SELECTED PARISH -->
+      <div class="card" style="margin-bottom: 24px;">
         <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-          <h3 class="card-title"><i class="fa-solid fa-users-gear"></i> Danh Sách Tài Khoản & Dữ Liệu Lớp Phụ Trách</h3>
+          <h3 class="card-title">
+            <i class="fa-solid fa-users-gear text-primary"></i> Danh Sách Tài Khoản Thuộc: 
+            <span style="color: var(--primary);">${activeParish === 'ALL' ? 'Tất Cả Giáo Xứ' : activeParish}</span>
+            <span class="badge badge-info" style="margin-left: 8px;">${totalAccountsInView} tài khoản</span>
+          </h3>
           <span class="badge badge-primary"><i class="fa-solid fa-cloud"></i> Đồng Bộ Đám Mây Supabase Cloud</span>
         </div>
         <div class="card-body" style="padding: 0;">
@@ -4026,28 +4288,34 @@
             <table class="custom-table">
               <thead>
                 <tr>
-                  <th>Tài Khoản Google / Gmail</th>
+                  <th>Tài Khoản Gmail & ID</th>
                   <th>Tên Thánh & Họ Tên</th>
-                  <th>Vai Trò</th>
-                  <th>Số Lớp Phụ Trách</th>
-                  <th>Số Học Viên</th>
+                  <th>Giáo Xứ Trực Thuộc</th>
+                  <th>Mật Khẩu</th>
+                  <th>Lớp Phụ Trách</th>
+                  <th>Học Viên</th>
                   <th>Lần Đăng Nhập Cuối</th>
                   <th>Trạng Thái</th>
                   <th>Thao Tác Admin Master</th>
                 </tr>
               </thead>
               <tbody>
-                ${accountsList.map(acc => {
-                  const cloudMatch = cloudDataRows.find(r => r.email.toLowerCase() === acc.email.toLowerCase());
-                  const cCount = cloudMatch && cloudMatch.data && Array.isArray(cloudMatch.data.classes) ? cloudMatch.data.classes.length : 0;
-                  const sCount = cloudMatch && cloudMatch.data && Array.isArray(cloudMatch.data.students) ? cloudMatch.data.students.length : 0;
-                  const lastSync = cloudMatch && cloudMatch.updated_at ? new Date(cloudMatch.updated_at).toLocaleString('vi-VN') : (acc.lastLogin || 'Mới khởi tạo');
+                ${filteredAccounts.length === 0 ? `
+                  <tr>
+                    <td colspan="9" style="text-align: center; padding: 40px; color: var(--slate-muted);">
+                      <i class="fa-solid fa-church" style="font-size: 32px; opacity: 0.3; margin-bottom: 8px; display: block;"></i>
+                      Chưa có tài khoản nào thuộc giáo xứ này.
+                    </td>
+                  </tr>
+                ` : filteredAccounts.map(acc => {
+                  const isHK = acc.parish && acc.parish.includes('Hoà Khánh');
+                  const badgeClass = isHK ? 'badge-hk' : 'badge-other';
 
                   return `
-                    <tr>
+                    <tr class="admin-account-row">
                       <td>
                         <div style="display: flex; align-items: center; gap: 10px;">
-                          <img src="${acc.avatar || 'admin_avatar.png'}" style="width: 34px; height: 34px; border-radius: 50%; object-fit: cover;">
+                          <img src="${acc.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80'}" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--slate-border);">
                           <div>
                             <strong>${acc.email}</strong>
                             <div style="font-size: 10px; color: var(--slate-muted);">ID: ${acc.id}</div>
@@ -4056,27 +4324,95 @@
                       </td>
                       <td><strong>${acc.holyName || ''}</strong> ${acc.name}</td>
                       <td>
-                        <span class="role-badge ${acc.role === 'Admin' ? 'role-admin' : 'role-catechist'}">
-                          ${acc.role === 'Admin' ? '👑 Admin Master' : '⛪ Giáo Lý Viên'}
+                        <span class="parish-badge ${badgeClass}">
+                          <i class="fa-solid fa-church"></i> ${acc.parish || 'Giáo Xứ Hoà Khánh'}
                         </span>
                       </td>
-                      <td><span class="badge badge-info">${cCount} lớp</span></td>
-                      <td><span class="badge badge-success">${sCount} học viên</span></td>
-                      <td><small style="color: var(--slate-muted);">${lastSync}</small></td>
+                      <td>
+                        <span class="pw-mask" id="pw-text-${acc.id}" data-raw="${acc.password || '123456'}" data-hidden="true">••••••</span>
+                        <button type="button" class="pw-reveal-btn" onclick="window.toggleAdminPasswordVisibility('${acc.id}', this)" title="Ẩn/Hiện mật khẩu">
+                          <i class="fa-solid fa-eye"></i>
+                        </button>
+                      </td>
+                      <td><span class="badge badge-info">${(acc.classes || []).length} lớp</span></td>
+                      <td><span class="badge badge-success">${(acc.students || []).length} em</span></td>
+                      <td><small style="color: var(--slate-muted); font-size: 11px;">${acc.lastSync}</small></td>
                       <td>
                         ${acc.status === 'active' 
                           ? '<span class="badge badge-success">🟢 Hoạt động</span>' 
                           : '<span class="badge badge-warning">🟡 Tạm khóa</span>'}
                       </td>
                       <td>
-                        <button class="btn btn-sm btn-outline-info" onclick="window.inspectUserData('${acc.email}')" title="Xem & Quản lý các lớp của tài khoản này">
-                          <i class="fa-solid fa-eye"></i> Xem Lớp
-                        </button>
-                        <button class="btn btn-sm btn-outline-primary" onclick="window.openAdminEditModal('${acc.id}')">
-                          <i class="fa-solid fa-user-gear"></i> Quản lý
-                        </button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="window.quickDeleteAdminUser('${acc.id}')" title="Xóa tài khoản">
-                          <i class="fa-solid fa-trash"></i>
+                        <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                          <button class="btn btn-sm btn-outline-info" onclick="window.openInspectUserModal('${acc.email}')" title="Xem toàn bộ dữ liệu lớp học, học sinh, điểm danh của tài khoản này">
+                            <i class="fa-solid fa-eye"></i> Xem Dữ Liệu
+                          </button>
+                          <button class="btn btn-sm btn-outline-primary" onclick="window.impersonateUser('${acc.email}')" title="Đăng nhập xem giao diện như giáo viên này">
+                            <i class="fa-solid fa-right-to-bracket"></i> Vào Xem
+                          </button>
+                          <button class="btn btn-sm btn-outline-secondary" onclick="window.openAdminEditModal('${acc.id}')" title="Sửa thông tin / Mật khẩu">
+                            <i class="fa-solid fa-pen"></i>
+                          </button>
+                          <button class="btn btn-sm btn-outline-danger" onclick="window.quickDeleteAdminUser('${acc.id}')" title="Xóa tài khoản">
+                            <i class="fa-solid fa-trash"></i>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- PARISH CLASSES MASTER LIST -->
+      <div class="card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+          <h3 class="card-title">
+            <i class="fa-solid fa-school text-primary"></i> Tổng Hợp Tất Cả Lớp Học Được Lập Trong:
+            <span style="color: var(--primary);">${activeParish === 'ALL' ? 'Toàn Hệ Thống' : activeParish}</span>
+            <span class="badge badge-info" style="margin-left: 8px;">${totalClassesInView} lớp</span>
+          </h3>
+        </div>
+        <div class="card-body" style="padding: 0;">
+          <div class="table-responsive">
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th>Tên Lớp Học</th>
+                  <th>Khối / Ngành</th>
+                  <th>Giáo Lý Viên Phụ Trách</th>
+                  <th>Giáo Xứ</th>
+                  <th>Sĩ Số Học Viên</th>
+                  <th>Lịch Học & Phòng Học</th>
+                  <th>Thao Tác</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${allParishClasses.length === 0 ? `
+                  <tr>
+                    <td colspan="7" style="text-align: center; padding: 30px; color: var(--slate-muted);">
+                      Chưa có lớp học nào được lập trong giáo xứ này.
+                    </td>
+                  </tr>
+                ` : allParishClasses.map(cls => {
+                  const sCount = allParishStudents.filter(s => s.classId === cls.id).length;
+                  return `
+                    <tr>
+                      <td><strong>${cls.name}</strong></td>
+                      <td><span class="badge badge-info">${cls.grade || cls.category || 'Giáo lý'}</span></td>
+                      <td>
+                        <strong>${cls.teacherHoly ? cls.teacherHoly + ' ' : ''}${cls.teacherName}</strong>
+                        <div style="font-size: 11px; color: var(--slate-muted);">${cls.teacherEmail}</div>
+                      </td>
+                      <td><span class="parish-badge">${cls.parish || activeParish}</span></td>
+                      <td><strong>${sCount}</strong> học viên</td>
+                      <td>${cls.schedule || 'Chưa xếp'} ${cls.room ? ' - Phòng ' + cls.room : ''}</td>
+                      <td>
+                        <button class="btn btn-xs btn-outline-info" onclick="window.openInspectUserModal('${cls.teacherEmail}')">
+                          <i class="fa-solid fa-users"></i> Xem Học Viên
                         </button>
                       </td>
                     </tr>
@@ -4094,49 +4430,67 @@
      6. MODAL & USER ACTIONS HANDLERS
      -------------------------------------------------------------------------- */
 
-  // GOOGLE LOGIN FLOW
+  // GOOGLE LOGIN & TEACHER AUTH MODAL FLOW
   function openGoogleAuthModal() {
     const modal = document.getElementById('google-auth-modal');
     const container = document.getElementById('google-accounts-list');
-    if (!modal || !container) return;
+    if (!modal) return;
 
-    container.innerHTML = accountsList.map(acc => `
-      <div class="google-account-card" onclick="window.selectGoogleAccount('${acc.id}')">
-        <img src="${acc.avatar}" alt="Avatar" class="account-avatar">
-        <div class="account-info">
-          <div class="name">${acc.holyName ? acc.holyName + ' ' : ''}${acc.name}</div>
-          <div class="email">${acc.email}</div>
-          <span class="role-tag">${acc.role === 'Admin' ? '👑 Tài khoản Admin' : '⛪ Giáo lý viên'}</span>
-        </div>
-        ${acc.status === 'suspended' ? '<span class="badge badge-danger">Tạm khóa</span>' : '<i class="fa-solid fa-chevron-right text-muted"></i>'}
-      </div>
-    `).join('');
+    if (container) {
+      if (accountsList.length === 0) {
+        container.innerHTML = '<p style="color: var(--slate-muted); font-size: 12px; text-align: center; margin: 10px 0;">Chưa có tài khoản nào được lưu trên máy này.</p>';
+      } else {
+        container.innerHTML = accountsList.map(acc => `
+          <div class="google-account-card" onclick="window.selectTeacherAccountQuick('${acc.id}')">
+            <img src="${acc.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80'}" alt="Avatar" class="account-avatar">
+            <div class="account-info">
+              <div class="name">${acc.holyName ? acc.holyName + ' ' : ''}${acc.name}</div>
+              <div class="email">${acc.email}</div>
+              <div style="font-size: 11px; color: var(--primary); font-weight: 700; margin-top: 2px;">
+                <i class="fa-solid fa-church"></i> ${acc.parish || 'Giáo Xứ Hoà Khánh'} • 
+                <span>${acc.role === 'Admin' ? '👑 Admin Master' : '⛪ Giáo lý viên'}</span>
+              </div>
+            </div>
+            ${acc.status === 'suspended' ? '<span class="badge badge-danger">Tạm khóa</span>' : '<i class="fa-solid fa-chevron-right text-muted"></i>'}
+          </div>
+        `).join('');
+      }
+    }
 
+    if (typeof window.switchAuthTab === 'function') window.switchAuthTab('login');
     openModal('google-auth-modal');
   }
 
-  window.selectGoogleAccount = function (accId) {
+  window.selectTeacherAccountQuick = function (accId) {
     const target = accountsList.find(a => a.id === accId);
     if (!target) return;
 
     if (target.status === 'suspended') {
-      alert('Tài khoản Google này đang bị TẠM KHÓA bởi Admin.');
+      alert('Tài khoản này đang bị TẠM KHÓA bởi Admin.');
       return;
     }
+
+    const emailInput = document.getElementById('teacher-login-email');
+    const passInput = document.getElementById('teacher-login-password');
+    if (emailInput) emailInput.value = target.email;
+    if (passInput) passInput.value = target.password || '123456';
 
     loginWithAccount(target);
     closeModal('google-auth-modal');
   };
+  window.selectGoogleAccount = window.selectTeacherAccountQuick;
 
   function loginWithAccount(acc) {
     // Check if existing
-    let match = accountsList.find(a => a.email.toLowerCase() === acc.email.toLowerCase());
+    let match = accountsList.find(a => a.email && a.email.toLowerCase() === acc.email.toLowerCase());
     if (!match) {
       match = acc;
       accountsList.push(match);
     } else {
       match.lastLogin = new Date().toLocaleString();
       match.loginCount = (match.loginCount || 0) + 1;
+      if (acc.password) match.password = acc.password;
+      if (acc.parish) match.parish = acc.parish;
     }
 
     saveAccounts();
@@ -4144,10 +4498,230 @@
     saveCurrentUser();
     loadUserData(currentUser.email);
 
+    // Notify Admin Master
+    notifyAdminMasterOfLogin(match);
+
     renderAppHeaderAndSidebar();
     navigateTo(activePage);
-    showToast(`Đã đăng nhập thành công tài khoản: ${currentUser.name}`, 'success');
+    showToast(`Đã đăng nhập thành công tài khoản: ${currentUser.name} (${currentUser.parish || 'Giáo Xứ Hoà Khánh'})`, 'success');
   }
+
+  // INSPECT USER FULL DATA MODAL
+  window.openInspectUserModal = async function(email) {
+    if (!email) return;
+    const modal = document.getElementById('admin-inspect-modal');
+    const titleEl = document.getElementById('inspect-modal-title');
+    const bodyEl = document.getElementById('inspect-modal-body');
+    const footerEl = document.getElementById('inspect-modal-footer');
+    if (!modal || !bodyEl) return;
+
+    bodyEl.innerHTML = '<div style="text-align: center; padding: 40px;"><i class="fa-solid fa-spinner fa-spin" style="font-size: 28px; color: var(--primary);"></i><p style="margin-top: 10px; color: var(--slate-muted);">Đang tải toàn bộ dữ liệu tài khoản từ Cloud...</p></div>';
+    openModal('admin-inspect-modal');
+
+    let uData = null;
+    let accInfo = accountsList.find(a => a.email.toLowerCase() === email.toLowerCase());
+
+    if (window.supabaseClient) {
+      try {
+        const { data } = await window.supabaseClient.from('user_data').select('*').eq('email', email.toLowerCase()).maybeSingle();
+        if (data && data.data) uData = data.data;
+      } catch (e) {}
+    }
+
+    if (!uData) {
+      const key = STORAGE_PREFIX_DATA + email.toLowerCase().replace(/[^a-z0-9]/g, '_');
+      const local = localStorage.getItem(key);
+      if (local) try { uData = JSON.parse(local); } catch (e) {}
+    }
+
+    if (!uData) uData = generateDefaultUserData(email);
+
+    const parishName = (uData.parishInfo && uData.parishInfo.name) || (accInfo && accInfo.parish) || 'Giáo Xứ Hoà Khánh';
+    const teacherName = (accInfo && accInfo.name) ? `${accInfo.holyName ? accInfo.holyName + ' ' : ''}${accInfo.name}` : email;
+    const classes = Array.isArray(uData.classes) ? uData.classes : [];
+    const students = Array.isArray(uData.students) ? uData.students : [];
+    const attendanceLogs = Array.isArray(uData.attendanceLogs) ? uData.attendanceLogs : [];
+
+    titleEl.innerHTML = `<i class="fa-solid fa-folder-tree text-primary"></i> Dữ Liệu Toàn Diện: <strong>${teacherName}</strong> (${email})`;
+
+    bodyEl.innerHTML = `
+      <div style="background: var(--slate-bg); border-radius: 10px; padding: 16px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; border: 1px solid var(--slate-border);">
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <img src="${(accInfo && accInfo.avatar) || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80'}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary);">
+          <div>
+            <h4 style="margin: 0; font-size: 16px; font-weight: 800; color: var(--dark-navy);">${teacherName}</h4>
+            <div style="font-size: 12px; color: var(--slate-muted); margin-top: 2px;">
+              <span><i class="fa-solid fa-envelope"></i> ${email}</span> • 
+              <span><i class="fa-solid fa-church text-primary"></i> <strong>${parishName}</strong></span>
+            </div>
+            <div style="font-size: 11.5px; color: #059669; font-weight: 700; margin-top: 2px;">
+              <i class="fa-solid fa-lock"></i> Mật khẩu: <code>${(accInfo && accInfo.password) || '123456'}</code>
+            </div>
+          </div>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-sm btn-primary" onclick="window.impersonateUser('${email}')">
+            <i class="fa-solid fa-right-to-bracket"></i> Đăng Nhập Xem Như Giáo Viên Này
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick KPI of this teacher -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px;">
+        <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px; text-align: center;">
+          <div style="font-size: 11px; font-weight: 700; color: #1d4ed8;">LỚP HỌC</div>
+          <div style="font-size: 22px; font-weight: 800; color: #1e40af;">${classes.length}</div>
+        </div>
+        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px; text-align: center;">
+          <div style="font-size: 11px; font-weight: 700; color: #15803d;">HỌC VIÊN</div>
+          <div style="font-size: 22px; font-weight: 800; color: #166534;">${students.length}</div>
+        </div>
+        <div style="background: #fefce8; border: 1px solid #fef08a; border-radius: 8px; padding: 12px; text-align: center;">
+          <div style="font-size: 11px; font-weight: 700; color: #a16207;">LẦN ĐIỂM DANH</div>
+          <div style="font-size: 22px; font-weight: 800; color: #854d0e;">${attendanceLogs.length}</div>
+        </div>
+      </div>
+
+      <!-- Section: Classes -->
+      <h5 style="font-size: 14px; font-weight: 800; color: var(--dark-navy); margin-bottom: 10px;">
+        <i class="fa-solid fa-school text-primary"></i> Các Lớp Học Do Giáo Viên Phụ Trách (${classes.length})
+      </h5>
+      ${classes.length === 0 ? '<p style="color: var(--slate-muted); font-size: 12.5px; margin-bottom: 20px;">Giáo viên chưa tạo lớp học nào.</p>' : `
+        <div class="table-responsive" style="margin-bottom: 20px;">
+          <table class="custom-table" style="font-size: 12.5px;">
+            <thead>
+              <tr>
+                <th>Tên Lớp</th>
+                <th>Khối / Ngành</th>
+                <th>Sĩ Số</th>
+                <th>Lịch Học</th>
+                <th>Phòng Học</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${classes.map(c => {
+                const sInClass = students.filter(s => s.classId === c.id).length;
+                return `
+                  <tr>
+                    <td><strong>${c.name}</strong></td>
+                    <td><span class="badge badge-info">${c.grade || c.category || 'Giáo lý'}</span></td>
+                    <td><strong>${sInClass}</strong> học viên</td>
+                    <td>${c.schedule || 'Chưa xếp'}</td>
+                    <td>${c.room || 'Chưa xếp'}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      `}
+
+      <!-- Section: Students -->
+      <h5 style="font-size: 14px; font-weight: 800; color: var(--dark-navy); margin-bottom: 10px;">
+        <i class="fa-solid fa-graduation-cap text-success"></i> Danh Sách Học Viên (${students.length})
+      </h5>
+      ${students.length === 0 ? '<p style="color: var(--slate-muted); font-size: 12.5px;">Chưa có học viên nào trong danh sách.</p>' : `
+        <div class="table-responsive" style="max-height: 280px; overflow-y: auto;">
+          <table class="custom-table" style="font-size: 12px;">
+            <thead>
+              <tr>
+                <th>Mã</th>
+                <th>Tên Thánh & Họ Tên</th>
+                <th>Giới Tính</th>
+                <th>Ngày Sinh</th>
+                <th>Lớp</th>
+                <th>Phụ Huynh & SĐT</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${students.map(s => {
+                const c = classes.find(cl => cl.id === s.classId);
+                return `
+                  <tr>
+                    <td><code>${s.code || s.id}</code></td>
+                    <td><strong>${s.holyName || ''}</strong> ${s.name || s.fullName}</td>
+                    <td>${s.gender || 'Nam'}</td>
+                    <td>${s.dob || '-'}</td>
+                    <td><span class="badge badge-primary">${c ? c.name : (s.classId || 'Chưa xếp')}</span></td>
+                    <td>${s.fatherName ? s.fatherName + ' (' + (s.fatherPhone || '-') + ')' : (s.motherName ? s.motherName + ' (' + (s.motherPhone || '-') + ')' : '-')}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      `}
+    `;
+
+    footerEl.innerHTML = `
+      <button type="button" class="btn btn-outline-primary" onclick="window.impersonateUser('${email}')">
+        <i class="fa-solid fa-right-to-bracket"></i> Đăng Nhập Xem Như Giáo Viên Này
+      </button>
+      <button type="button" class="btn btn-secondary" onclick="closeModal('admin-inspect-modal')">Đóng</button>
+    `;
+  };
+
+  // IMPERSONATE USER VIEW
+  window.impersonateUser = function(targetEmail) {
+    if (!targetEmail) return;
+    const target = accountsList.find(a => a.email.toLowerCase() === targetEmail.toLowerCase());
+    closeModal('admin-inspect-modal');
+    closeModal('google-auth-modal');
+
+    // Create / Update Banner
+    let banner = document.getElementById('impersonate-banner-bar');
+    if (!banner) {
+      banner = document.createElement('div');
+      banner.id = 'impersonate-banner-bar';
+      banner.className = 'impersonate-banner';
+      document.body.prepend(banner);
+    }
+    const displayName = target ? `${target.holyName ? target.holyName + ' ' : ''}${target.name}` : targetEmail;
+    const parish = (target && target.parish) ? target.parish : 'Giáo Xứ Hoà Khánh';
+    banner.innerHTML = `
+      <div>
+        <i class="fa-solid fa-triangle-exclamation"></i> 
+        Đang xem hệ thống với quyền Giáo lý viên: <strong>${displayName}</strong> (${targetEmail}) • ⛪ <strong>${parish}</strong>
+      </div>
+      <button class="btn btn-xs btn-dark" onclick="window.exitImpersonation()" style="font-weight: 700; border-radius: 4px; padding: 4px 10px;">
+        <i class="fa-solid fa-arrow-left"></i> Quay Lại Admin Master (Võ Thiện Hảo)
+      </button>
+    `;
+    banner.style.display = 'flex';
+
+    if (target) {
+      currentUser = target;
+    } else {
+      currentUser = {
+        id: 'acc_' + targetEmail.replace(/[^a-z0-9]/gi, '_'),
+        email: targetEmail,
+        name: targetEmail.split('@')[0],
+        holyName: 'T. Giuse',
+        role: 'Giáo lý viên',
+        parish: parish,
+        avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80'
+      };
+    }
+
+    saveCurrentUser();
+    loadUserData(targetEmail);
+    renderAppHeaderAndSidebar();
+    navigateTo('overview');
+    showToast(`Đang xem giao diện với quyền của Giáo lý viên: ${displayName}`, 'info');
+  };
+
+  window.exitImpersonation = function() {
+    const banner = document.getElementById('impersonate-banner-bar');
+    if (banner) banner.style.display = 'none';
+
+    const admin = accountsList.find(a => a.email.toLowerCase() === 'philthienhao@gmail.com') || SEED_ACCOUNTS[0];
+    currentUser = admin;
+    saveCurrentUser();
+    loadUserData(admin.email);
+    renderAppHeaderAndSidebar();
+    navigateTo('admin-users');
+    showToast('Đã quay trở lại tài khoản Admin Master (Võ Thiện Hảo)', 'success');
+  };
 
   // STUDENT MODAL & PHOTO UPLOAD HANDLERS
   window.openAddStudentModal = function () {
@@ -4869,10 +5443,14 @@
     if (!acc) return;
 
     document.getElementById('admin-target-id').value = acc.id;
-    document.getElementById('admin-target-avatar').src = acc.avatar;
+    document.getElementById('admin-target-avatar').src = acc.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80';
     document.getElementById('admin-target-name').textContent = acc.name;
     document.getElementById('admin-target-email').textContent = acc.email;
     document.getElementById('admin-target-fullname').value = (acc.holyName ? acc.holyName + ' ' : '') + acc.name;
+    const parishInput = document.getElementById('admin-target-parish');
+    if (parishInput) parishInput.value = acc.parish || 'Giáo Xứ Hoà Khánh';
+    const pwInput = document.getElementById('admin-target-password');
+    if (pwInput) pwInput.value = acc.password || '123456';
     document.getElementById('admin-target-role').value = acc.role;
     document.getElementById('admin-target-status').value = acc.status;
 
@@ -4888,10 +5466,40 @@
     acc.role = document.getElementById('admin-target-role').value;
     acc.status = document.getElementById('admin-target-status').value;
 
+    const parishInput = document.getElementById('admin-target-parish');
+    if (parishInput && parishInput.value.trim()) acc.parish = parishInput.value.trim();
+
+    const pwInput = document.getElementById('admin-target-password');
+    if (pwInput && pwInput.value.trim()) acc.password = pwInput.value.trim();
+
     saveAccounts();
+
+    // Sync to Supabase
+    if (window.supabaseClient && acc.email) {
+      window.supabaseClient
+        .from('user_data')
+        .select('data')
+        .eq('email', acc.email.toLowerCase())
+        .maybeSingle()
+        .then(({ data }) => {
+          let uData = (data && data.data) ? data.data : {};
+          if (!uData.account_info) uData.account_info = {};
+          uData.account_info.role = acc.role;
+          uData.account_info.status = acc.status;
+          uData.account_info.parish = acc.parish;
+          uData.account_info.password = acc.password;
+          if (uData.parishInfo) uData.parishInfo.name = acc.parish;
+          window.supabaseClient.from('user_data').upsert({
+            email: acc.email.toLowerCase(),
+            data: uData,
+            updated_at: new Date().toISOString()
+          });
+        });
+    }
+
     closeModal('admin-user-modal');
     if (activePage === 'admin-users') renderAdminUsers(document.getElementById('content-area'));
-    showToast(`Đã cập nhật trạng thái tài khoản ${acc.name}!`, 'success');
+    showToast(`Đã cập nhật thông tin & mật khẩu tài khoản ${acc.name}!`, 'success');
   }
 
   // ACCOUNT DELETION LOGIC WITH CUSTOM CONFIRMATION MODAL
@@ -5375,6 +5983,15 @@
   window.changeGradeSemester = window.changeGradeSemester;
   window.resetCurrentGradebook = window.resetCurrentGradebook;
   window.resetCurrentGradebookDirect = window.resetCurrentGradebookDirect;
+  window.switchAuthTab = window.switchAuthTab;
+  window.togglePasswordVisibility = window.togglePasswordVisibility;
+  window.handleRegisterParishChange = window.handleRegisterParishChange;
+  window.changeAdminParishFilter = window.changeAdminParishFilter;
+  window.filterAdminTable = window.filterAdminTable;
+  window.toggleAdminPasswordVisibility = window.toggleAdminPasswordVisibility;
+  window.openInspectUserModal = window.openInspectUserModal;
+  window.impersonateUser = window.impersonateUser;
+  window.exitImpersonation = window.exitImpersonation;
 
   // Initialize application on DOM content loaded or immediate if ready
   if (document.readyState === 'loading') {

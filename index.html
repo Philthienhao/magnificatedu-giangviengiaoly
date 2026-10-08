@@ -140,9 +140,9 @@
         <div id="admin-menu-section" class="admin-only-block" style="display: none;">
           <div class="nav-section-label text-warning">QUẢN TRỊ VIÊN</div>
           <a href="#admin-users" class="nav-item nav-admin-item" data-page="admin-users">
-            <i class="fa-solid fa-user-shield"></i>
-            <span>Quản trị tài khoản</span>
-            <span class="badge badge-pill badge-danger" id="admin-badge">Admin</span>
+            <i class="fa-solid fa-church"></i>
+            <span>Quản trị Đa Giáo Xứ</span>
+            <span class="badge badge-pill badge-danger" id="admin-badge">Admin Master</span>
           </a>
         </div>
       </nav>
@@ -256,7 +256,7 @@
 
   <!-- MODALS CONTAINER -->
 
-  <!-- GOOGLE LOGIN & ACCOUNT SELECTION MODAL -->
+  <!-- GOOGLE LOGIN & TEACHER AUTHENTICATION PORTAL -->
   <div id="google-auth-modal" class="modal-backdrop" style="display: none;">
     <div class="modal-dialog auth-modal">
       <div class="modal-content">
@@ -267,7 +267,7 @@
             </div>
             <h2>Magnificat<span>Edu</span></h2>
           </div>
-          <p class="auth-subtitle">Cổng Đăng Nhập Giáo Lý Viên Công Giáo</p>
+          <p class="auth-subtitle">Cổng Đăng Nhập & Đăng Ký Giáo Lý Viên Công Giáo</p>
         </div>
 
         <div class="auth-body">
@@ -277,43 +277,144 @@
             <span>— Chân Phước Anrê Phú Yên —</span>
           </div>
 
-          <div class="auth-prompt">
-            <p><i class="fa-brands fa-google text-primary"></i> Vui lòng chọn tài khoản Google để tiếp tục:</p>
-          </div>
-
-          <!-- List of available accounts -->
-          <div id="google-accounts-list" class="google-accounts-list">
-            <!-- Account items injected via JS -->
-          </div>
-
-          <!-- Add custom Google account form -->
-          <div class="add-account-toggle-wrapper">
-            <button id="toggle-custom-google-btn" class="btn btn-outline-secondary btn-block">
-              <i class="fa-solid fa-user-plus"></i> Đăng nhập bằng tài khoản Google khác
+          <!-- Auth Navigation Tabs -->
+          <div class="auth-tabs-nav">
+            <button type="button" class="auth-tab-btn active" id="tab-btn-login" onclick="window.switchAuthTab('login')">
+              <i class="fa-solid fa-right-to-bracket"></i> Đăng Nhập
+            </button>
+            <button type="button" class="auth-tab-btn" id="tab-btn-register" onclick="window.switchAuthTab('register')">
+              <i class="fa-solid fa-user-plus"></i> Đăng Ký Mới
             </button>
           </div>
 
-          <form id="custom-google-form" class="custom-google-form" style="display: none;">
-            <div class="form-group">
-              <label><i class="fa-brands fa-google"></i> Địa chỉ Email Google:</label>
-              <input type="email" id="custom-email" class="form-control" placeholder="vi-du@gmail.com" required>
-            </div>
-            <div class="form-group">
-              <label><i class="fa-solid fa-user"></i> Họ và Tên Giáo lý viên:</label>
-              <input type="text" id="custom-fullname" class="form-control" placeholder="Võ Thiện Hảo" required>
-            </div>
-            <div class="form-group">
-              <label><i class="fa-solid fa-cross"></i> Tên Thánh:</label>
-              <input type="text" id="custom-holyname" class="form-control" placeholder="T. Giuse" required>
-            </div>
-            <button type="submit" class="btn btn-primary btn-block">
-              <i class="fa-solid fa-right-to-bracket"></i> Đăng nhập ngay
-            </button>
-          </form>
+          <!-- TAB 1: LOGIN FORM -->
+          <div id="auth-pane-login" class="auth-tab-pane">
+            <form id="teacher-login-form">
+              <div class="form-group mb-3">
+                <label><i class="fa-brands fa-google text-danger"></i> Địa chỉ Gmail Giáo viên:</label>
+                <input type="email" id="teacher-login-email" class="form-control" placeholder="vi-du@gmail.com" required autocomplete="username">
+              </div>
 
-          <div class="auth-notice">
-            <i class="fa-solid fa-shield-halved"></i> Dữ liệu của từng tài khoản được mã hóa và lưu trữ riêng biệt trên hệ thống MagnificatEdu.
+              <div class="form-group mb-3">
+                <label><i class="fa-solid fa-lock text-primary"></i> Mật khẩu đăng nhập:</label>
+                <div class="password-input-wrapper">
+                  <input type="password" id="teacher-login-password" class="form-control" placeholder="Nhập mật khẩu của bạn..." required autocomplete="current-password">
+                  <button type="button" class="toggle-pw-btn" onclick="window.togglePasswordVisibility('teacher-login-password', this)" title="Ẩn/Hiện mật khẩu">
+                    <i class="fa-solid fa-eye"></i>
+                  </button>
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-block" style="padding: 10px 16px; font-weight: 700;">
+                <i class="fa-solid fa-right-to-bracket"></i> Đăng Nhập Ngay
+              </button>
+            </form>
+
+            <!-- Saved Accounts Quick Login Section -->
+            <div style="margin-top: 20px;">
+              <div class="auth-prompt" style="margin-bottom: 8px;">
+                <p style="font-size: 11.5px; font-weight: 700; color: var(--slate-muted);"><i class="fa-solid fa-clock-rotate-left"></i> Hoặc chọn nhanh tài khoản trên máy này:</p>
+              </div>
+              <div id="google-accounts-list" class="google-accounts-list">
+                <!-- Account cards injected via JS -->
+              </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 14px;">
+              <button type="button" class="btn btn-link btn-sm" onclick="window.switchAuthTab('register')" style="font-size: 12.5px; color: var(--primary);">
+                <i class="fa-solid fa-user-plus"></i> Chưa có tài khoản? Bấm để Đăng Ký Giáo Lý Viên mới
+              </button>
+            </div>
           </div>
+
+          <!-- TAB 2: REGISTER FORM -->
+          <div id="auth-pane-register" class="auth-tab-pane" style="display: none;">
+            <form id="teacher-register-form">
+              <div class="form-group mb-2">
+                <label><i class="fa-brands fa-google text-danger"></i> Địa chỉ Gmail:</label>
+                <input type="email" id="teacher-reg-email" class="form-control" placeholder="vi-du@gmail.com" required autocomplete="username">
+              </div>
+
+              <div class="form-group mb-2">
+                <label><i class="fa-solid fa-lock text-primary"></i> Mật khẩu đăng nhập:</label>
+                <div class="password-input-wrapper">
+                  <input type="password" id="teacher-reg-password" class="form-control" placeholder="Tạo mật khẩu cho tài khoản..." required autocomplete="new-password">
+                  <button type="button" class="toggle-pw-btn" onclick="window.togglePasswordVisibility('teacher-reg-password', this)" title="Ẩn/Hiện mật khẩu">
+                    <i class="fa-solid fa-eye"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div class="form-row" style="display: flex; gap: 10px;">
+                <div class="form-group mb-2" style="flex: 1;">
+                  <label><i class="fa-solid fa-cross text-warning"></i> Tên Thánh:</label>
+                  <input type="text" id="teacher-reg-holyname" class="form-control" placeholder="T. Giuse / Maria..." required>
+                </div>
+                <div class="form-group mb-2" style="flex: 1.5;">
+                  <label><i class="fa-solid fa-user"></i> Họ và Tên:</label>
+                  <input type="text" id="teacher-reg-fullname" class="form-control" placeholder="Họ và tên giáo viên..." required>
+                </div>
+              </div>
+
+              <div class="form-group mb-2">
+                <label><i class="fa-solid fa-phone"></i> Số điện thoại liên lạc:</label>
+                <input type="tel" id="teacher-reg-phone" class="form-control" placeholder="Số điện thoại di động...">
+              </div>
+
+              <div class="form-group mb-3">
+                <label><i class="fa-solid fa-church text-primary"></i> Trực thuộc Giáo Xứ:</label>
+                <select id="teacher-reg-parish" class="form-control" onchange="window.handleRegisterParishChange(this.value)" required>
+                  <option value="Giáo Xứ Hoà Khánh" selected>⛪ Giáo Xứ Hoà Khánh (Đà Nẵng)</option>
+                  <option value="Giáo Xứ Chính Tòa Đà Nẵng">⛪ Giáo Xứ Chính Tòa Đà Nẵng</option>
+                  <option value="Giáo Xứ An Ngãi">⛪ Giáo Xứ An Ngãi</option>
+                  <option value="Giáo Xứ Tam Tòa">⛪ Giáo Xứ Tam Tòa</option>
+                  <option value="Giáo Xứ Thanh Đức">⛪ Giáo Xứ Thanh Đức</option>
+                  <option value="Giáo Xứ Cẩm Lệ">⛪ Giáo Xứ Cẩm Lệ</option>
+                  <option value="Giáo Xứ Phước Tường">⛪ Giáo Xứ Phước Tường</option>
+                  <option value="Giáo Xứ Phú Thượng">⛪ Giáo Xứ Phú Thượng</option>
+                  <option value="Giáo Xứ Hòa Cường">⛪ Giáo Xứ Hòa Cường</option>
+                  <option value="OTHER">➕ Giáo Xứ Khác (Tự nhập tên Giáo xứ...)</option>
+                </select>
+                <div id="teacher-reg-custom-parish-wrap" style="display: none; margin-top: 6px;">
+                  <input type="text" id="teacher-reg-custom-parish" class="form-control" placeholder="Nhập tên Giáo xứ của bạn (Ví dụ: Giáo Xứ Tân Định...)">
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-success btn-block" style="padding: 10px 16px; font-weight: 700;">
+                <i class="fa-solid fa-user-check"></i> Đăng Ký & Vào Hệ Thống Ngay
+              </button>
+            </form>
+
+            <div style="text-align: center; margin-top: 14px;">
+              <button type="button" class="btn btn-link btn-sm" onclick="window.switchAuthTab('login')" style="font-size: 12.5px; color: var(--slate-muted);">
+                <i class="fa-solid fa-arrow-left"></i> Đã có tài khoản? Quay lại Đăng Nhập
+              </button>
+            </div>
+          </div>
+
+          <div class="auth-notice" style="margin-top: 16px;">
+            <i class="fa-solid fa-shield-halved text-success"></i> Dữ liệu được bảo mật & đồng bộ vĩnh viễn theo thời gian thực lên Supabase Cloud.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN INSPECT ACCOUNT FULL DATA MODAL -->
+  <div id="admin-inspect-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-dialog inspect-modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header" style="background: var(--slate-bg); border-bottom: 1px solid var(--slate-border); padding: 16px 24px;">
+          <h3 id="inspect-modal-title" style="font-size: 16px; font-weight: 800; color: var(--dark-navy);">
+            <i class="fa-solid fa-folder-tree text-primary"></i> Dữ Liệu Chi Tiết Tài Khoản
+          </h3>
+          <button class="close-modal-btn" data-modal="admin-inspect-modal"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body" id="inspect-modal-body" style="padding: 20px 24px;">
+          <!-- Injected via window.openInspectUserModal -->
+        </div>
+        <div class="modal-footer" id="inspect-modal-footer" style="padding: 14px 24px; border-top: 1px solid var(--slate-border); display: flex; justify-content: flex-end; gap: 10px;">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('admin-inspect-modal')">Đóng</button>
         </div>
       </div>
     </div>
@@ -595,7 +696,17 @@
               <input type="text" id="admin-target-fullname" class="form-control" required>
             </div>
 
-            <div class="form-group">
+            <div class="form-group mb-2">
+              <label>Giáo Xứ Trực Thuộc:</label>
+              <input type="text" id="admin-target-parish" class="form-control" placeholder="Ví dụ: Giáo Xứ Hoà Khánh">
+            </div>
+
+            <div class="form-group mb-2">
+              <label><i class="fa-solid fa-lock text-primary"></i> Mật Khẩu Đăng Nhập:</label>
+              <input type="text" id="admin-target-password" class="form-control" placeholder="Mật khẩu của tài khoản">
+            </div>
+
+            <div class="form-group mb-2">
               <label>Vai Trò Trong Hệ Thống:</label>
               <select id="admin-target-role" class="form-control">
                 <option value="Giáo lý viên">Giáo lý viên / Huấn Luyện Viên</option>
@@ -603,7 +714,7 @@
               </select>
             </div>
 
-            <div class="form-group">
+            <div class="form-group mb-2">
               <label>Trạng Thái Tài Khoản:</label>
               <select id="admin-target-status" class="form-control">
                 <option value="active">🟢 Đang Hoạt Động</option>
@@ -1080,6 +1191,6 @@
   <div id="toast-container" class="toast-container"></div>
 
   <!-- Application JS Code -->
-  <script src="app_v2.js?v=20261008_v1100"></script>
+  <script src="app_v2.js?v=20261008_v1200"></script>
 </body>
 </html>
