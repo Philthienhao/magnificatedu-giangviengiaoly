@@ -100,8 +100,9 @@ Hệ thống tính điểm được thiết kế minh bạch với các chế đ
 * **Cách khắc phục**:
   1. Di chuyển `getSeatIdFromChart` và `isSeatAbsentInChart` lên scope cấp cao (Top-level Module scope) trong cả `app_v2.js` và `app.js`.
   2. Bổ sung khai báo `topParishName` và `topParishSub` trong `renderAppHeaderAndSidebar()`.
-  3. Cập nhật cache buster `index.html` lên `?v=20261008_v500`.
-  4. Tạo kịch bản kiểm thử Node.js `test_seating_scope.js` để tự động giả lập và xác minh trước khi công bố.
+  3. Chuẩn hóa so sánh ID dạng chuỗi `String(s.classId) === String(selectedClassId)` & `String(s.id) === String(stId)` tránh lệch kiểu dữ liệu (String vs Number).
+  4. Cập nhật cache buster `index.html` lên `?v=20261008_v600`.
+  5. Tạo kịch bản kiểm thử Node.js `test_seating_scope.js` để tự động giả lập và xác minh trước khi công bố.
 
 ---
 

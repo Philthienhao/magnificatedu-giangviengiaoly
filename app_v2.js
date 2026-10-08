@@ -1450,7 +1450,7 @@
     const selectedSessionType = window._selectedAttendanceSessionType || 'Giáo lý';
     const activeTab = window._attendanceSubTab || 'list'; // 'list' | 'ai-seating' | 'history'
 
-    const filteredStudents = appData.students.filter(s => !selectedClassId || s.classId === selectedClassId);
+    const filteredStudents = appData.students.filter(s => !selectedClassId || String(s.classId) === String(selectedClassId));
 
   // Initialize seatingChart state if missing
   if (!appData.seatingCharts) appData.seatingCharts = {};
@@ -1798,7 +1798,7 @@
                         ${Array.from({ length: seatsPerDesk }).map((_, sIdx) => {
                           const seatKey = `r${rIdx}_c${cIdx}_s${sIdx}`;
                           const stId = getSeatIdFromChart(chart, rIdx, cIdx, sIdx);
-                          const st = filteredStudents.find(s => s.id === stId);
+                          const st = filteredStudents.find(s => s.id === stId || String(s.id) === String(stId));
                           const isAbsent = isSeatAbsentInChart(chart, rIdx, cIdx, sIdx);
                           const confidence = chart.confidenceScores ? (chart.confidenceScores[seatKey] || (sIdx === 0 ? chart.confidenceScores[`r${rIdx}_c${cIdx}`] : null)) : null;
 
@@ -2423,39 +2423,53 @@
     const today = document.getElementById('att-date') ? document.getElementById('att-date').value : new Date().toISOString().split('T')[0];
     const sessionType = document.getElementById('att-session-type') ? document.getElementById('att-session-type').value : 'Giáo lý';
 
-    if (!appData.attendanceLog) appData.attendanceLog = [];
+    if (!Array.isArray(appData.attendanceLogs)) appData.attendanceLogs = [];
 
-    const filteredStudents = appData.students.filter(s => s.classId === classId);
+    const filteredStudents = appData.students.filter(s => String(s.classId) === String(classId));
+    const records = [];
     filteredStudents.forEach(st => {
       let studentSeatKey = null;
       Object.keys(chart.seats || {}).forEach(k => {
-        if (chart.seats[k] === st.id) studentSeatKey = k;
+        if (String(chart.seats[k]) === String(st.id)) studentSeatKey = k;
       });
 
       const isAbsent = studentSeatKey && absentSeats.includes(studentSeatKey);
       const status = isAbsent ? 'unexcused' : 'present';
 
-      appData.attendanceLog.push({
-        id: 'att_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+      records.push({
         studentId: st.id,
-        classId: classId,
-        date: today,
-        sessionType: sessionType,
         status: status,
-        method: 'ai_auto_photo',
-        timestamp: new Date().toISOString()
+        note: isAbsent ? 'AI phát hiện vắng mặt' : 'Có mặt (AI)'
       });
     });
+
+    const absentCount = records.filter(r => r.status === 'unexcused').length;
+    const presentCount = records.length - absentCount;
+
+    const logEntry = {
+      id: 'att_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+      classId: classId,
+      date: today,
+      sessionType: sessionType,
+      records: records,
+      savedAt: new Date().toISOString(),
+      savedBy: (window.currentUser ? window.currentUser.name : 'Giáo lý viên'),
+      stats: { total: records.length, present: presentCount, late: 0, excused: 0, unexcused: absentCount },
+      method: 'ai_auto_photo'
+    };
+
+    const existingIdx = appData.attendanceLogs.findIndex(l => String(l.classId) === String(classId) && l.date === today && l.sessionType === sessionType);
+    if (existingIdx >= 0) {
+      appData.attendanceLogs[existingIdx] = logEntry;
+    } else {
+      appData.attendanceLogs.push(logEntry);
+    }
 
     saveUserData();
     showToast(`✓ Đã lưu vĩnh viễn kết quả điểm danh AI cho lớp lên Supabase Cloud! (Vắng ${absentSeats.length} em)`, 'success');
   };
 
-  // ATTENDANCE SUB-TAB & FILTER CONTROLLER
-  window.switchAttSubTab = function(tab) {
-    window._attendanceSubTab = tab;
-    renderAttendance(document.getElementById('content-area'));
-  };
+  // ATTENDANCE FILTER CONTROLLER
 
   window.handleAttFilterChange = function() {
     const classSelect = document.getElementById('att-class-select');

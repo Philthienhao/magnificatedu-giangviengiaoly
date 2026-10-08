@@ -1813,7 +1813,7 @@
                         ${Array.from({ length: seatsPerDesk }).map((_, sIdx) => {
                           const seatKey = `r${rIdx}_c${cIdx}_s${sIdx}`;
                           const stId = getSeatIdFromChart(chart, rIdx, cIdx, sIdx);
-                          const st = filteredStudents.find(s => s.id === stId);
+                          const st = filteredStudents.find(s => s.id === stId || String(s.id) === String(stId));
                           const isAbsent = isSeatAbsentInChart(chart, rIdx, cIdx, sIdx);
                           const confidence = chart.confidenceScores ? (chart.confidenceScores[seatKey] || (sIdx === 0 ? chart.confidenceScores[`r${rIdx}_c${cIdx}`] : null)) : null;
 
