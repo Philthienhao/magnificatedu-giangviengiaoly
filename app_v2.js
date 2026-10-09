@@ -628,6 +628,104 @@
     }
   }
 
+  // Sacred Catholic Ambient Effects (Particles & Interactive Click Ripples)
+  let sacredEffectsInitialized = false;
+  function initSacredAuthEffects() {
+    if (sacredEffectsInitialized) return;
+    sacredEffectsInitialized = true;
+
+    // 1. Sacred Golden Embers & Grace Sparks Canvas
+    const canvas = document.getElementById('sacred-particles-canvas');
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      let width = canvas.width = window.innerWidth;
+      let height = canvas.height = window.innerHeight;
+
+      window.addEventListener('resize', () => {
+        if (!document.body.classList.contains('auth-gate-active')) return;
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+      });
+
+      const particleCount = 42;
+      const particles = [];
+      for (let i = 0; i < particleCount; i++) {
+        particles.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          radius: Math.random() * 2.2 + 0.8,
+          alpha: Math.random() * 0.7 + 0.3,
+          speedY: Math.random() * 0.6 + 0.25,
+          speedX: (Math.random() - 0.5) * 0.3,
+          pulse: Math.random() * Math.PI,
+          pulseSpeed: Math.random() * 0.04 + 0.02,
+          color: Math.random() > 0.3 ? '#fef08a' : (Math.random() > 0.5 ? '#f59e0b' : '#93c5fd')
+        });
+      }
+
+      function renderParticles() {
+        if (!document.body.classList.contains('auth-gate-active')) {
+          requestAnimationFrame(renderParticles);
+          return;
+        }
+
+        ctx.clearRect(0, 0, width, height);
+
+        particles.forEach(p => {
+          p.y -= p.speedY;
+          p.x += p.speedX;
+          p.pulse += p.pulseSpeed;
+
+          if (p.y < -10) {
+            p.y = height + 10;
+            p.x = Math.random() * width;
+          }
+          if (p.x < -10) p.x = width + 10;
+          if (p.x > width + 10) p.x = -10;
+
+          const currentAlpha = Math.max(0.1, p.alpha * (0.6 + 0.4 * Math.sin(p.pulse)));
+
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+          ctx.fillStyle = p.color;
+          ctx.globalAlpha = currentAlpha;
+          ctx.shadowBlur = p.radius * 4;
+          ctx.shadowColor = p.color;
+          ctx.fill();
+          ctx.restore();
+        });
+
+        requestAnimationFrame(renderParticles);
+      }
+      renderParticles();
+    }
+
+    // 2. Interactive Divine Cross Click Ripple Effect
+    const modal = document.getElementById('google-auth-modal');
+    if (modal) {
+      modal.addEventListener('click', (e) => {
+        const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : '';
+        if (tag === 'input' || tag === 'select' || tag === 'textarea') return;
+
+        const ripple = document.createElement('div');
+        ripple.className = 'sacred-click-ripple';
+        ripple.style.left = e.clientX + 'px';
+        ripple.style.top = e.clientY + 'px';
+
+        ripple.innerHTML = `
+          <div class="sacred-ripple-circle"></div>
+          <div class="sacred-ripple-cross">✝</div>
+        `;
+
+        document.body.appendChild(ripple);
+        setTimeout(() => {
+          if (ripple.parentNode) ripple.parentNode.removeChild(ripple);
+        }, 800);
+      });
+    }
+  }
+
   // Auth Gate Control (Show Login Screen vs Main App)
   function showAuthGate(isSwitchMode = false) {
     const appEl = document.getElementById('app');
@@ -645,6 +743,7 @@
     }
 
     if (modalEl) modalEl.style.display = 'flex';
+    initSacredAuthEffects();
     renderSavedAccounts();
     if (typeof window.switchAuthTab === 'function') window.switchAuthTab('login');
   }

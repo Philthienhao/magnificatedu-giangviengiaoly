@@ -31,7 +31,7 @@
   </script>
   
   <!-- Custom Stylesheet -->
-  <link rel="stylesheet" href="styles.css?v=20261009_v2700">
+  <link rel="stylesheet" href="styles.css?v=20261010_v2800">
 </head>
 <body>
 
@@ -271,35 +271,136 @@
 
   <!-- GOOGLE LOGIN & TEACHER AUTHENTICATION PORTAL -->
   <div id="google-auth-modal" class="modal-backdrop" style="display: none;">
+    <!-- Sacred Celestial Particles & Light Rays Canvas -->
+    <canvas id="sacred-particles-canvas" class="sacred-particles-canvas"></canvas>
+    <div class="celestial-light-beam"></div>
+    <div class="sacred-rose-backdrop"></div>
+
     <div class="modal-dialog auth-modal">
-      <div class="modal-content">
+      <!-- Sacred Gothic Cathedral Crest Header (Holy Cross & Holy Spirit Dove) -->
+      <div class="sacred-crest-wrapper">
+        <div class="sacred-aura-pulse"></div>
+        <svg class="sacred-cross-svg" viewBox="0 0 120 150" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#fffbeb"/>
+              <stop offset="25%" stop-color="#fef08a"/>
+              <stop offset="50%" stop-color="#f59e0b"/>
+              <stop offset="75%" stop-color="#d97706"/>
+              <stop offset="100%" stop-color="#78350f"/>
+            </linearGradient>
+            <linearGradient id="goldShine" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9"/>
+              <stop offset="50%" stop-color="#fef08a" stop-opacity="0.3"/>
+              <stop offset="100%" stop-color="#b45309" stop-opacity="0.8"/>
+            </linearGradient>
+            <filter id="holyGlow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="5" result="blur"/>
+              <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+            </filter>
+            <radialGradient id="rayRadial" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#fef08a" stop-opacity="0.6"/>
+              <stop offset="50%" stop-color="#f59e0b" stop-opacity="0.2"/>
+              <stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <!-- Celestial Rays -->
+          <g class="celestial-rays" transform="translate(60, 52)">
+            <circle cx="0" cy="0" r="42" fill="url(#rayRadial)" filter="url(#holyGlow)"/>
+            <path d="M0 -48 L0 48 M-48 0 L48 0 M-34 -34 L34 34 M-34 34 L34 -34" stroke="#fef08a" stroke-width="1.5" stroke-linecap="round" opacity="0.75"/>
+            <path d="M0 -40 L0 40 M-40 0 L40 0 M-28 -28 L28 28 M-28 28 L28 -28" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
+            <circle cx="0" cy="0" r="28" fill="none" stroke="url(#goldGrad)" stroke-width="1.8" stroke-dasharray="3,3" opacity="0.85"/>
+            <circle cx="0" cy="0" r="34" fill="none" stroke="url(#goldGrad)" stroke-width="1" opacity="0.5"/>
+          </g>
+          <!-- Holy Cross -->
+          <path d="M52 16 L68 16 L68 138 L52 138 Z" fill="url(#goldGrad)" filter="url(#holyGlow)"/>
+          <path d="M54 18 L60 18 L60 136 L54 136 Z" fill="url(#goldShine)"/>
+          <path d="M48 16 L72 16 L60 8 Z" fill="url(#goldGrad)"/>
+          <path d="M48 138 L72 138 L60 146 Z" fill="url(#goldGrad)"/>
+          <path d="M22 44 L98 44 L98 60 L22 60 Z" fill="url(#goldGrad)" filter="url(#holyGlow)"/>
+          <path d="M24 46 L96 46 L96 52 L24 52 Z" fill="url(#goldShine)"/>
+          <path d="M22 40 L22 64 L14 52 Z" fill="url(#goldGrad)"/>
+          <path d="M98 40 L98 64 L106 52 Z" fill="url(#goldGrad)"/>
+          <circle cx="60" cy="52" r="7" fill="#ffffff" filter="url(#holyGlow)"/>
+          <circle cx="60" cy="52" r="4.5" fill="#fef08a"/>
+          <circle cx="60" cy="52" r="2.5" fill="#d97706"/>
+        </svg>
+        <div class="holy-dove-emblem" title="Chúa Thánh Thần">
+          <i class="fa-solid fa-dove"></i>
+        </div>
+        <div class="sacred-motto-ribbon">
+          <span>✝ AD MAJOREM DEI GLORIAM ✝</span>
+        </div>
+      </div>
+
+      <div class="modal-content auth-modal-content">
+        <!-- 4 Gothic Floral Filigree Corners -->
+        <div class="gothic-filigree-corner gothic-corner-tl">
+          <svg viewBox="0 0 50 50">
+            <path d="M 4 4 L 46 4 C 36 10, 20 20, 16 34 C 14 26, 10 14, 4 4 Z" fill="none" stroke="#f59e0b" stroke-width="1.6" opacity="0.8"/>
+            <circle cx="12" cy="12" r="3" fill="#f59e0b" opacity="0.9"/>
+            <path d="M 4 4 L 4 28 C 8 20, 14 14, 28 4 Z" fill="#f59e0b" opacity="0.25"/>
+          </svg>
+        </div>
+        <div class="gothic-filigree-corner gothic-corner-tr">
+          <svg viewBox="0 0 50 50">
+            <path d="M 4 4 L 46 4 C 36 10, 20 20, 16 34 C 14 26, 10 14, 4 4 Z" fill="none" stroke="#f59e0b" stroke-width="1.6" opacity="0.8"/>
+            <circle cx="12" cy="12" r="3" fill="#f59e0b" opacity="0.9"/>
+            <path d="M 4 4 L 4 28 C 8 20, 14 14, 28 4 Z" fill="#f59e0b" opacity="0.25"/>
+          </svg>
+        </div>
+        <div class="gothic-filigree-corner gothic-corner-bl">
+          <svg viewBox="0 0 50 50">
+            <path d="M 4 4 L 46 4 C 36 10, 20 20, 16 34 C 14 26, 10 14, 4 4 Z" fill="none" stroke="#f59e0b" stroke-width="1.6" opacity="0.8"/>
+            <circle cx="12" cy="12" r="3" fill="#f59e0b" opacity="0.9"/>
+            <path d="M 4 4 L 4 28 C 8 20, 14 14, 28 4 Z" fill="#f59e0b" opacity="0.25"/>
+          </svg>
+        </div>
+        <div class="gothic-filigree-corner gothic-corner-br">
+          <svg viewBox="0 0 50 50">
+            <path d="M 4 4 L 46 4 C 36 10, 20 20, 16 34 C 14 26, 10 14, 4 4 Z" fill="none" stroke="#f59e0b" stroke-width="1.6" opacity="0.8"/>
+            <circle cx="12" cy="12" r="3" fill="#f59e0b" opacity="0.9"/>
+            <path d="M 4 4 L 4 28 C 8 20, 14 14, 28 4 Z" fill="#f59e0b" opacity="0.25"/>
+          </svg>
+        </div>
+
         <div class="auth-header">
           <button type="button" id="auth-modal-close-btn" class="auth-modal-close-btn" onclick="window.closeAuthModal()" title="Đóng và quay lại" style="display: none;">
             <i class="fa-solid fa-xmark"></i>
           </button>
-          <div class="auth-logo">
-            <div class="brand-icon" style="width: 46px; height: 46px;">
+          
+          <div class="auth-brand-emblem-wrap">
+            <div class="brand-avatar-halo-ring"></div>
+            <div class="brand-icon">
               <img src="brand_logo.jpg" alt="Chân Phước Anrê Phú Yên" class="brand-avatar-img">
             </div>
-            <h2>Magnificat<span>Edu</span></h2>
+            <span class="sacred-cross-badge" title="Thánh Giá"><i class="fa-solid fa-cross"></i></span>
           </div>
-          <p class="auth-subtitle">Cổng Đăng Nhập & Đăng Ký Giáo Lý Viên Công Giáo</p>
+
+          <div class="auth-logo">
+            <h2>Magnificat<span class="gold-gradient">Edu</span> <i class="fa-solid fa-sparkles text-warning" style="font-size: 16px;"></i></h2>
+          </div>
+          <p class="auth-subtitle"><span class="chi-rho-symbol">☧</span> Cổng Đăng Nhập & Đăng Ký Giáo Lý Viên Công Giáo <span class="chi-rho-symbol">☧</span></p>
         </div>
 
         <div class="auth-body">
           <div class="slogan-card-auth">
-            <i class="fa-solid fa-quote-left quote-icon"></i>
-            <p>"Chúng ta hãy lấy tình yêu để đáp lại tình yêu của Chúa chúng ta, hãy lấy mạng sống đáp lại mạng sống."</p>
-            <span>— Chân Phước Anrê Phú Yên —</span>
+            <div class="sacred-candle-glow">
+              <i class="fa-solid fa-fire-flame-curved candle-flame-anim"></i>
+            </div>
+            <div class="slogan-text-wrap">
+              <p>"Chúng ta hãy lấy tình yêu để đáp lại tình yêu của Chúa chúng ta, hãy lấy mạng sống đáp lại mạng sống."</p>
+              <span>— Chân Phước Anrê Phú Yên • Bổn Mạng Giáo Lý Viên Việt Nam —</span>
+            </div>
           </div>
 
           <!-- Auth Navigation Tabs -->
           <div class="auth-tabs-nav">
             <button type="button" class="auth-tab-btn active" id="tab-btn-login" onclick="window.switchAuthTab('login')">
-              <i class="fa-solid fa-right-to-bracket"></i> Đăng Nhập
+              <i class="fa-solid fa-cross text-warning"></i> Đăng Nhập
             </button>
             <button type="button" class="auth-tab-btn" id="tab-btn-register" onclick="window.switchAuthTab('register')">
-              <i class="fa-solid fa-user-plus"></i> Đăng Ký Mới
+              <i class="fa-solid fa-dove text-info"></i> Đăng Ký Mới
             </button>
           </div>
 
@@ -308,31 +409,35 @@
             <form id="teacher-login-form">
               <div class="form-group mb-3">
                 <label><i class="fa-brands fa-google text-danger"></i> Địa chỉ Gmail Giáo viên:</label>
-                <input type="email" id="teacher-login-email" class="form-control" placeholder="vi-du@gmail.com" required autocomplete="username">
+                <div class="input-with-sacred-icon">
+                  <input type="email" id="teacher-login-email" class="form-control sacred-input" placeholder="vi-du@gmail.com" required autocomplete="username">
+                  <i class="fa-solid fa-envelope input-right-icon"></i>
+                </div>
               </div>
 
               <div class="form-group mb-3">
-                <label><i class="fa-solid fa-lock text-primary"></i> Mật khẩu đăng nhập:</label>
+                <label><i class="fa-solid fa-key text-warning"></i> Mật khẩu đăng nhập:</label>
                 <div class="password-input-wrapper">
-                  <input type="password" id="teacher-login-password" class="form-control" placeholder="Nhập mật khẩu của bạn..." required autocomplete="current-password">
+                  <input type="password" id="teacher-login-password" class="form-control sacred-input" placeholder="Nhập mật khẩu của bạn..." required autocomplete="current-password">
                   <button type="button" class="toggle-pw-btn" onclick="window.togglePasswordVisibility('teacher-login-password', this)" title="Ẩn/Hiện mật khẩu">
                     <i class="fa-solid fa-eye"></i>
                   </button>
                 </div>
               </div>
 
-              <div class="form-check mb-3" style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
-                <input type="checkbox" id="teacher-login-remember" checked style="width: 16px; height: 16px; cursor: pointer;">
-                <label for="teacher-login-remember" style="margin: 0; cursor: pointer; color: var(--slate-dark); font-weight: 500;">Ghi nhớ đăng nhập trên thiết bị này</label>
+              <div class="form-check mb-3 auth-remember-check">
+                <input type="checkbox" id="teacher-login-remember" checked>
+                <label for="teacher-login-remember">Ghi nhớ đăng nhập trên thiết bị này</label>
               </div>
 
-              <button type="submit" class="btn btn-primary btn-block" style="padding: 10px 16px; font-weight: 700;">
-                <i class="fa-solid fa-right-to-bracket"></i> Đăng Nhập Ngay
+              <button type="submit" class="btn btn-primary btn-block btn-sacred-login">
+                <span class="btn-shimmer-sweep"></span>
+                <i class="fa-solid fa-cross"></i> Đăng Nhập Ngay
               </button>
             </form>
 
             <div style="text-align: center; margin-top: 18px;">
-              <button type="button" class="btn btn-link btn-sm" onclick="window.switchAuthTab('register')" style="font-size: 12.5px; color: var(--primary); font-weight: 600;">
+              <button type="button" class="btn btn-link btn-sm auth-switch-link" onclick="window.switchAuthTab('register')">
                 <i class="fa-solid fa-user-plus"></i> Chưa có tài khoản? Bấm để Đăng Ký Giáo Lý Viên mới
               </button>
             </div>
@@ -450,13 +555,14 @@
                 </div>
               </div>
 
-              <button type="submit" class="btn btn-success btn-block" style="padding: 10px 16px; font-weight: 700;">
+              <button type="submit" class="btn btn-success btn-block btn-sacred-register">
+                <span class="btn-shimmer-sweep"></span>
                 <i class="fa-solid fa-user-check"></i> Đăng Ký & Vào Hệ Thống Ngay
               </button>
             </form>
 
             <div style="text-align: center; margin-top: 14px;">
-              <button type="button" class="btn btn-link btn-sm" onclick="window.switchAuthTab('login')" style="font-size: 12.5px; color: var(--slate-muted);">
+              <button type="button" class="btn btn-link btn-sm auth-switch-link" onclick="window.switchAuthTab('login')">
                 <i class="fa-solid fa-arrow-left"></i> Đã có tài khoản? Quay lại Đăng Nhập
               </button>
             </div>
@@ -1411,6 +1517,6 @@
   <div id="toast-container" class="toast-container"></div>
 
   <!-- Application JS Code -->
-  <script src="app_v2.js?v=20261009_v2700"></script>
+  <script src="app_v2.js?v=20261010_v2800"></script>
 </body>
 </html>
