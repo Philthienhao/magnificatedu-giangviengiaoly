@@ -268,6 +268,7 @@
     }
 
     if (modalEl) {
+      modalEl.style.zIndex = '99999';
       modalEl.style.display = 'flex';
     } else {
       if (window.confirm(`${title || 'Xác Nhận Xóa'}\n\n${message || ''}`)) {
@@ -2320,7 +2321,8 @@
         <div class="kpi-grid">
           ${classes.map(c => {
             const cid = c.id || c.name || '';
-            const safeId = encodeURIComponent(cid);
+            const safeId = encodeURIComponent(cid).replace(/'/g, '%27');
+            const escapedName = String(c.name || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
             const classStudentCount = c.studentCount || students.filter(s => s.classId === c.id || s.className === c.name).length;
             const teacherDisplay = c.teacher || (currentUser.holyName ? currentUser.holyName + ' ' : '') + currentUser.name;
             const teacher1 = c.teacher || teacherDisplay;
@@ -2363,8 +2365,8 @@
                 <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--slate-border); padding-top: 12px;">
                   <span style="font-weight: 700; color: var(--slate-dark);"><i class="fa-solid fa-users text-primary"></i> ${classStudentCount} Học viên</span>
                   <div style="display: flex; gap: 6px;">
-                    <button class="btn btn-sm btn-outline-primary" onclick="window.editClass('${safeId}')"><i class="fa-solid fa-pen"></i> Sửa</button>
-                    <button class="btn btn-sm btn-outline-danger btn-delete-class" data-class-id="${safeId}" onclick="window.deleteClass('${safeId}')"><i class="fa-solid fa-trash"></i> Xóa</button>
+                    <button class="btn btn-sm btn-outline-primary" data-class-id="${safeId}" data-class-name="${escapedName}" onclick="window.editClass(this)"><i class="fa-solid fa-pen"></i> Sửa</button>
+                    <button class="btn btn-sm btn-outline-danger btn-delete-class" data-class-id="${safeId}" data-class-name="${escapedName}" onclick="window.deleteClass(this)" title="Xóa lớp học này"><i class="fa-solid fa-trash"></i> Xóa</button>
                   </div>
                 </div>
               </div>
@@ -5413,7 +5415,8 @@
                   </tr>
                 ` : allParishClasses.map(cls => {
                   const sCount = allParishStudents.filter(s => s.classId === cls.id).length;
-                  const safeClassId = encodeURIComponent(cls.id || cls.name || '');
+                  const safeClassId = encodeURIComponent(cls.id || cls.name || '').replace(/'/g, '%27');
+                  const escapedClsName = String(cls.name || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
                   return `
                     <tr>
                       <td><strong>${cls.name}</strong></td>
@@ -5430,10 +5433,10 @@
                           <button class="btn btn-xs btn-outline-info" onclick="window.openInspectUserModal('${cls.teacherEmail}')" title="Xem học viên lớp này" style="font-size: 11px; padding: 3px 7px;">
                             <i class="fa-solid fa-users"></i> Xem
                           </button>
-                          <button class="btn btn-xs btn-outline-primary" onclick="window.editClass('${safeClassId}')" title="Sửa thông tin lớp học" style="font-size: 11px; padding: 3px 7px;">
+                          <button class="btn btn-xs btn-outline-primary" data-class-id="${safeClassId}" data-class-name="${escapedClsName}" onclick="window.editClass(this)" title="Sửa thông tin lớp học" style="font-size: 11px; padding: 3px 7px;">
                             <i class="fa-solid fa-pen"></i> Sửa
                           </button>
-                          <button class="btn btn-xs btn-outline-danger" onclick="window.deleteClass('${safeClassId}')" title="Xóa lớp học này" style="font-size: 11px; padding: 3px 7px;">
+                          <button class="btn btn-xs btn-outline-danger" data-class-id="${safeClassId}" data-class-name="${escapedClsName}" onclick="window.deleteClass(this)" title="Xóa lớp học này" style="font-size: 11px; padding: 3px 7px;">
                             <i class="fa-solid fa-trash"></i> Xóa
                           </button>
                         </div>
@@ -5847,7 +5850,16 @@
     showToast('Đã lưu thông tin học viên thành công!', 'success');
   }
 
-  window.deleteStudent = function (stdId) {
+  window.deleteStudent = function (stdIdentifier) {
+    let stdId = '';
+    if (stdIdentifier && typeof stdIdentifier === 'object') {
+      const btn = stdIdentifier.target ? stdIdentifier.target.closest('button') : stdIdentifier;
+      stdId = (btn && (btn.getAttribute('data-id') || btn.getAttribute('data-student-id'))) || '';
+    } else if (stdIdentifier) {
+      stdId = String(stdIdentifier).trim();
+    }
+    if (!stdId) return;
+
     const globalData = hasAdminAccess(currentUser) ? getParishGlobalData() : null;
     const std = (appData.students || []).find(s => s.id === stdId || String(s.id) === String(stdId)) || (globalData && globalData.students.find(s => s.id === stdId || String(s.id) === String(stdId)));
     const name = std ? `${std.holyName ? std.holyName + ' ' : ''}${std.fullName || std.name || ''}` : 'học viên này';
@@ -5944,15 +5956,40 @@
     openModal('class-modal');
   };
 
-  window.editClass = function (clsId) {
-    const rawId = String(clsId || '').trim();
+  window.editClass = function (clsIdentifier, optionalName) {
+    let rawId = '';
+    let targetName = '';
+
+    if (clsIdentifier && typeof clsIdentifier === 'object') {
+      const btn = clsIdentifier.target ? clsIdentifier.target.closest('button') : clsIdentifier;
+      rawId = (btn && (btn.getAttribute('data-class-id') || btn.getAttribute('data-id'))) || '';
+      targetName = (btn && (btn.getAttribute('data-class-name') || btn.getAttribute('data-name'))) || '';
+    } else if (typeof clsIdentifier === 'string') {
+      rawId = clsIdentifier.trim();
+      targetName = optionalName ? String(optionalName).trim() : '';
+    }
+
     let decodedId = rawId;
     try { decodedId = decodeURIComponent(rawId); } catch(e) {}
 
     const globalData = hasAdminAccess(currentUser) ? getParishGlobalData() : null;
     const allClasses = (globalData ? globalData.classes : []).concat(appData.classes || []).concat(getAccessibleClasses());
-    const cls = allClasses.find(c => c && (c.id === rawId || c.id === decodedId || c.name === rawId || c.name === decodedId));
-    if (!cls) return;
+
+    const isMatch = (c) => {
+      if (!c) return false;
+      const cId = String(c.id || '').trim();
+      const cName = String(c.name || '').trim().toLowerCase();
+      if (rawId && (cId === rawId || cName === rawId.toLowerCase())) return true;
+      if (decodedId && (cId === decodedId || cName === decodedId.toLowerCase())) return true;
+      if (targetName && cName === targetName.toLowerCase()) return true;
+      return false;
+    };
+
+    const cls = allClasses.find(isMatch);
+    if (!cls) {
+      console.warn('Class not found for editClass:', rawId, targetName);
+      return;
+    }
 
     const modalTitle = document.getElementById('class-modal-title');
     if (modalTitle) modalTitle.innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Cập Nhật Thông Tin Lớp Học';
@@ -5977,6 +6014,7 @@
     if (delBtn) {
       delBtn.style.display = 'inline-block';
       delBtn.setAttribute('data-class-id', cls.id || rawId);
+      delBtn.setAttribute('data-class-name', cls.name || '');
     }
 
     populateCatechistDatalist();
@@ -5987,51 +6025,87 @@
   window.handleDeleteClassFromModal = function() {
     const delBtn = document.getElementById('class-modal-delete-btn');
     const clsId = (delBtn && delBtn.getAttribute('data-class-id')) || document.getElementById('class-form-id').value;
-    if (!clsId) return;
+    const clsName = (delBtn && delBtn.getAttribute('data-class-name')) || document.getElementById('cls-name').value;
+    if (!clsId && !clsName) return;
     closeModal('class-modal');
-    window.deleteClass(clsId);
+    window.deleteClass(clsId || clsName, clsName);
   };
 
-  window.deleteClass = function (clsId) {
-    if (!clsId) return;
-    const rawId = String(clsId).trim();
+  window.deleteClass = function (clsIdentifier, optionalName) {
+    let rawId = '';
+    let targetName = '';
+
+    if (clsIdentifier && typeof clsIdentifier === 'object') {
+      const btn = clsIdentifier.target ? clsIdentifier.target.closest('button') : clsIdentifier;
+      rawId = (btn && (btn.getAttribute('data-class-id') || btn.getAttribute('data-id'))) || '';
+      targetName = (btn && (btn.getAttribute('data-class-name') || btn.getAttribute('data-name'))) || '';
+    } else if (typeof clsIdentifier === 'string') {
+      rawId = clsIdentifier.trim();
+      targetName = optionalName ? String(optionalName).trim() : '';
+    }
+
+    if (!rawId && !targetName) return;
+
     let decodedId = rawId;
     try { decodedId = decodeURIComponent(rawId); } catch (e) {}
 
     const globalData = hasAdminAccess(currentUser) ? getParishGlobalData() : null;
     const allClasses = (globalData ? globalData.classes : []).concat(appData.classes || []).concat(getAccessibleClasses());
-    const cls = allClasses.find(c =>
-      c && (
-        c.id === rawId ||
-        c.id === decodedId ||
-        String(c.id) === rawId ||
-        String(c.id) === decodedId ||
-        c.name === rawId ||
-        c.name === decodedId
-      )
-    );
 
+    const isMatch = (c) => {
+      if (!c) return false;
+      const cId = String(c.id || '').trim();
+      const cName = String(c.name || '').trim().toLowerCase();
+      if (rawId && (cId === rawId || cName === rawId.toLowerCase())) return true;
+      if (decodedId && (cId === decodedId || cName === decodedId.toLowerCase())) return true;
+      if (targetName && cName === targetName.toLowerCase()) return true;
+      return false;
+    };
+
+    const cls = allClasses.find(isMatch);
     const targetId = cls ? cls.id : (rawId !== decodedId ? decodedId : rawId);
-    const targetName = cls ? cls.name : (decodedId || rawId);
+    if (!targetName && cls && cls.name) {
+      targetName = cls.name;
+    }
+    if (!targetName) {
+      targetName = decodedId || rawId || 'Lớp học';
+    }
     const teacherEmail = cls ? (cls.teacherEmail || cls.ownerEmail || '') : '';
     const coTeacherEmail = cls ? (cls.coTeacherEmail || '') : '';
 
     const performDelete = async function () {
       try {
+        const isTargetClass = (c) => {
+          if (!c) return false;
+          const cId = String(c.id || '').trim();
+          const cName = String(c.name || '').trim().toLowerCase();
+          if (targetId && (cId === String(targetId).trim() || cName === String(targetId).trim().toLowerCase())) return true;
+          if (rawId && (cId === rawId || cName === rawId.toLowerCase())) return true;
+          if (decodedId && (cId === decodedId || cName === decodedId.toLowerCase())) return true;
+          if (targetName && cName === String(targetName).trim().toLowerCase()) return true;
+          return false;
+        };
+
+        const isStudentInClass = (s) => {
+          if (!s) return false;
+          const sCId = String(s.classId || '').trim();
+          const sCName = String(s.className || '').trim().toLowerCase();
+          if (targetId && (sCId === String(targetId).trim() || sCName === String(targetId).trim().toLowerCase())) return true;
+          if (rawId && (sCId === rawId || sCName === rawId.toLowerCase())) return true;
+          if (decodedId && (sCId === decodedId || sCName === decodedId.toLowerCase())) return true;
+          if (targetName && sCName === String(targetName).trim().toLowerCase()) return true;
+          return false;
+        };
+
         // 1. Remove from current working appData
         if (Array.isArray(appData.classes)) {
-          appData.classes = appData.classes.filter(c => {
-            if (!c) return false;
-            if (targetId && (c.id === targetId || String(c.id) === String(targetId))) return false;
-            if (targetName && c.name === targetName) return false;
-            return true;
-          });
+          appData.classes = appData.classes.filter(c => !isTargetClass(c));
         }
 
         // Unassign current user's students belonging to this class
         if (Array.isArray(appData.students)) {
           appData.students.forEach(s => {
-            if ((targetId && (s.classId === targetId || String(s.classId) === String(targetId))) || (targetName && s.className === targetName)) {
+            if (isStudentInClass(s)) {
               s.classId = '';
               s.className = 'Chưa xếp lớp';
             }
@@ -6039,26 +6113,26 @@
         }
         saveUserData();
 
-        // 2. Scan and clean all teachers in memory cache allCloudUserDataMap
+        // 2. Identify affected teacher emails & update in-memory cache
         const affectedEmails = new Set();
-        if (teacherEmail) affectedEmails.add(teacherEmail.toLowerCase());
-        if (coTeacherEmail) affectedEmails.add(coTeacherEmail.toLowerCase());
+        if (currentUser && currentUser.email) affectedEmails.add(currentUser.email.toLowerCase().trim());
+        if (teacherEmail) affectedEmails.add(teacherEmail.toLowerCase().trim());
+        if (coTeacherEmail) affectedEmails.add(coTeacherEmail.toLowerCase().trim());
+
+        if (currentUser && currentUser.email) {
+          allCloudUserDataMap[currentUser.email.toLowerCase().trim()] = JSON.parse(JSON.stringify(appData));
+        }
 
         Object.keys(allCloudUserDataMap).forEach(uEmail => {
           const uData = allCloudUserDataMap[uEmail];
           if (uData && Array.isArray(uData.classes)) {
-            const hasCls = uData.classes.some(c => c && ((targetId && (c.id === targetId || String(c.id) === String(targetId))) || (targetName && c.name === targetName)));
+            const hasCls = uData.classes.some(isTargetClass);
             if (hasCls) {
-              affectedEmails.add(uEmail.toLowerCase());
-              uData.classes = uData.classes.filter(c => {
-                if (!c) return false;
-                if (targetId && (c.id === targetId || String(c.id) === String(targetId))) return false;
-                if (targetName && c.name === targetName) return false;
-                return true;
-              });
+              affectedEmails.add(uEmail.toLowerCase().trim());
+              uData.classes = uData.classes.filter(c => !isTargetClass(c));
               if (Array.isArray(uData.students)) {
                 uData.students.forEach(s => {
-                  if ((targetId && (s.classId === targetId || String(s.classId) === String(targetId))) || (targetName && s.className === targetName)) {
+                  if (isStudentInClass(s)) {
                     s.classId = '';
                     s.className = 'Chưa xếp lớp';
                   }
@@ -6076,19 +6150,14 @@
             if (!raw) return;
             const uData = JSON.parse(raw);
             if (uData && Array.isArray(uData.classes)) {
-              const hasCls = uData.classes.some(c => c && ((targetId && (c.id === targetId || String(c.id) === String(targetId))) || (targetName && c.name === targetName)));
+              const hasCls = uData.classes.some(isTargetClass);
               if (hasCls) {
-                const uEmail = (uData.account_info && uData.account_info.email) || k.replace(STORAGE_PREFIX_DATA, '').replace(/_/g, '@').toLowerCase();
+                const uEmail = ((uData.account_info && uData.account_info.email) || k.replace(STORAGE_PREFIX_DATA, '').replace(/_/g, '@')).toLowerCase().trim();
                 affectedEmails.add(uEmail);
-                uData.classes = uData.classes.filter(c => {
-                  if (!c) return false;
-                  if (targetId && (c.id === targetId || String(c.id) === String(targetId))) return false;
-                  if (targetName && c.name === targetName) return false;
-                  return true;
-                });
+                uData.classes = uData.classes.filter(c => !isTargetClass(c));
                 if (Array.isArray(uData.students)) {
                   uData.students.forEach(s => {
-                    if ((targetId && (s.classId === targetId || String(s.classId) === String(targetId))) || (targetName && s.className === targetName)) {
+                    if (isStudentInClass(s)) {
                       s.classId = '';
                       s.className = 'Chưa xếp lớp';
                     }
@@ -6101,11 +6170,19 @@
           } catch (e) {}
         });
 
-        // 4. Persist updated datasets to Supabase Cloud
+        // 4. Persist updated datasets to Supabase Cloud for ALL affected teachers
         if (window.supabaseClient && affectedEmails.size > 0) {
           for (const uEmail of affectedEmails) {
             try {
-              const uData = allCloudUserDataMap[uEmail];
+              let uData = allCloudUserDataMap[uEmail];
+              if (!uData) {
+                const storageKey = STORAGE_PREFIX_DATA + uEmail.replace(/[^a-z0-9]/g, '_');
+                const localStr = localStorage.getItem(storageKey);
+                if (localStr) {
+                  uData = JSON.parse(localStr);
+                  allCloudUserDataMap[uEmail] = uData;
+                }
+              }
               if (uData) {
                 const storageKey = STORAGE_PREFIX_DATA + uEmail.replace(/[^a-z0-9]/g, '_');
                 localStorage.setItem(storageKey, JSON.stringify(uData));
@@ -6114,31 +6191,7 @@
                   data: uData,
                   updated_at: new Date().toISOString()
                 });
-              } else {
-                const { data: cloudRow } = await window.supabaseClient.from('user_data').select('data').eq('email', uEmail).maybeSingle();
-                if (cloudRow && cloudRow.data && Array.isArray(cloudRow.data.classes)) {
-                  const cData = cloudRow.data;
-                  cData.classes = cData.classes.filter(c => {
-                    if (!c) return false;
-                    if (targetId && (c.id === targetId || String(c.id) === String(targetId))) return false;
-                    if (targetName && c.name === targetName) return false;
-                    return true;
-                  });
-                  if (Array.isArray(cData.students)) {
-                    cData.students.forEach(s => {
-                      if ((targetId && (s.classId === targetId || String(s.classId) === String(targetId))) || (targetName && s.className === targetName)) {
-                        s.classId = '';
-                        s.className = 'Chưa xếp lớp';
-                      }
-                    });
-                  }
-                  await window.supabaseClient.from('user_data').upsert({
-                    email: uEmail,
-                    data: cData,
-                    updated_at: new Date().toISOString()
-                  });
-                  allCloudUserDataMap[uEmail] = cData;
-                }
+                console.log('✅ Synchronized class deletion to Supabase for:', uEmail);
               }
             } catch (cloudErr) {
               console.warn('Supabase sync class delete notice:', cloudErr);
@@ -7117,6 +7170,9 @@
     if (targetName) targetName.textContent = (acc.holyName ? acc.holyName + ' ' : '') + acc.name;
     if (targetEmailEl) targetEmailEl.textContent = acc.email;
 
+    closeModal('admin-user-modal');
+    const modalEl = document.getElementById('custom-confirm-modal');
+    if (modalEl) modalEl.style.zIndex = '99999';
     openModal('custom-confirm-modal');
   };
 
