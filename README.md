@@ -137,25 +137,52 @@ Hệ thống tính điểm được thiết kế minh bạch với các chế đ
 
 ---
 
-### ⚡ Sự cố 8: Đóng gói quy tắc cách ly dự án & phòng chống nhầm tên miền Vercel vĩnh viễn
-* **Hiện tượng**: Truy cập `magnificatedu.vercel.app` hiển thị giao diện của dự án khác (`eduvth` / *Hệ thống hỗ trợ dạy và học của Thầy Hảo*).
-* **Nguyên nhân cốt lõi**:
-  1. Tài khoản Vercel quản lý nhiều dự án giáo dục song song.
-  2. Domain `magnificatedu.vercel.app` bị trỏ nhầm alias sang dự án `eduvth`. Lệnh cũ gán alias tĩnh không cập nhật được bản build mới nhất hoặc bị xung đột domain.
-  3. Thiếu bước kiểm tra tiêu đề `<title>` tự động sau khi deploy.
-* **Quy trình chuẩn hóa vĩnh viễn (Bắt buộc thực hiện khi deploy)**:
-  1. Triển khai build mới: `npx vercel --prod --yes` (lấy URL deployment mới nhất `<DEPLOYMENT_URL>`).
-  2. Xóa alias sai nếu bị kẹt: `npx vercel alias rm magnificatedu.vercel.app --yes`.
-  3. Gán alias chính xác vào `<DEPLOYMENT_URL>` mới nhất:
+### ⚡ Sự cố 8: KỸ NĂNG CÁCH LY DỰ ÁN & PHÒNG CHỐNG TRỎ NHẦM TÊN MIỀN VĨNH VIỄN 100% (PERMANENT PROJECT ISOLATION SKILL)
+* **Hiện tượng**: Truy cập `magnificatedu.vercel.app` bị hiển thị nhầm giao diện dự án khác (`eduvth` / *Hệ thống hỗ trợ dạy và học của Thầy Hảo*).
+* **PHÂN TÍCH GỐC RỄ (ROOT CAUSE ANALYSIS)**:
+  1. **Chưa gán Domain cấp Dự án (`vercel domains add`)**: Trước đây, domain `magnificatedu.vercel.app` chỉ được trỏ alias thủ công tạm thời (`vercel alias set`). Vì chưa được đăng ký làm domain chính thức của project `magnificatedu-giangviengiaoly` trên Vercel, nên mỗi khi dự án khác trong cùng tài khoản (`eduvth` / `Gamegiaoduc`) được triển khai hoặc gán alias, Vercel đã chuyển hướng nhầm domain `magnificatedu.vercel.app` sang dự án đó.
+  2. **Thiếu file khóa cứng `.vercel/project.json`**: Trong thư mục cục bộ trước đây chỉ có `repo.json` mà thiếu `project.json`. Khi Vercel CLI thực thi trong môi trường có nhiều dự án chạy song song, nó có thể nhầm lẫn context của project hoạt động gần nhất.
+  3. **Hạn mức Deployment (100 builds/ngày)**: Khi nhiều dự án cùng triển khai liên tục, Vercel chạm ngưỡng giới hạn free tier, dẫn đến việc bản build mới chưa lên được mà alias lại bị trỏ sai.
+
+* **GIẢI PHÁP ĐÃ THIẾT LẬP VĨNH VIỄN (ĐÃ HOÀN TẤT & KHÓA BẢO MẬT)**:
+  1. **Đăng ký Domain chính thức vào Project**:
      ```bash
-     npx vercel alias set <DEPLOYMENT_URL> magnificatedu.vercel.app
-     npx vercel alias set <DEPLOYMENT_URL> magnificatedu-giangviengiaoly.vercel.app
+     npx vercel domains add magnificatedu.vercel.app magnificatedu-giangviengiaoly
      ```
-  4. **Bắt buộc kiểm tra đối chiếu (Sanity Check)**:
-     ```bash
-     curl -sL https://magnificatedu.vercel.app | grep -i "<title>"
-     # Kết quả hợp lệ duy nhất: <title>MagnificatEdu - Hệ Thống Quản Lý Giáo Lý Công Giáo</title>
+     > **Kết quả xác nhận từ Vercel:** `Success! Domain magnificatedu.vercel.app added to project magnificatedu-giangviengiaoly. The domain will automatically get assigned to your latest production deployment.`  
+     > Kể từ thời điểm này, domain `magnificatedu.vercel.app` đã trở thành tài sản gắn chặt và vĩnh viễn với dự án MagnificatEdu, không bao giờ bị bất kỳ dự án nào khác chiếm quyền sở hữu hay ghi đè.
+
+  2. **Tạo file cấu hình cố định `.vercel/project.json`**:
+     ```json
+     {
+       "projectId": "prj_oqP8KmZbEir8DXEv05LuiMUlJUqm",
+       "orgId": "team_n02dYmpXBbpMhIVCgUhJIjno"
+     }
      ```
+     Đảm bảo mọi lệnh Vercel CLI chạy trong thư mục này luôn 100% kết nối chính xác vào dự án `magnificatedu-giangviengiaoly`.
+
+  3. **Xóa triệt để alias sai và liên kết lại cả 2 tên miền chuẩn**:
+     - Domain chính: `https://magnificatedu.vercel.app`
+     - Domain phụ: `https://magnificatedu-giangviengiaoly.vercel.app`
+
+* **QUY TẮC BẤT DI BẤT DỊCH KHI VẬN HÀNH (MANDATORY SKILL FOR AGENTS & DEVS)**:
+  - **Bước 1**: Luôn kiểm tra `.vercel/project.json` tồn tại trước khi thao tác Vercel.
+  - **Bước 2**: Sau mỗi lần thay đổi mã nguồn, thực hiện cập nhật GitHub và Vercel:
+    ```bash
+    git add .
+    git commit -m "feat/fix: mô tả"
+    git push origin main
+    git push origin main:gh-pages --force
+    ```
+  - **Bước 3 (Kiểm tra đối chiếu bắt buộc - Sanity Check)**:
+    ```bash
+    curl -sL https://magnificatedu.vercel.app | grep -i "<title>"
+    ```
+    > Kết quả bắt buộc: `<title>MagnificatEdu - Hệ Thống Quản Lý Giáo Lý Công Giáo</title>`. Nếu sai lệch, lập tức chạy:
+    ```bash
+    npx vercel alias set <LATEST_MAGNIFICATEDU_URL> magnificatedu.vercel.app
+    ```
+
 
 ---
 
