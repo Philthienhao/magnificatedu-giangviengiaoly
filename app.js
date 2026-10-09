@@ -397,8 +397,10 @@
       let changed = false;
       data.forEach(r => {
         if (!r.email) return;
-        const uEmail = r.email.toLowerCase();
+        const uEmail = r.email.toLowerCase().trim();
         const uData = (r.data && typeof r.data === 'object') ? r.data : {};
+        if (!uData.account_info) uData.account_info = {};
+        uData.account_info.email = uEmail;
         
         // Cache full user data in global in-memory map
         allCloudUserDataMap[uEmail] = uData;
@@ -1659,7 +1661,7 @@
 
     const effectiveClasses = getAccessibleClasses();
     const effectiveStudents = getAccessibleStudents();
-    const effectiveCatechists = (isAdmin && globalData) ? globalData.catechists : (appData.catechists || []);
+    const effectiveCatechists = (isAdmin && globalData) ? (globalData.catechists || []) : ((appData && appData.catechists) || []);
     const allAttendanceLogs = getAccessibleAttendanceLogs();
 
     const totalClasses = effectiveClasses.length;
@@ -1749,7 +1751,7 @@
     container.innerHTML = `
       <div class="welcome-slogan-card">
         <div class="slogan-content">
-          <h2>Chào mừng quay trở lại, ${currentUser.holyName ? currentUser.holyName + ' ' : ''}${currentUser.name}! ✨</h2>
+          <h2>Chào mừng quay trở lại, ${currentUser && currentUser.holyName ? currentUser.holyName + ' ' : ''}${(currentUser && currentUser.name) || 'Giáo lý viên'}! ✨</h2>
           <div class="slogan-quote">
             "${SLOGAN_TEXT}"
           </div>
@@ -1876,9 +1878,9 @@
             </div>
             <div class="card-body" style="padding: 12px 20px;">
               <div class="notification-list">
-                ${(appData.notifications || []).length === 0 ? `
+                ${((appData && appData.notifications) || []).length === 0 ? `
                   <p style="color: var(--slate-muted); font-size: 13px; text-align: center; padding: 16px 0;">Chưa có thông báo mới.</p>
-                ` : (appData.notifications || []).map(n => `
+                ` : ((appData && appData.notifications) || []).map(n => `
                   <div style="padding: 10px 0; border-bottom: 1px solid var(--slate-border);">
                     <span class="badge badge-primary" style="margin-bottom: 4px;">${n.category}</span>
                     <h5 style="font-size: 13px; font-weight: 700; color: var(--slate-dark);">${n.title}</h5>
@@ -1932,6 +1934,19 @@
     }
   }
 
+  // Robust helper to recover real user email from localStorage key and dataset
+  function resolveEmailFromStorageKey(k, uData) {
+    if (uData && uData.account_info && uData.account_info.email) {
+      return uData.account_info.email.toLowerCase().trim();
+    }
+    const suffix = k.replace(STORAGE_PREFIX_DATA, '');
+    const foundInAccounts = accountsList.find(a => a.email && a.email.toLowerCase().replace(/[^a-z0-9]/g, '_') === suffix);
+    if (foundInAccounts) return foundInAccounts.email.toLowerCase().trim();
+    const foundInCloud = Object.keys(allCloudUserDataMap).find(e => e.toLowerCase().replace(/[^a-z0-9]/g, '_') === suffix);
+    if (foundInCloud) return foundInCloud.toLowerCase().trim();
+    return suffix;
+  }
+
   // Helper: Multi-tenant Global Data Aggregation for Admin
   function getParishGlobalData() {
     const isParish = isParishAdmin(currentUser);
@@ -1947,8 +1962,7 @@
         if (!raw) return;
         const d = JSON.parse(raw);
         if (d && typeof d === 'object') {
-          const email = (d.account_info && d.account_info.email) 
-            || k.replace(STORAGE_PREFIX_DATA, '').replace(/_/g, '@');
+          const email = resolveEmailFromStorageKey(k, d);
           userDatasets.set(email.toLowerCase(), d);
         }
       } catch (e) {}
@@ -2109,7 +2123,7 @@
     const classMap = new Map();
 
     // 1. Current user's own classes
-    (appData.classes || []).forEach(c => {
+    ((appData && appData.classes) || []).forEach(c => {
       if (c && (c.id || c.name)) {
         classMap.set(String(c.id || c.name), c);
       }
@@ -2156,7 +2170,7 @@
     const studentMap = new Map();
 
     // 1. Current user's own students
-    (appData.students || []).forEach(s => {
+    ((appData && appData.students) || []).forEach(s => {
       if (s && s.id) {
         studentMap.set(String(s.id), s);
       }
@@ -2194,7 +2208,7 @@
 
     const logMap = new Map();
 
-    (appData.attendanceLogs || []).forEach(l => {
+    ((appData && appData.attendanceLogs) || []).forEach(l => {
       if (l && l.id) logMap.set(String(l.id), l);
     });
 
@@ -2365,8 +2379,8 @@
                 <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--slate-border); padding-top: 12px;">
                   <span style="font-weight: 700; color: var(--slate-dark);"><i class="fa-solid fa-users text-primary"></i> ${classStudentCount} Học viên</span>
                   <div style="display: flex; gap: 6px;">
-                    <button class="btn btn-sm btn-outline-primary" data-class-id="${safeId}" data-class-name="${escapedName}" onclick="window.editClass(this)"><i class="fa-solid fa-pen"></i> Sửa</button>
-                    <button class="btn btn-sm btn-outline-danger btn-delete-class" data-class-id="${safeId}" data-class-name="${escapedName}" onclick="window.deleteClass(this)" title="Xóa lớp học này"><i class="fa-solid fa-trash"></i> Xóa</button>
+                    <button class="btn btn-sm btn-outline-primary" data-class-id="${safeId}" data-class-name="${escapedName}" data-teacher-email="${teacher1Email}" onclick="window.editClass(this)"><i class="fa-solid fa-pen"></i> Sửa</button>
+                    <button class="btn btn-sm btn-outline-danger btn-delete-class" data-class-id="${safeId}" data-class-name="${escapedName}" data-teacher-email="${teacher1Email}" onclick="window.deleteClass(this)" title="Xóa lớp học này"><i class="fa-solid fa-trash"></i> Xóa</button>
                   </div>
                 </div>
               </div>
@@ -5478,10 +5492,10 @@
                           <button class="btn btn-xs btn-outline-info" onclick="window.openInspectUserModal('${cls.teacherEmail}')" title="Xem học viên lớp này" style="font-size: 11px; padding: 3px 7px;">
                             <i class="fa-solid fa-users"></i> Xem
                           </button>
-                          <button class="btn btn-xs btn-outline-primary" data-class-id="${safeClassId}" data-class-name="${escapedClsName}" onclick="window.editClass(this)" title="Sửa thông tin lớp học" style="font-size: 11px; padding: 3px 7px;">
+                          <button class="btn btn-xs btn-outline-primary" data-class-id="${safeClassId}" data-class-name="${escapedClsName}" data-teacher-email="${cls.teacherEmail || ''}" onclick="window.editClass(this)" title="Sửa thông tin lớp học" style="font-size: 11px; padding: 3px 7px;">
                             <i class="fa-solid fa-pen"></i> Sửa
                           </button>
-                          <button class="btn btn-xs btn-outline-danger" data-class-id="${safeClassId}" data-class-name="${escapedClsName}" onclick="window.deleteClass(this)" title="Xóa lớp học này" style="font-size: 11px; padding: 3px 7px;">
+                          <button class="btn btn-xs btn-outline-danger" data-class-id="${safeClassId}" data-class-name="${escapedClsName}" data-teacher-email="${cls.teacherEmail || ''}" onclick="window.deleteClass(this)" title="Xóa lớp học này" style="font-size: 11px; padding: 3px 7px;">
                             <i class="fa-solid fa-trash"></i> Xóa
                           </button>
                         </div>
@@ -6001,38 +6015,53 @@
     openModal('class-modal');
   };
 
-  window.editClass = function (clsIdentifier, optionalName) {
+  window.editClass = function (clsIdentifier, optionalName, optionalTeacherEmail) {
     let rawId = '';
     let targetName = '';
+    let targetTeacherEmail = '';
 
     if (clsIdentifier && typeof clsIdentifier === 'object') {
       const btn = clsIdentifier.target ? clsIdentifier.target.closest('button') : clsIdentifier;
       rawId = (btn && (btn.getAttribute('data-class-id') || btn.getAttribute('data-id'))) || '';
       targetName = (btn && (btn.getAttribute('data-class-name') || btn.getAttribute('data-name'))) || '';
+      targetTeacherEmail = (btn && (btn.getAttribute('data-teacher-email') || btn.getAttribute('data-email'))) || '';
     } else if (typeof clsIdentifier === 'string') {
       rawId = clsIdentifier.trim();
       targetName = optionalName ? String(optionalName).trim() : '';
+      targetTeacherEmail = optionalTeacherEmail ? String(optionalTeacherEmail).trim() : '';
     }
 
     let decodedId = rawId;
     try { decodedId = decodeURIComponent(rawId); } catch(e) {}
 
     const globalData = hasAdminAccess(currentUser) ? getParishGlobalData() : null;
-    const allClasses = (globalData ? globalData.classes : []).concat(appData.classes || []).concat(getAccessibleClasses());
+    const allClasses = (globalData && globalData.classes ? globalData.classes : []).concat((appData && appData.classes) || []).concat(getAccessibleClasses() || []);
 
-    const isMatch = (c) => {
-      if (!c) return false;
-      const cId = String(c.id || '').trim();
-      const cName = String(c.name || '').trim().toLowerCase();
-      if (rawId && (cId === rawId || cName === rawId.toLowerCase())) return true;
-      if (decodedId && (cId === decodedId || cName === decodedId.toLowerCase())) return true;
-      if (targetName && cName === targetName.toLowerCase()) return true;
-      return false;
-    };
+    let cls = null;
+    const cleanRawId = String(rawId || '').trim();
+    const cleanDecodedId = String(decodedId || '').trim();
+    const cleanEmail = String(targetTeacherEmail || '').toLowerCase().trim();
+    const cleanName = String(targetName || '').toLowerCase().trim();
 
-    const cls = allClasses.find(isMatch);
+    // Priority 1: Exact ID + teacherEmail
+    if (cleanRawId && cleanEmail) {
+      cls = allClasses.find(c => c && (String(c.id).trim() === cleanRawId || String(c.id).trim() === cleanDecodedId) && (c.teacherEmail || '').toLowerCase().trim() === cleanEmail);
+    }
+    // Priority 2: Exact ID only
+    if (!cls && cleanRawId) {
+      cls = allClasses.find(c => c && (String(c.id).trim() === cleanRawId || String(c.id).trim() === cleanDecodedId));
+    }
+    // Priority 3: teacherEmail + class Name
+    if (!cls && cleanEmail && cleanName) {
+      cls = allClasses.find(c => c && (c.teacherEmail || '').toLowerCase().trim() === cleanEmail && String(c.name || '').toLowerCase().trim() === cleanName);
+    }
+    // Priority 4: class Name only
+    if (!cls && cleanName) {
+      cls = allClasses.find(c => c && String(c.name || '').toLowerCase().trim() === cleanName);
+    }
+
     if (!cls) {
-      console.warn('Class not found for editClass:', rawId, targetName);
+      console.warn('Class not found for editClass:', rawId, targetName, targetTeacherEmail);
       return;
     }
 
@@ -6046,7 +6075,7 @@
     document.getElementById('cls-schedule').value = cls.schedule || '';
     document.getElementById('cls-teacher').value = cls.teacher || '';
     if (document.getElementById('cls-teacher-email')) {
-      document.getElementById('cls-teacher-email').value = cls.teacherEmail || (currentUser ? currentUser.email : '');
+      document.getElementById('cls-teacher-email').value = cls.teacherEmail || targetTeacherEmail || (currentUser ? currentUser.email : '');
     }
     if (document.getElementById('cls-co-teacher')) {
       document.getElementById('cls-co-teacher').value = cls.coTeacher || '';
@@ -6060,6 +6089,7 @@
       delBtn.style.display = 'inline-block';
       delBtn.setAttribute('data-class-id', cls.id || rawId);
       delBtn.setAttribute('data-class-name', cls.name || '');
+      delBtn.setAttribute('data-teacher-email', cls.teacherEmail || targetTeacherEmail || '');
     }
 
     populateCatechistDatalist();
@@ -6071,22 +6101,26 @@
     const delBtn = document.getElementById('class-modal-delete-btn');
     const clsId = (delBtn && delBtn.getAttribute('data-class-id')) || document.getElementById('class-form-id').value;
     const clsName = (delBtn && delBtn.getAttribute('data-class-name')) || document.getElementById('cls-name').value;
+    const teacherEmail = (delBtn && delBtn.getAttribute('data-teacher-email')) || (document.getElementById('cls-teacher-email') ? document.getElementById('cls-teacher-email').value : '');
     if (!clsId && !clsName) return;
     closeModal('class-modal');
-    window.deleteClass(clsId || clsName, clsName);
+    window.deleteClass(clsId || clsName, clsName, teacherEmail);
   };
 
-  window.deleteClass = function (clsIdentifier, optionalName) {
+  window.deleteClass = function (clsIdentifier, optionalName, optionalTeacherEmail) {
     let rawId = '';
     let targetName = '';
+    let targetTeacherEmail = '';
 
     if (clsIdentifier && typeof clsIdentifier === 'object') {
       const btn = clsIdentifier.target ? clsIdentifier.target.closest('button') : clsIdentifier;
       rawId = (btn && (btn.getAttribute('data-class-id') || btn.getAttribute('data-id'))) || '';
       targetName = (btn && (btn.getAttribute('data-class-name') || btn.getAttribute('data-name'))) || '';
+      targetTeacherEmail = (btn && (btn.getAttribute('data-teacher-email') || btn.getAttribute('data-email'))) || '';
     } else if (typeof clsIdentifier === 'string') {
       rawId = clsIdentifier.trim();
       targetName = optionalName ? String(optionalName).trim() : '';
+      targetTeacherEmail = optionalTeacherEmail ? String(optionalTeacherEmail).trim() : '';
     }
 
     if (!rawId && !targetName) return;
@@ -6095,84 +6129,115 @@
     try { decodedId = decodeURIComponent(rawId); } catch (e) {}
 
     const globalData = hasAdminAccess(currentUser) ? getParishGlobalData() : null;
-    const allClasses = (globalData ? globalData.classes : []).concat(appData.classes || []).concat(getAccessibleClasses());
+    const allClasses = (globalData && globalData.classes ? globalData.classes : []).concat((appData && appData.classes) || []).concat(getAccessibleClasses() || []);
 
-    const isMatch = (c) => {
-      if (!c) return false;
-      const cId = String(c.id || '').trim();
-      const cName = String(c.name || '').trim().toLowerCase();
-      if (rawId && (cId === rawId || cName === rawId.toLowerCase())) return true;
-      if (decodedId && (cId === decodedId || cName === decodedId.toLowerCase())) return true;
-      if (targetName && cName === targetName.toLowerCase()) return true;
-      return false;
-    };
+    let cls = null;
+    const cleanRawId = String(rawId || '').trim();
+    const cleanDecodedId = String(decodedId || '').trim();
+    const cleanEmail = String(targetTeacherEmail || '').toLowerCase().trim();
+    const cleanName = String(targetName || '').toLowerCase().trim();
 
-    const cls = allClasses.find(isMatch);
-    const targetId = cls ? cls.id : (rawId !== decodedId ? decodedId : rawId);
-    if (!targetName && cls && cls.name) {
-      targetName = cls.name;
+    // Priority 1: Exact ID + teacherEmail
+    if (cleanRawId && cleanEmail) {
+      cls = allClasses.find(c => c && (String(c.id).trim() === cleanRawId || String(c.id).trim() === cleanDecodedId) && (c.teacherEmail || '').toLowerCase().trim() === cleanEmail);
     }
-    if (!targetName) {
-      targetName = decodedId || rawId || 'Lớp học';
+    // Priority 2: Exact ID only
+    if (!cls && cleanRawId) {
+      cls = allClasses.find(c => c && (String(c.id).trim() === cleanRawId || String(c.id).trim() === cleanDecodedId));
     }
-    const teacherEmail = cls ? (cls.teacherEmail || cls.ownerEmail || '') : '';
-    const coTeacherEmail = cls ? (cls.coTeacherEmail || '') : '';
+    // Priority 3: teacherEmail + class Name
+    if (!cls && cleanEmail && cleanName) {
+      cls = allClasses.find(c => c && (c.teacherEmail || '').toLowerCase().trim() === cleanEmail && String(c.name || '').toLowerCase().trim() === cleanName);
+    }
+    // Priority 4: class Name only
+    if (!cls && cleanName) {
+      cls = allClasses.find(c => c && String(c.name || '').toLowerCase().trim() === cleanName);
+    }
+
+    const targetClassId = String((cls && cls.id) || cleanRawId || cleanDecodedId).trim();
+    const displayName = (cls && cls.name) || targetName || targetClassId || 'Lớp học';
+    const ownerEmail = (cls && (cls.teacherEmail || cls.ownerEmail)) || cleanEmail || '';
+    const coTeacherEmail = cls && cls.coTeacherEmail ? cls.coTeacherEmail.toLowerCase().trim() : '';
 
     const performDelete = async function () {
       try {
         const isTargetClass = (c) => {
           if (!c) return false;
           const cId = String(c.id || '').trim();
+          if (targetClassId && cId) {
+            return cId === targetClassId;
+          }
           const cName = String(c.name || '').trim().toLowerCase();
-          if (targetId && (cId === String(targetId).trim() || cName === String(targetId).trim().toLowerCase())) return true;
-          if (rawId && (cId === rawId || cName === rawId.toLowerCase())) return true;
-          if (decodedId && (cId === decodedId || cName === decodedId.toLowerCase())) return true;
-          if (targetName && cName === String(targetName).trim().toLowerCase()) return true;
-          return false;
+          return Boolean(cleanName && cName === cleanName);
         };
 
         const isStudentInClass = (s) => {
           if (!s) return false;
           const sCId = String(s.classId || '').trim();
+          if (targetClassId && sCId) {
+            return sCId === targetClassId;
+          }
           const sCName = String(s.className || '').trim().toLowerCase();
-          if (targetId && (sCId === String(targetId).trim() || sCName === String(targetId).trim().toLowerCase())) return true;
-          if (rawId && (sCId === rawId || sCName === rawId.toLowerCase())) return true;
-          if (decodedId && (sCId === decodedId || sCName === decodedId.toLowerCase())) return true;
-          if (targetName && sCName === String(targetName).trim().toLowerCase()) return true;
-          return false;
+          return Boolean(cleanName && sCName === cleanName);
         };
 
-        // 1. Remove from current working appData
-        if (Array.isArray(appData.classes)) {
-          appData.classes = appData.classes.filter(c => !isTargetClass(c));
-        }
-
-        // Unassign current user's students belonging to this class
-        if (Array.isArray(appData.students)) {
-          appData.students.forEach(s => {
-            if (isStudentInClass(s)) {
-              s.classId = '';
-              s.className = 'Chưa xếp lớp';
-            }
-          });
-        }
-        saveUserData();
-
-        // 2. Identify affected teacher emails & update in-memory cache
         const affectedEmails = new Set();
-        if (currentUser && currentUser.email) affectedEmails.add(currentUser.email.toLowerCase().trim());
-        if (teacherEmail) affectedEmails.add(teacherEmail.toLowerCase().trim());
+        if (ownerEmail) affectedEmails.add(ownerEmail.toLowerCase().trim());
         if (coTeacherEmail) affectedEmails.add(coTeacherEmail.toLowerCase().trim());
 
-        if (currentUser && currentUser.email) {
-          allCloudUserDataMap[currentUser.email.toLowerCase().trim()] = JSON.parse(JSON.stringify(appData));
+        // Helper to get all localStorage keys safely across environments
+        const getStorageKeys = () => {
+          const keys = new Set();
+          try {
+            for (let i = 0; i < localStorage.length; i++) {
+              const k = localStorage.key(i);
+              if (k) keys.add(k);
+            }
+          } catch(e) {}
+          try {
+            Object.keys(localStorage).forEach(k => {
+              if (typeof localStorage[k] !== 'function') keys.add(k);
+            });
+          } catch(e) {}
+          return Array.from(keys);
+        };
+
+        // 1. If deleting class belongs to current user or matches current appData
+        if (appData && Array.isArray(appData.classes) && appData.classes.some(isTargetClass)) {
+          if (currentUser && currentUser.email) affectedEmails.add(currentUser.email.toLowerCase().trim());
+          appData.classes = appData.classes.filter(c => !isTargetClass(c));
+          if (Array.isArray(appData.students)) {
+            appData.students.forEach(s => {
+              if (isStudentInClass(s)) {
+                s.classId = '';
+                s.className = 'Chưa xếp lớp';
+              }
+            });
+          }
+          if (appData.seatingCharts && targetClassId && appData.seatingCharts[targetClassId]) {
+            delete appData.seatingCharts[targetClassId];
+          }
+          saveUserData();
         }
 
+        // 2. If target class belongs to another teacher, fetch fresh data from Supabase if not in memory
+        if (window.supabaseClient && ownerEmail && (!allCloudUserDataMap[ownerEmail] || !Array.isArray(allCloudUserDataMap[ownerEmail].classes))) {
+          try {
+            const { data: cloudRow } = await window.supabaseClient.from('user_data').select('data').eq('email', ownerEmail).maybeSingle();
+            if (cloudRow && cloudRow.data) {
+              allCloudUserDataMap[ownerEmail] = cloudRow.data;
+            }
+          } catch (fetchErr) {
+            console.warn('Notice fetching cloud data for owner:', fetchErr);
+          }
+        }
+
+        // 3. Update allCloudUserDataMap
         Object.keys(allCloudUserDataMap).forEach(uEmail => {
           const uData = allCloudUserDataMap[uEmail];
           if (uData && Array.isArray(uData.classes)) {
             const hasCls = uData.classes.some(isTargetClass);
-            if (hasCls) {
+            if (hasCls || (ownerEmail && uEmail.toLowerCase().trim() === ownerEmail.toLowerCase().trim())) {
               affectedEmails.add(uEmail.toLowerCase().trim());
               uData.classes = uData.classes.filter(c => !isTargetClass(c));
               if (Array.isArray(uData.students)) {
@@ -6183,12 +6248,43 @@
                   }
                 });
               }
+              if (uData.seatingCharts && targetClassId && uData.seatingCharts[targetClassId]) {
+                delete uData.seatingCharts[targetClassId];
+              }
             }
           }
         });
 
-        // 3. Scan all keys in localStorage starting with STORAGE_PREFIX_DATA
-        const allDataKeys = Object.keys(localStorage).filter(k => k.startsWith(STORAGE_PREFIX_DATA));
+        // 4. Update owner's direct localStorage entry
+        if (ownerEmail) {
+          const directKey = STORAGE_PREFIX_DATA + ownerEmail.toLowerCase().trim().replace(/[^a-z0-9]/g, '_');
+          try {
+            let uData = allCloudUserDataMap[ownerEmail];
+            if (!uData) {
+              const raw = localStorage.getItem(directKey);
+              if (raw) uData = JSON.parse(raw);
+            }
+            if (uData && Array.isArray(uData.classes)) {
+              uData.classes = uData.classes.filter(c => !isTargetClass(c));
+              if (Array.isArray(uData.students)) {
+                uData.students.forEach(s => {
+                  if (isStudentInClass(s)) {
+                    s.classId = '';
+                    s.className = 'Chưa xếp lớp';
+                  }
+                });
+              }
+              if (uData.seatingCharts && targetClassId && uData.seatingCharts[targetClassId]) {
+                delete uData.seatingCharts[targetClassId];
+              }
+              localStorage.setItem(directKey, JSON.stringify(uData));
+              allCloudUserDataMap[ownerEmail] = uData;
+            }
+          } catch(e) {}
+        }
+
+        // 5. Scan all keys in localStorage starting with STORAGE_PREFIX_DATA
+        const allDataKeys = getStorageKeys().filter(k => k.startsWith(STORAGE_PREFIX_DATA));
         allDataKeys.forEach(k => {
           try {
             const raw = localStorage.getItem(k);
@@ -6196,9 +6292,9 @@
             const uData = JSON.parse(raw);
             if (uData && Array.isArray(uData.classes)) {
               const hasCls = uData.classes.some(isTargetClass);
-              if (hasCls) {
-                const uEmail = ((uData.account_info && uData.account_info.email) || k.replace(STORAGE_PREFIX_DATA, '').replace(/_/g, '@')).toLowerCase().trim();
-                affectedEmails.add(uEmail);
+              const uEmail = resolveEmailFromStorageKey(k, uData);
+              if (hasCls || (ownerEmail && uEmail && uEmail.toLowerCase().trim() === ownerEmail.toLowerCase().trim())) {
+                if (uEmail) affectedEmails.add(uEmail);
                 uData.classes = uData.classes.filter(c => !isTargetClass(c));
                 if (Array.isArray(uData.students)) {
                   uData.students.forEach(s => {
@@ -6208,14 +6304,17 @@
                     }
                   });
                 }
+                if (uData.seatingCharts && targetClassId && uData.seatingCharts[targetClassId]) {
+                  delete uData.seatingCharts[targetClassId];
+                }
                 localStorage.setItem(k, JSON.stringify(uData));
-                allCloudUserDataMap[uEmail] = uData;
+                if (uEmail) allCloudUserDataMap[uEmail] = uData;
               }
             }
           } catch (e) {}
         });
 
-        // 4. Persist updated datasets to Supabase Cloud for ALL affected teachers
+        // 5. Persist updated datasets to Supabase Cloud for ALL affected teachers
         if (window.supabaseClient && affectedEmails.size > 0) {
           for (const uEmail of affectedEmails) {
             try {
@@ -6223,20 +6322,24 @@
               if (!uData) {
                 const storageKey = STORAGE_PREFIX_DATA + uEmail.replace(/[^a-z0-9]/g, '_');
                 const localStr = localStorage.getItem(storageKey);
-                if (localStr) {
-                  uData = JSON.parse(localStr);
-                  allCloudUserDataMap[uEmail] = uData;
-                }
+                if (localStr) uData = JSON.parse(localStr);
               }
               if (uData) {
+                if (!uData.account_info) uData.account_info = {};
+                uData.account_info.email = uEmail;
                 const storageKey = STORAGE_PREFIX_DATA + uEmail.replace(/[^a-z0-9]/g, '_');
                 localStorage.setItem(storageKey, JSON.stringify(uData));
-                await window.supabaseClient.from('user_data').upsert({
+
+                const { error: syncErr } = await window.supabaseClient.from('user_data').upsert({
                   email: uEmail,
                   data: uData,
                   updated_at: new Date().toISOString()
                 });
-                console.log('✅ Synchronized class deletion to Supabase for:', uEmail);
+                if (syncErr) {
+                  console.error('Supabase sync class delete error for ' + uEmail + ':', syncErr);
+                } else {
+                  console.log('✅ Synchronized class deletion to Supabase Cloud for:', uEmail);
+                }
               }
             } catch (cloudErr) {
               console.warn('Supabase sync class delete notice:', cloudErr);
@@ -6244,14 +6347,14 @@
           }
         }
 
-        // 5. Update UI views
+        // 6. Update UI views
         const container = document.getElementById('content-area');
         if (activePage === 'classes' && container) renderClasses(container);
         if (activePage === 'admin-users' && container) await renderAdminUsers(container);
         if (activePage === 'students' && container) renderStudents(container);
         if (typeof renderOverview === 'function' && activePage === 'overview' && container) renderOverview(container);
 
-        showToast(`Đã xóa vĩnh viễn lớp học "${targetName}" thành công!`, 'warning');
+        showToast(`Đã xóa vĩnh viễn lớp học "${displayName}" thành công!`, 'warning');
       } catch (err) {
         console.error('Error performing deleteClass:', err);
         showToast('Có lỗi xảy ra khi xóa lớp: ' + err.message, 'danger');
@@ -6261,10 +6364,10 @@
     if (typeof window.showConfirmDialog === 'function') {
       window.showConfirmDialog(
         'Xóa Lớp Học',
-        `Bạn có chắc chắn muốn xóa lớp "${targetName}" khỏi hệ thống? Tất cả học viên thuộc lớp này sẽ chuyển về Chưa xếp lớp.`,
+        `Bạn có chắc chắn muốn xóa lớp "${displayName}" khỏi hệ thống? Tất cả học viên thuộc lớp này sẽ chuyển về Chưa xếp lớp.`,
         performDelete
       );
-    } else if (window.confirm(`Xóa Lớp Học: Bạn có chắc chắn muốn xóa lớp "${targetName}" khỏi hệ thống?`)) {
+    } else if (window.confirm(`Xóa Lớp Học: Bạn có chắc chắn muốn xóa lớp "${displayName}" khỏi hệ thống?`)) {
       performDelete();
     }
   };
