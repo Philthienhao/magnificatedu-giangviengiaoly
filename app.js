@@ -70,6 +70,125 @@
   const SLOGAN_TEXT = "Không phải tất cả chúng ta đều làm được những điều vĩ đại. Nhưng chúng ta có thể làm những điều nhỏ nhặt với tình yêu vĩ đại";
   const SLOGAN_AUTHOR = "Mẹ Thánh Têrêsa Calcutta";
 
+  // Danh Sách Toàn Bộ 56 Giáo Xứ Trực Thuộc Giáo Phận Đà Nẵng
+  const DIOCESE_PARISHES = [
+    "Giáo xứ Chính Tòa",
+    "Giáo xứ An Hải",
+    "Giáo xứ An Hòa",
+    "Giáo xứ An Thượng",
+    "Giáo xứ Cẩm Lệ",
+    "Giáo xứ Chợ Chiều",
+    "Giáo xứ Chính Trạch",
+    "Giáo xứ Cồn Dầu",
+    "Giáo xứ Gia Phước",
+    "Giáo xứ Hòa Cường",
+    "Giáo xứ Hòa Thuận",
+    "Giáo xứ Ngọc Quang",
+    "Giáo xứ Nhượng Nghĩa",
+    "Giáo xứ Nội Hà",
+    "Giáo xứ Phước Tường",
+    "Giáo xứ Sơn Trà",
+    "Giáo xứ Tam Tòa",
+    "Giáo xứ Thanh Bình",
+    "Giáo xứ Thanh Đức",
+    "Giáo xứ An Ngãi Đông",
+    "Giáo xứ Đông Vinh",
+    "Giáo xứ Hòa Khánh",
+    "Giáo xứ Hòa Minh",
+    "Giáo xứ Hòa Ninh",
+    "Giáo xứ Hội Yên",
+    "Giáo xứ Phú Nghi",
+    "Giáo xứ Phước Kiều",
+    "Giáo xứ Song Mỹ",
+    "Giáo xứ Lệ Sơn",
+    "Giáo xứ Lộc Hòa",
+    "Giáo xứ Mông Triệu",
+    "Giáo xứ Phú Hạ",
+    "Giáo xứ Phú Thượng",
+    "Giáo xứ Thạch Nham",
+    "Giáo xứ Hội An",
+    "Giáo xứ Vĩnh Điện",
+    "Giáo xứ Ái Nghĩa",
+    "Giáo xứ Cẩm Sơn",
+    "Giáo xứ Hà Tân",
+    "Giáo xứ Hòa Lâm",
+    "Giáo xứ Hoằng Phước",
+    "Giáo xứ La Nang",
+    "Giáo xứ Phú Hương",
+    "Giáo xứ Trà Kiệu",
+    "Giáo xứ Trung Phước",
+    "Giáo xứ Xuân Thạnh",
+    "Giáo xứ An Sơn",
+    "Giáo xứ Bình Phong",
+    "Giáo xứ Hà Lam",
+    "Giáo xứ Khánh Thọ",
+    "Giáo xứ Tam Kỳ",
+    "Giáo xứ Tam Thành",
+    "Giáo xứ Thuận Yên",
+    "Giáo xứ Tiên Phước",
+    "Giáo xứ Vân Đóa",
+    "Giáo xứ Việt An"
+  ];
+
+  // Danh Sách Toàn Bộ 6 Giáo Họ Biệt Lập Trực Thuộc Giáo Phận Đà Nẵng
+  const DIOCESE_MISSION_STATIONS = [
+    "Giáo họ biệt lập Tùng Sơn",
+    "Giáo họ biệt lập Ô Gia",
+    "Giáo họ biệt lập Tam Lãnh",
+    "Giáo họ biệt lập Thái Đông",
+    "Giáo họ biệt lập Chiêm Sơn",
+    "Giáo họ biệt lập Đại Hiệp"
+  ];
+
+  const ALL_DIOCESE_ENTITIES = [...DIOCESE_PARISHES, ...DIOCESE_MISSION_STATIONS];
+
+  // Chuẩn hóa tên Giáo xứ để so sánh không phân biệt hoa/thường hay vị trí dấu (Hòa Khánh vs Hoà Khánh)
+  function normalizeParishName(name) {
+    if (!name) return '';
+    return name.trim().toLowerCase()
+      .normalize('NFC')
+      .replace(/hoà/g, 'hòa')
+      .replace(/oà/g, 'òa')
+      .replace(/uỳ/g, 'ùy');
+  }
+
+  function isSameParish(p1, p2) {
+    if (!p1 || !p2) return false;
+    return normalizeParishName(p1) === normalizeParishName(p2);
+  }
+
+  function isMissionStation(name) {
+    if (!name) return false;
+    return DIOCESE_MISSION_STATIONS.some(m => isSameParish(m, name)) || name.toLowerCase().includes('biệt lập');
+  }
+
+  function renderParishOptionsHTML(selectedVal = 'Giáo xứ Hòa Khánh', includeOther = true) {
+    let html = '';
+    
+    html += '<optgroup label="⛪ 56 Giáo Xứ (Giáo Phận Đà Nẵng)">';
+    DIOCESE_PARISHES.forEach(p => {
+      const isSel = isSameParish(p, selectedVal);
+      html += `<option value="${p}" ${isSel ? 'selected' : ''}>⛪ ${p}</option>`;
+    });
+    html += '</optgroup>';
+
+    html += '<optgroup label="📍 6 Giáo Họ Biệt Lập (Giáo Phận Đà Nẵng)">';
+    DIOCESE_MISSION_STATIONS.forEach(m => {
+      const isSel = isSameParish(m, selectedVal);
+      html += `<option value="${m}" ${isSel ? 'selected' : ''}>📍 ${m}</option>`;
+    });
+    html += '</optgroup>';
+
+    if (includeOther) {
+      const isOther = selectedVal && selectedVal !== 'ALL' && !ALL_DIOCESE_ENTITIES.some(item => isSameParish(item, selectedVal));
+      html += '<optgroup label="➕ Khác">';
+      html += `<option value="OTHER" ${isOther ? 'selected' : ''}>➕ Giáo Xứ / Giáo Họ Khác (Tự nhập...)</option>`;
+      html += '</optgroup>';
+    }
+
+    return html;
+  }
+
   // Pre-configured Accounts (Single Default Admin Account as requested)
   const SEED_ACCOUNTS = [
     {
@@ -1026,6 +1145,24 @@
       if (customWrap) {
         customWrap.style.display = (val === 'OTHER') ? 'block' : 'none';
         const customInput = document.getElementById('teacher-reg-custom-parish');
+        if (val === 'OTHER' && customInput) customInput.focus();
+      }
+    };
+
+    window.handleProfileParishChange = function(val) {
+      const customWrap = document.getElementById('prof-custom-parish-wrap');
+      if (customWrap) {
+        customWrap.style.display = (val === 'OTHER') ? 'block' : 'none';
+        const customInput = document.getElementById('prof-custom-parish');
+        if (val === 'OTHER' && customInput) customInput.focus();
+      }
+    };
+
+    window.handleAdminTargetParishChange = function(val) {
+      const customWrap = document.getElementById('admin-target-custom-parish-wrap');
+      if (customWrap) {
+        customWrap.style.display = (val === 'OTHER') ? 'block' : 'none';
+        const customInput = document.getElementById('admin-target-custom-parish');
         if (val === 'OTHER' && customInput) customInput.focus();
       }
     };
@@ -4955,23 +5092,20 @@
       }
     });
 
-    // Collect all unique Parishes across all accounts
-    const uniqueParishesSet = new Set(['Giáo Xứ Hoà Khánh']);
-    combinedAccounts.forEach(a => {
-      if (a.parish && a.parish.trim()) uniqueParishesSet.add(a.parish.trim());
-    });
-    const allParishes = Array.from(uniqueParishesSet);
-
     // Apply Parish Selection Filter
     const isSuper = isSuperAdmin(currentUser);
     const isParish = isParishAdmin(currentUser);
     const myManagedParish = getUserManagedParish(currentUser);
 
-    // Apply Parish Selection Filter
-    let activeParish = (isParish && !isSuper) ? myManagedParish : (window.adminSelectedParish || 'Giáo Xứ Hoà Khánh');
+    // Default to ALL for SuperAdmin if not explicitly selected
+    if (isSuper && !window.adminSelectedParish) {
+      window.adminSelectedParish = 'ALL';
+    }
+
+    let activeParish = (isParish && !isSuper) ? myManagedParish : (window.adminSelectedParish || 'ALL');
     const filteredAccounts = (activeParish === 'ALL' && isSuper)
       ? combinedAccounts
-      : combinedAccounts.filter(a => (a.parish || '').toLowerCase().trim() === activeParish.toLowerCase().trim());
+      : combinedAccounts.filter(a => isSameParish(a.parish, activeParish));
 
     // Aggregate statistics for the filtered parish
     let allParishClasses = [];
@@ -4995,6 +5129,17 @@
     const totalClassesInView = allParishClasses.length;
     const totalStudentsInView = allParishStudents.length;
     const activeUsersCount = filteredAccounts.filter(a => a.status === 'active').length;
+
+    // Collect custom parishes not in the 62 official list
+    const customParishesList = [];
+    combinedAccounts.forEach(a => {
+      if (a.parish && a.parish.trim()) {
+        const p = a.parish.trim();
+        if (!ALL_DIOCESE_ENTITIES.some(item => isSameParish(item, p))) {
+          if (!customParishesList.some(cp => isSameParish(cp, p))) customParishesList.push(p);
+        }
+      }
+    });
 
     container.innerHTML = `
       <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 20px;">
@@ -5025,16 +5170,34 @@
         <div class="parish-filter-left">
           ${isSuper ? `
             <label style="font-size: 13.5px; font-weight: 800; color: var(--dark-navy); margin: 0; display: flex; align-items: center; gap: 6px;">
-              <i class="fa-solid fa-filter text-primary"></i> Xem Dữ Liệu Theo Giáo Xứ:
+              <i class="fa-solid fa-filter text-primary"></i> Xem Dữ Liệu Theo Giáo Xứ / Giáo Họ:
             </label>
             <div class="parish-select-wrapper">
               <i class="fa-solid fa-church text-primary"></i>
               <select id="admin-parish-filter" onchange="window.changeAdminParishFilter(this.value)">
-                <option value="ALL" ${activeParish === 'ALL' ? 'selected' : ''}>🌐 Tất Cả Giáo Xứ (${combinedAccounts.length} tài khoản)</option>
-                ${allParishes.map(p => {
-                  const count = combinedAccounts.filter(a => (a.parish || '').toLowerCase().trim() === p.toLowerCase().trim()).length;
-                  return `<option value="${p}" ${activeParish === p ? 'selected' : ''}>⛪ ${p} (${count} tài khoản)</option>`;
-                }).join('')}
+                <option value="ALL" ${activeParish === 'ALL' ? 'selected' : ''}>🌐 Tất Cả Giáo Xứ & Giáo Họ (${combinedAccounts.length} tài khoản)</option>
+                <optgroup label="⛪ 56 Giáo Xứ (Giáo Phận Đà Nẵng)">
+                  ${DIOCESE_PARISHES.map(p => {
+                    const count = combinedAccounts.filter(a => isSameParish(a.parish, p)).length;
+                    const countBadge = count > 0 ? ` (${count} tài khoản)` : '';
+                    return `<option value="${p}" ${isSameParish(activeParish, p) ? 'selected' : ''}>⛪ ${p}${countBadge}</option>`;
+                  }).join('')}
+                </optgroup>
+                <optgroup label="📍 6 Giáo Họ Biệt Lập (Giáo Phận Đà Nẵng)">
+                  ${DIOCESE_MISSION_STATIONS.map(m => {
+                    const count = combinedAccounts.filter(a => isSameParish(a.parish, m)).length;
+                    const countBadge = count > 0 ? ` (${count} tài khoản)` : '';
+                    return `<option value="${m}" ${isSameParish(activeParish, m) ? 'selected' : ''}>📍 ${m}${countBadge}</option>`;
+                  }).join('')}
+                </optgroup>
+                ${customParishesList.length > 0 ? `
+                  <optgroup label="➕ Giáo Xứ / Giáo Họ Khác">
+                    ${customParishesList.map(cp => {
+                      const count = combinedAccounts.filter(a => isSameParish(a.parish, cp)).length;
+                      return `<option value="${cp}" ${isSameParish(activeParish, cp) ? 'selected' : ''}>➕ ${cp} (${count} tài khoản)</option>`;
+                    }).join('')}
+                  </optgroup>
+                ` : ''}
               </select>
             </div>
           ` : `
@@ -5126,8 +5289,10 @@
                     </td>
                   </tr>
                 ` : filteredAccounts.map(acc => {
-                  const isHK = acc.parish && acc.parish.includes('Hoà Khánh');
-                  const badgeClass = isHK ? 'badge-hk' : 'badge-other';
+                  const isHK = isSameParish(acc.parish, 'Giáo xứ Hòa Khánh');
+                  const isMission = isMissionStation(acc.parish);
+                  const badgeClass = isMission ? 'badge-mission' : (isHK ? 'badge-hk' : 'badge-other');
+                  const parishIcon = isMission ? 'fa-map-pin' : 'fa-church';
 
                   let roleBadgeHtml = '';
                   if (acc.email.toLowerCase() === 'philthienhao@gmail.com' || acc.role === 'Admin') {
@@ -5152,7 +5317,7 @@
                       <td style="white-space: nowrap;"><strong>${acc.holyName || ''}</strong> ${acc.name}</td>
                       <td style="white-space: nowrap;">
                         <span class="parish-badge ${badgeClass}">
-                          <i class="fa-solid fa-church"></i> ${acc.parish || 'Giáo Xứ Hoà Khánh'}
+                          <i class="fa-solid ${parishIcon}"></i> ${acc.parish || 'Giáo xứ Hòa Khánh'}
                         </span>
                       </td>
                       <td style="white-space: nowrap;">${roleBadgeHtml}</td>
@@ -6489,14 +6654,7 @@
     // Populate parish dropdown
     const parishSelect = document.getElementById('delegation-target-parish-select');
     if (parishSelect) {
-      const parishSet = new Set(['Giáo Xứ Hoà Khánh', 'Giáo Xứ Chính Tòa Đà Nẵng', 'Giáo Xứ An Ngãi', 'Giáo Xứ Tam Tòa', 'Giáo Xứ Thanh Đức', 'Giáo Xứ Cẩm Lệ', 'Giáo Xứ Phước Tường', 'Giáo Xứ Phú Thượng', 'Giáo Xứ Hòa Cường']);
-      accountsList.forEach(a => { if (a.parish) parishSet.add(a.parish); });
-      const currentAccParish = acc.parish || 'Giáo Xứ Hoà Khánh';
-      parishSet.add(currentAccParish);
-
-      parishSelect.innerHTML = Array.from(parishSet).map(p => `
-        <option value="${p}" ${p === currentAccParish ? 'selected' : ''}>⛪ ${p}</option>
-      `).join('') + '<option value="OTHER">➕ Giáo Xứ Khác (Tự nhập tên...)</option>';
+      parishSelect.innerHTML = renderParishOptionsHTML(acc.parish || 'Giáo xứ Hòa Khánh', true);
     }
 
     const customWrap = document.getElementById('delegation-custom-parish-wrap');
@@ -6626,8 +6784,19 @@
     document.getElementById('admin-target-fullname').value = (acc.holyName ? acc.holyName + ' ' : '') + acc.name;
     const parishInput = document.getElementById('admin-target-parish');
     if (parishInput) {
-      parishInput.value = acc.parish || 'Giáo Xứ Hoà Khánh';
-      parishInput.readOnly = !isSuper; // Only Super Admin can change parish
+      parishInput.innerHTML = renderParishOptionsHTML(acc.parish || 'Giáo xứ Hòa Khánh', true);
+      const isCustom = acc.parish && !ALL_DIOCESE_ENTITIES.some(item => isSameParish(item, acc.parish));
+      const customWrap = document.getElementById('admin-target-custom-parish-wrap');
+      const customInput = document.getElementById('admin-target-custom-parish');
+      if (isCustom) {
+        parishInput.value = 'OTHER';
+        if (customWrap) customWrap.style.display = 'block';
+        if (customInput) customInput.value = acc.parish;
+      } else {
+        if (customWrap) customWrap.style.display = 'none';
+        if (customInput) customInput.value = '';
+      }
+      parishInput.disabled = !isSuper; // Only Super Admin can change parish
     }
     const pwInput = document.getElementById('admin-target-password');
     if (pwInput) pwInput.value = acc.password || '123456';
@@ -6662,8 +6831,13 @@
     acc.status = document.getElementById('admin-target-status').value;
 
     const parishInput = document.getElementById('admin-target-parish');
-    if (parishInput && parishInput.value.trim() && isSuper) {
-      acc.parish = parishInput.value.trim();
+    if (parishInput && isSuper) {
+      let chosenParish = parishInput.value;
+      if (chosenParish === 'OTHER') {
+        const customP = document.getElementById('admin-target-custom-parish');
+        chosenParish = (customP && customP.value.trim()) ? customP.value.trim() : 'Giáo xứ Hòa Khánh';
+      }
+      acc.parish = chosenParish;
       if (acc.role === 'ParishAdmin') acc.managedParish = acc.parish;
     }
 
@@ -6973,6 +7147,22 @@
     if (roleInput) roleInput.value = currentUser.email.toLowerCase() === 'philthienhao@gmail.com' ? 'Admin' : (currentUser.role || 'Giáo lý viên');
     if (emailInput) emailInput.value = currentUser.email || '';
     if (avatarPreview) avatarPreview.src = currentUser.avatar || 'admin_avatar.png';
+    const profParishSelect = document.getElementById('prof-parish');
+    if (profParishSelect) {
+      profParishSelect.innerHTML = renderParishOptionsHTML(currentUser.parish || 'Giáo xứ Hòa Khánh', true);
+      const isCustom = currentUser.parish && !ALL_DIOCESE_ENTITIES.some(item => isSameParish(item, currentUser.parish));
+      const customWrap = document.getElementById('prof-custom-parish-wrap');
+      const customInput = document.getElementById('prof-custom-parish');
+      if (isCustom) {
+        profParishSelect.value = 'OTHER';
+        if (customWrap) customWrap.style.display = 'block';
+        if (customInput) customInput.value = currentUser.parish;
+      } else {
+        if (customWrap) customWrap.style.display = 'none';
+        if (customInput) customInput.value = '';
+      }
+    }
+
     uploadedUserAvatarBase64 = null;
 
     openModal('user-profile-modal');
@@ -6985,6 +7175,7 @@
     const nameInput = document.getElementById('prof-fullname');
     const phoneInput = document.getElementById('prof-phone');
     const roleInput = document.getElementById('prof-role');
+    const profParishSelect = document.getElementById('prof-parish');
 
     if (!holyInput || !nameInput) return;
 
@@ -6994,6 +7185,17 @@
     if (!holyName || !name) {
       alert('Vui lòng nhập đầy đủ Tên Thánh và Họ Tên!');
       return;
+    }
+
+    let chosenParish = currentUser.parish || 'Giáo xứ Hòa Khánh';
+    if (profParishSelect) {
+      if (profParishSelect.value === 'OTHER') {
+        const customP = document.getElementById('prof-custom-parish');
+        if (customP && customP.value.trim()) chosenParish = customP.value.trim();
+      } else {
+        chosenParish = profParishSelect.value;
+      }
+      currentUser.parish = chosenParish;
     }
 
     currentUser.holyName = holyName;
@@ -7024,10 +7226,15 @@
       match.name = currentUser.name;
       match.phone = currentUser.phone;
       match.role = currentUser.role;
+      match.parish = chosenParish;
       if (currentUser.avatar && !isDefaultAvatar(currentUser.avatar)) match.avatar = currentUser.avatar;
     }
 
-    if (appData && Array.isArray(appData.catechists)) {
+    if (!appData) appData = {};
+    if (appData.parishInfo) appData.parishInfo.name = chosenParish;
+    if (appData.account_info) appData.account_info.parish = chosenParish;
+
+    if (Array.isArray(appData.catechists)) {
       const catMatch = appData.catechists.find(c => (c.email && c.email.toLowerCase() === currentUser.email.toLowerCase()) || c.name === currentUser.name);
       if (catMatch) {
         catMatch.holyName = currentUser.holyName;
@@ -7047,6 +7254,30 @@
       saveAccounts();
       saveCurrentUser();
       saveUserData();
+
+      // Direct cloud sync of updated profile & parish to Supabase
+      if (window.supabaseClient && currentUser.email) {
+        window.supabaseClient
+          .from('user_data')
+          .select('data')
+          .eq('email', currentUser.email.toLowerCase())
+          .maybeSingle()
+          .then(({ data }) => {
+            let uData = (data && data.data) ? data.data : (appData || {});
+            if (!uData.account_info) uData.account_info = {};
+            uData.account_info.name = currentUser.name;
+            uData.account_info.holyName = currentUser.holyName;
+            uData.account_info.phone = currentUser.phone;
+            uData.account_info.parish = chosenParish;
+            if (uData.parishInfo) uData.parishInfo.name = chosenParish;
+            window.supabaseClient.from('user_data').upsert({
+              email: currentUser.email.toLowerCase(),
+              data: uData,
+              updated_at: new Date().toISOString()
+            });
+          }).catch(err => console.warn('Sync profile to Supabase err:', err));
+      }
+
       renderAppHeaderAndSidebar();
 
       const contentArea = document.getElementById('content-area');
@@ -7055,7 +7286,7 @@
       if (activePage === 'admin-users') renderAdminUsers(contentArea);
 
       closeModal('user-profile-modal');
-      showToast('Đã lưu thông tin cá nhân và ảnh đại diện thành công! ✨', 'success');
+      showToast(`Đã lưu thông tin cá nhân (${chosenParish}) thành công! ✨`, 'success');
     } catch (err) {
       console.error('Lỗi khi lưu tài khoản:', err);
       alert('Đã xảy ra lỗi khi lưu thông tin. Vui lòng thử lại!');
@@ -7196,6 +7427,8 @@
   window.switchAuthTab = window.switchAuthTab;
   window.togglePasswordVisibility = window.togglePasswordVisibility;
   window.handleRegisterParishChange = window.handleRegisterParishChange;
+  window.handleProfileParishChange = window.handleProfileParishChange;
+  window.handleAdminTargetParishChange = window.handleAdminTargetParishChange;
   window.changeAdminParishFilter = window.changeAdminParishFilter;
   window.filterAdminTable = window.filterAdminTable;
   window.toggleAdminPasswordVisibility = window.toggleAdminPasswordVisibility;

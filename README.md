@@ -319,5 +319,91 @@ Yêu cầu đặt ra:
 
 ---
 
+## ⛪ 7. Danh Sách Toàn Bộ 62 Giáo Xứ & Giáo Họ Biệt Lập (Giáo Phận Đà Nẵng)
+
+Hệ thống đã tích hợp toàn bộ **62 đơn vị mục vụ** gồm **56 Giáo Xứ** và **6 Giáo Họ Biệt Lập** thuộc Giáo Phận Đà Nẵng, giúp giáo viên chọn trực tiếp khi đăng ký tài khoản, đồng thời tài khoản Admin Master có thể phân loại, lọc và quản lý minh bạch từng giáo xứ.
+
+### 📋 Danh Sách 56 Giáo Xứ:
+1. Giáo xứ Chính Tòa
+2. Giáo xứ An Hải
+3. Giáo xứ An Hòa
+4. Giáo xứ An Thượng
+5. Giáo xứ Cẩm Lệ
+6. Giáo xứ Chợ Chiều
+7. Giáo xứ Chính Trạch
+8. Giáo xứ Cồn Dầu
+9. Giáo xứ Gia Phước
+10. Giáo xứ Hòa Cường
+11. Giáo xứ Hòa Thuận
+12. Giáo xứ Ngọc Quang
+13. Giáo xứ Nhượng Nghĩa
+14. Giáo xứ Nội Hà
+15. Giáo xứ Phước Tường
+16. Giáo xứ Sơn Trà
+17. Giáo xứ Tam Tòa
+18. Giáo xứ Thanh Bình
+19. Giáo xứ Thanh Đức
+20. Giáo xứ An Ngãi Đông
+21. Giáo xứ Đông Vinh
+22. Giáo xứ Hòa Khánh
+23. Giáo xứ Hòa Minh
+24. Giáo xứ Hòa Ninh
+25. Giáo xứ Hội Yên
+26. Giáo xứ Phú Nghi
+27. Giáo xứ Phước Kiều
+28. Giáo xứ Song Mỹ
+29. Giáo xứ Lệ Sơn
+30. Giáo xứ Lộc Hòa
+31. Giáo xứ Mông Triệu
+32. Giáo xứ Phú Hạ
+33. Giáo xứ Phú Thượng
+34. Giáo xứ Thạch Nham
+35. Giáo xứ Hội An
+36. Giáo xứ Vĩnh Điện
+37. Giáo xứ Ái Nghĩa
+38. Giáo xứ Cẩm Sơn
+39. Giáo xứ Hà Tân
+40. Giáo xứ Hòa Lâm
+41. Giáo xứ Hoằng Phước
+42. Giáo xứ La Nang
+43. Giáo xứ Phú Hương
+44. Giáo xứ Trà Kiệu
+45. Giáo xứ Trung Phước
+46. Giáo xứ Xuân Thạnh
+47. Giáo xứ An Sơn
+48. Giáo xứ Bình Phong
+49. Giáo xứ Hà Lam
+50. Giáo xứ Khánh Thọ
+51. Giáo xứ Tam Kỳ
+52. Giáo xứ Tam Thành
+53. Giáo xứ Thuận Yên
+54. Giáo xứ Tiên Phước
+55. Giáo xứ Vân Đóa
+56. Giáo xứ Việt An
+
+### 📍 Danh Sách 6 Giáo Họ Biệt Lập:
+1. Giáo họ biệt lập Tùng Sơn
+2. Giáo họ biệt lập Ô Gia
+3. Giáo họ biệt lập Tam Lãnh
+4. Giáo họ biệt lập Thái Đông
+5. Giáo họ biệt lập Chiêm Sơn
+6. Giáo họ biệt lập Đại Hiệp
+
+### 🛠️ Cơ Chế Tích Hợp Đa Nền Tảng:
+1. **Form Đăng Ký Giáo Viên Mới (`#teacher-reg-parish`)**: Phân nhóm rõ ràng theo `<optgroup>`:
+   - `⛪ 56 Giáo Xứ (Giáo Phận Đà Nẵng)`
+   - `📍 6 Giáo Họ Biệt Lập (Giáo Phận Đà Nẵng)`
+   - `➕ Khác (Tự nhập tên Giáo xứ ngoài giáo phận)`
+2. **Hồ Sơ Cá Nhân GLV (`#prof-parish`)**: Giáo viên có thể xem và cập nhật lại Giáo xứ / Giáo họ mình đang sinh hoạt, tự động đồng bộ lên Supabase Cloud.
+3. **Phân Quyền Admin Cấp 2 (`#delegation-target-parish-select`)**: Admin Master dễ dàng chọn bất kỳ Giáo xứ / Giáo họ nào trong số 62 đơn vị để ủy quyền quản trị.
+4. **Admin Master Hub (`renderAdminUsers`)**:
+   - Bộ lọc `#admin-parish-filter` hiển thị đủ 62 đơn vị kèm số lượng tài khoản thực tế đang hoạt động (ví dụ: `⛪ Giáo xứ Hòa Khánh (4 tài khoản)`).
+   - Huy hiệu Giáo Xứ trực quan trên bảng:
+     - Giáo xứ: biểu tượng `⛪` với tông xanh navy hoặc xanh lá.
+     - Giáo họ biệt lập: biểu tượng `📍` với tông vàng hổ phách đặc trưng (`badge-mission`).
+   - Hàm chuẩn hóa thanh điệu tiếng Việt (`normalizeParishName`): So khớp không phân biệt dấu cũ/mới (`Hoà Khánh` = `Hòa Khánh`).
+
+---
+
 *Hệ Thống Quản Lý Giáo Lý Công Giáo - MagnificatEdu © 2026*
 

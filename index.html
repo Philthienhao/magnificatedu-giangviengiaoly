@@ -375,16 +375,75 @@
               <div class="form-group mb-3">
                 <label><i class="fa-solid fa-church text-primary"></i> Trực thuộc Giáo Xứ:</label>
                 <select id="teacher-reg-parish" class="form-control" onchange="window.handleRegisterParishChange(this.value)" required>
-                  <option value="Giáo Xứ Hoà Khánh" selected>⛪ Giáo Xứ Hoà Khánh (Đà Nẵng)</option>
-                  <option value="Giáo Xứ Chính Tòa Đà Nẵng">⛪ Giáo Xứ Chính Tòa Đà Nẵng</option>
-                  <option value="Giáo Xứ An Ngãi">⛪ Giáo Xứ An Ngãi</option>
-                  <option value="Giáo Xứ Tam Tòa">⛪ Giáo Xứ Tam Tòa</option>
-                  <option value="Giáo Xứ Thanh Đức">⛪ Giáo Xứ Thanh Đức</option>
-                  <option value="Giáo Xứ Cẩm Lệ">⛪ Giáo Xứ Cẩm Lệ</option>
-                  <option value="Giáo Xứ Phước Tường">⛪ Giáo Xứ Phước Tường</option>
-                  <option value="Giáo Xứ Phú Thượng">⛪ Giáo Xứ Phú Thượng</option>
-                  <option value="Giáo Xứ Hòa Cường">⛪ Giáo Xứ Hòa Cường</option>
-                  <option value="OTHER">➕ Giáo Xứ Khác (Tự nhập tên Giáo xứ...)</option>
+                  <optgroup label="⛪ 56 Giáo Xứ (Giáo Phận Đà Nẵng)">
+                    <option value="Giáo xứ Hòa Khánh" selected>⛪ Giáo xứ Hòa Khánh (Mặc định)</option>
+                    <option value="Giáo xứ Chính Tòa">⛪ Giáo xứ Chính Tòa</option>
+                    <option value="Giáo xứ An Hải">⛪ Giáo xứ An Hải</option>
+                    <option value="Giáo xứ An Hòa">⛪ Giáo xứ An Hòa</option>
+                    <option value="Giáo xứ An Thượng">⛪ Giáo xứ An Thượng</option>
+                    <option value="Giáo xứ Cẩm Lệ">⛪ Giáo xứ Cẩm Lệ</option>
+                    <option value="Giáo xứ Chợ Chiều">⛪ Giáo xứ Chợ Chiều</option>
+                    <option value="Giáo xứ Chính Trạch">⛪ Giáo xứ Chính Trạch</option>
+                    <option value="Giáo xứ Cồn Dầu">⛪ Giáo xứ Cồn Dầu</option>
+                    <option value="Giáo xứ Gia Phước">⛪ Giáo xứ Gia Phước</option>
+                    <option value="Giáo xứ Hòa Cường">⛪ Giáo xứ Hòa Cường</option>
+                    <option value="Giáo xứ Hòa Thuận">⛪ Giáo xứ Hòa Thuận</option>
+                    <option value="Giáo xứ Ngọc Quang">⛪ Giáo xứ Ngọc Quang</option>
+                    <option value="Giáo xứ Nhượng Nghĩa">⛪ Giáo xứ Nhượng Nghĩa</option>
+                    <option value="Giáo xứ Nội Hà">⛪ Giáo xứ Nội Hà</option>
+                    <option value="Giáo xứ Phước Tường">⛪ Giáo xứ Phước Tường</option>
+                    <option value="Giáo xứ Sơn Trà">⛪ Giáo xứ Sơn Trà</option>
+                    <option value="Giáo xứ Tam Tòa">⛪ Giáo xứ Tam Tòa</option>
+                    <option value="Giáo xứ Thanh Bình">⛪ Giáo xứ Thanh Bình</option>
+                    <option value="Giáo xứ Thanh Đức">⛪ Giáo xứ Thanh Đức</option>
+                    <option value="Giáo xứ An Ngãi Đông">⛪ Giáo xứ An Ngãi Đông</option>
+                    <option value="Giáo xứ Đông Vinh">⛪ Giáo xứ Đông Vinh</option>
+                    <option value="Giáo xứ Hòa Minh">⛪ Giáo xứ Hòa Minh</option>
+                    <option value="Giáo xứ Hòa Ninh">⛪ Giáo xứ Hòa Ninh</option>
+                    <option value="Giáo xứ Hội Yên">⛪ Giáo xứ Hội Yên</option>
+                    <option value="Giáo xứ Phú Nghi">⛪ Giáo xứ Phú Nghi</option>
+                    <option value="Giáo xứ Phước Kiều">⛪ Giáo xứ Phước Kiều</option>
+                    <option value="Giáo xứ Song Mỹ">⛪ Giáo xứ Song Mỹ</option>
+                    <option value="Giáo xứ Lệ Sơn">⛪ Giáo xứ Lệ Sơn</option>
+                    <option value="Giáo xứ Lộc Hòa">⛪ Giáo xứ Lộc Hòa</option>
+                    <option value="Giáo xứ Mông Triệu">⛪ Giáo xứ Mông Triệu</option>
+                    <option value="Giáo xứ Phú Hạ">⛪ Giáo xứ Phú Hạ</option>
+                    <option value="Giáo xứ Phú Thượng">⛪ Giáo xứ Phú Thượng</option>
+                    <option value="Giáo xứ Thạch Nham">⛪ Giáo xứ Thạch Nham</option>
+                    <option value="Giáo xứ Hội An">⛪ Giáo xứ Hội An</option>
+                    <option value="Giáo xứ Vĩnh Điện">⛪ Giáo xứ Vĩnh Điện</option>
+                    <option value="Giáo xứ Ái Nghĩa">⛪ Giáo xứ Ái Nghĩa</option>
+                    <option value="Giáo xứ Cẩm Sơn">⛪ Giáo xứ Cẩm Sơn</option>
+                    <option value="Giáo xứ Hà Tân">⛪ Giáo xứ Hà Tân</option>
+                    <option value="Giáo xứ Hòa Lâm">⛪ Giáo xứ Hòa Lâm</option>
+                    <option value="Giáo xứ Hoằng Phước">⛪ Giáo xứ Hoằng Phước</option>
+                    <option value="Giáo xứ La Nang">⛪ Giáo xứ La Nang</option>
+                    <option value="Giáo xứ Phú Hương">⛪ Giáo xứ Phú Hương</option>
+                    <option value="Giáo xứ Trà Kiệu">⛪ Giáo xứ Trà Kiệu</option>
+                    <option value="Giáo xứ Trung Phước">⛪ Giáo xứ Trung Phước</option>
+                    <option value="Giáo xứ Xuân Thạnh">⛪ Giáo xứ Xuân Thạnh</option>
+                    <option value="Giáo xứ An Sơn">⛪ Giáo xứ An Sơn</option>
+                    <option value="Giáo xứ Bình Phong">⛪ Giáo xứ Bình Phong</option>
+                    <option value="Giáo xứ Hà Lam">⛪ Giáo xứ Hà Lam</option>
+                    <option value="Giáo xứ Khánh Thọ">⛪ Giáo xứ Khánh Thọ</option>
+                    <option value="Giáo xứ Tam Kỳ">⛪ Giáo xứ Tam Kỳ</option>
+                    <option value="Giáo xứ Tam Thành">⛪ Giáo xứ Tam Thành</option>
+                    <option value="Giáo xứ Thuận Yên">⛪ Giáo xứ Thuận Yên</option>
+                    <option value="Giáo xứ Tiên Phước">⛪ Giáo xứ Tiên Phước</option>
+                    <option value="Giáo xứ Vân Đóa">⛪ Giáo xứ Vân Đóa</option>
+                    <option value="Giáo xứ Việt An">⛪ Giáo xứ Việt An</option>
+                  </optgroup>
+                  <optgroup label="📍 6 Giáo Họ Biệt Lập (Giáo Phận Đà Nẵng)">
+                    <option value="Giáo họ biệt lập Tùng Sơn">📍 Giáo họ biệt lập Tùng Sơn</option>
+                    <option value="Giáo họ biệt lập Ô Gia">📍 Giáo họ biệt lập Ô Gia</option>
+                    <option value="Giáo họ biệt lập Tam Lãnh">📍 Giáo họ biệt lập Tam Lãnh</option>
+                    <option value="Giáo họ biệt lập Thái Đông">📍 Giáo họ biệt lập Thái Đông</option>
+                    <option value="Giáo họ biệt lập Chiêm Sơn">📍 Giáo họ biệt lập Chiêm Sơn</option>
+                    <option value="Giáo họ biệt lập Đại Hiệp">📍 Giáo họ biệt lập Đại Hiệp</option>
+                  </optgroup>
+                  <optgroup label="➕ Khác">
+                    <option value="OTHER">➕ Giáo Xứ / Giáo Họ Khác (Tự nhập tên...)</option>
+                  </optgroup>
                 </select>
                 <div id="teacher-reg-custom-parish-wrap" style="display: none; margin-top: 6px;">
                   <input type="text" id="teacher-reg-custom-parish" class="form-control" placeholder="Nhập tên Giáo xứ của bạn (Ví dụ: Giáo Xứ Tân Định...)">
@@ -730,8 +789,13 @@
             </div>
 
             <div class="form-group mb-2">
-              <label>Giáo Xứ Trực Thuộc:</label>
-              <input type="text" id="admin-target-parish" class="form-control" placeholder="Ví dụ: Giáo Xứ Hoà Khánh">
+              <label><i class="fa-solid fa-church text-primary"></i> Giáo Xứ Trực Thuộc:</label>
+              <select id="admin-target-parish" class="form-control" onchange="window.handleAdminTargetParishChange(this.value)">
+                <!-- Dynamically populated with all 62 entities -->
+              </select>
+              <div id="admin-target-custom-parish-wrap" style="display: none; margin-top: 6px;">
+                <input type="text" id="admin-target-custom-parish" class="form-control" placeholder="Nhập tên Giáo xứ / Giáo họ khác...">
+              </div>
             </div>
 
             <div class="form-group mb-2">
@@ -925,6 +989,16 @@
                   <option value="Dự Trưởng">Dự Trưởng</option>
                   <option value="Admin">Admin / Quản Trị Viên</option>
                 </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label><i class="fa-solid fa-church text-primary"></i> Giáo Xứ / Giáo Họ Trực Thuộc: <span class="text-danger">*</span></label>
+              <select id="prof-parish" class="form-control" onchange="window.handleProfileParishChange(this.value)">
+                <!-- Dynamically populated with all 62 entities -->
+              </select>
+              <div id="prof-custom-parish-wrap" style="display: none; margin-top: 6px;">
+                <input type="text" id="prof-custom-parish" class="form-control" placeholder="Nhập tên Giáo xứ / Giáo họ của bạn...">
               </div>
             </div>
 
@@ -1328,6 +1402,6 @@
   <div id="toast-container" class="toast-container"></div>
 
   <!-- Application JS Code -->
-  <script src="app_v2.js?v=20261009_v2000"></script>
+  <script src="app_v2.js?v=20261009_v2100"></script>
 </body>
 </html>
