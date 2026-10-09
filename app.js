@@ -2956,16 +2956,16 @@
               <i class="fa-solid fa-chalkboard"></i> BẢNG GIẢNG & BÀN GIÁO LÝ VIÊN (PHÍA TRƯỚC LỚP)
             </div>
 
-            <div style="display: grid; grid-template-columns: repeat(${cols}, 1fr); gap: 14px; max-width: ${Math.min(1200, cols * Math.max(170, seatsPerDesk * 115))}px; margin: 0 auto; overflow-x: auto; padding: 4px;">
+            <div style="display: grid; grid-template-columns: repeat(${cols}, 1fr); gap: 16px; max-width: ${Math.min(1400, cols * Math.max(200, seatsPerDesk * 135))}px; margin: 0 auto; overflow-x: auto; padding: 6px;">
               ${Array.from({ length: rows }).map((_, rIdx) => {
                 return Array.from({ length: cols }).map((_, cIdx) => {
                   return `
-                    <div class="desk-box" style="background: rgba(15, 23, 42, 0.7); border: 1.5px solid var(--slate-border); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 8px;">
-                      <div style="font-size: 11px; font-weight: 700; color: #60a5fa; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 4px;">
+                    <div class="desk-box" style="background: rgba(15, 23, 42, 0.85); border: 1.5px solid var(--slate-border); border-radius: 12px; padding: 12px 10px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 4px 16px rgba(0,0,0,0.3);">
+                      <div style="font-size: 11px; font-weight: 800; color: #60a5fa; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px dashed rgba(255,255,255,0.12); padding-bottom: 5px;">
                         <span><i class="fa-solid fa-table-cells"></i> Hàng ${rIdx + 1} - Dãy ${cIdx + 1}</span>
-                        <span style="font-size: 10px; color: var(--slate-muted);">${seatsPerDesk} em/bàn</span>
+                        <span style="font-size: 10.5px; color: #94a3b8; background: rgba(255,255,255,0.06); padding: 1px 6px; border-radius: 4px;">${seatsPerDesk} em/bàn</span>
                       </div>
-                      <div style="display: grid; grid-template-columns: repeat(${seatsPerDesk}, 1fr); gap: 8px;">
+                      <div style="display: grid; grid-template-columns: repeat(${seatsPerDesk}, 1fr); gap: 10px;">
                         ${Array.from({ length: seatsPerDesk }).map((_, sIdx) => {
                           const seatKey = `r${rIdx}_c${cIdx}_s${sIdx}`;
                           const stId = getSeatIdFromChart(chart, rIdx, cIdx, sIdx);
@@ -2973,33 +2973,78 @@
                           const isAbsent = isSeatAbsentInChart(chart, rIdx, cIdx, sIdx);
                           const confidence = chart.confidenceScores ? (chart.confidenceScores[seatKey] || (sIdx === 0 ? chart.confidenceScores[`r${rIdx}_c${cIdx}`] : null)) : null;
 
+                          let cleanHoly = (st && st.holyName ? String(st.holyName).trim() : '');
+                          let cleanName = (st && (st.fullName || st.name) ? String(st.fullName || st.name).trim() : '');
+
+                          // If cleanName starts with cleanHoly, strip it to prevent duplicate display
+                          if (cleanHoly && cleanName.toLowerCase().startsWith(cleanHoly.toLowerCase())) {
+                            cleanName = cleanName.substring(cleanHoly.length).trim();
+                          }
+
+                          // If cleanHoly is empty, check if cleanName starts with common Catholic holy names
+                          if (!cleanHoly && cleanName) {
+                            const commonHolyNames = [
+                              'Đaminh', 'Maria', 'Giuse', 'Phêrô', 'Phaolô', 'Gioan', 'Têrêsa', 'Anna', 
+                              'Anrê', 'Mácta', 'Matthêu', 'Giacôbê', 'Tôma', 'Phanxicô', 'Inhaxiô', 
+                              'Augustinô', 'Cecilia', 'Luxia', 'Agata', 'Báctôlômêô', 'Têrêxa', 'Antôn',
+                              'Lucia', 'Monica', 'Vinh Sơn', 'Biển Đức', 'Clara', 'Stêphanô'
+                            ];
+                            for (const hn of commonHolyNames) {
+                              if (cleanName.toLowerCase().startsWith(hn.toLowerCase() + ' ')) {
+                                cleanHoly = cleanName.substring(0, hn.length);
+                                cleanName = cleanName.substring(hn.length).trim();
+                                break;
+                              }
+                            }
+                          }
+                          const fullStudentTitle = `${cleanHoly ? cleanHoly + ' ' : ''}${cleanName}`.trim();
+
                           return `
                             <div class="seat-card ${isAbsent ? 'seat-absent' : 'seat-present'}"
                                  onclick="window.toggleSeatAttendance('${classId}', '${seatKey}')"
-                                 style="background: ${isAbsent ? 'rgba(239, 68, 68, 0.15)' : 'rgba(34, 197, 94, 0.12)'}; 
-                                        border: 2px solid ${isAbsent ? '#ef4444' : '#22c55e'}; 
-                                        border-radius: 8px; padding: 8px 4px; cursor: pointer; transition: all 0.2s ease; text-align: center; min-width: 90px;"
-                                 title="Chạm để đổi trạng thái giữa Có mặt & Vắng mặt">
-                              <div style="font-size: 10px; font-weight: 700; color: var(--slate-muted); margin-bottom: 3px;">
-                                ${seatsPerDesk > 1 ? `Ghế ${sIdx + 1}` : `Chỗ ngồi`}
+                                 style="background: ${isAbsent ? 'linear-gradient(180deg, rgba(239, 68, 68, 0.25) 0%, rgba(127, 29, 29, 0.45) 100%)' : 'linear-gradient(180deg, rgba(16, 185, 129, 0.22) 0%, rgba(6, 78, 59, 0.42) 100%)'}; 
+                                        border: 2px solid ${isAbsent ? '#ef4444' : '#10b981'}; 
+                                        border-radius: 12px; padding: 10px 6px; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); text-align: center; min-width: 110px; min-height: 155px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; box-shadow: 0 4px 14px ${isAbsent ? 'rgba(239, 68, 68, 0.28)' : 'rgba(16, 185, 129, 0.25)'};"
+                                 title="Chạm để đổi trạng thái Có mặt / Vắng mặt: ${fullStudentTitle}">
+                              
+                              <!-- Header: Vị trí ghế -->
+                              <div style="font-size: 10px; font-weight: 800; color: #94a3b8; background: rgba(0,0,0,0.35); border-radius: 6px; padding: 2px 7px; margin-bottom: 6px; display: inline-flex; align-items: center; gap: 3px;">
+                                <i class="fa-solid fa-chair" style="font-size: 9px;"></i> ${seatsPerDesk > 1 ? `Ghế ${sIdx + 1}` : `Chỗ ngồi`}
                               </div>
+
                               ${st ? `
-                                <img src="${st.photo || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80'}" 
-                                     style="width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 2px solid ${isAbsent ? '#ef4444' : '#22c55e'}; margin: 0 auto 4px auto; display: block;">
-                                <div style="font-weight: 700; font-size: 11px; color: ${isAbsent ? '#ef4444' : 'var(--slate-heading)'}; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" title="${st.holyName ? st.holyName + ' ' : ''}${st.fullName || st.name}">
-                                  ${st.holyName ? st.holyName + ' ' : ''}${st.name || st.fullName || ''}
-                                </div>
-                                <div style="font-size: 10px; margin-top: 3px; font-weight: 700; color: ${isAbsent ? '#ef4444' : '#22c55e'};">
-                                  ${isAbsent ? '🔴 VẮNG' : '🟢 CÓ MẶT'}
-                                </div>
-                                ${(isAbsent && confidence) ? `
-                                  <div style="font-size: 9px; margin-top: 2px; color: #f87171; background: rgba(239,68,68,0.2); border-radius: 4px; padding: 1px 3px;">
-                                    🤖 AI: ${confidence}%
+                                <!-- Center: Avatar + Tên đầy đủ học sinh -->
+                                <div style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+                                  <img src="${st.photo || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80'}" 
+                                       style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2.5px solid ${isAbsent ? '#ef4444' : '#10b981'}; margin: 0 auto 6px auto; display: block; box-shadow: 0 3px 8px rgba(0,0,0,0.4);">
+                                  
+                                  ${cleanHoly ? `
+                                    <div class="seat-student-holy" style="font-size: 11px; font-weight: 800; color: ${isAbsent ? '#fca5a5' : '#38bdf8'}; text-transform: uppercase; letter-spacing: 0.6px; line-height: 1.2; margin-bottom: 2px; text-shadow: 0 1px 2px rgba(0,0,0,0.8);">
+                                      ${cleanHoly}
+                                    </div>
+                                  ` : ''}
+
+                                  <div class="seat-student-name" style="font-size: 12.5px; font-weight: 800; color: #ffffff !important; line-height: 1.35; word-break: break-word; overflow-wrap: break-word; hyphens: auto; text-shadow: 0 1px 3px rgba(0,0,0,0.95); padding: 0 2px;">
+                                    ${cleanName || 'Học viên'}
                                   </div>
-                                ` : ''}
+                                </div>
+
+                                <!-- Footer: Trạng thái điểm danh -->
+                                <div style="margin-top: 6px; width: 100%;">
+                                  <span class="seat-status-badge ${isAbsent ? 'absent' : 'present'}" style="display: inline-flex; align-items: center; justify-content: center; gap: 4px; border-radius: 999px; padding: 2px 8px; font-size: 10px; font-weight: 800; letter-spacing: 0.3px; text-transform: uppercase; white-space: nowrap; ${isAbsent ? 'background: rgba(239, 68, 68, 0.3); border: 1px solid #ef4444; color: #fca5a5;' : 'background: rgba(16, 185, 129, 0.3); border: 1px solid #10b981; color: #4ade80;'}">
+                                    ${isAbsent ? '🔴 VẮNG' : '🟢 CÓ MẶT'}
+                                  </span>
+                                  ${(isAbsent && confidence) ? `
+                                    <div style="font-size: 9px; margin-top: 3px; color: #fca5a5; background: rgba(239,68,68,0.3); border-radius: 4px; padding: 1px 4px; font-weight: 700;">
+                                      🤖 AI: ${confidence}%
+                                    </div>
+                                  ` : ''}
+                                </div>
                               ` : `
-                                <div style="padding: 10px 0; color: var(--slate-muted); font-size: 10px; font-style: italic;">
-                                  [Ghế Trống]
+                                <!-- Empty Seat -->
+                                <div style="padding: 14px 0; color: #64748b; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;">
+                                  <i class="fa-solid fa-chair" style="font-size: 26px; color: #475569; opacity: 0.7;"></i>
+                                  <span style="font-size: 11px; font-weight: 700; color: #94a3b8;">[Ghế Trống]</span>
                                 </div>
                               `}
                             </div>
