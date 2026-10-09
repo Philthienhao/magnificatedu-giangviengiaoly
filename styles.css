@@ -879,9 +879,9 @@ input, select, textarea {
 .welcome-slogan-img {
   width: 100%;
   height: auto;
-  max-height: 380px;
+  max-height: 420px;
   object-fit: cover;
-  object-position: center;
+  object-position: 50% 16%;
   display: block;
   border-radius: var(--radius-lg);
   transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);

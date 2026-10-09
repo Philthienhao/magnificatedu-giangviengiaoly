@@ -1749,22 +1749,9 @@
     });
 
     container.innerHTML = `
-      <!-- OVERVIEW HEADER -->
-      <div class="page-header overview-header">
-        <div>
-          <h2 class="page-title">
-            <i class="fa-solid fa-house-chimney text-primary"></i> Chào mừng quay trở lại, ${currentUser && currentUser.holyName ? currentUser.holyName + ' ' : ''}${(currentUser && currentUser.name) || 'Giáo lý viên'}! ✨
-          </h2>
-          <p class="page-subtitle">Hệ Thống Quản Lý Giáo Lý Công Giáo • Chúc bạn một ngày phục vụ và giảng dạy tràn đầy hồng ân Chúa!</p>
-        </div>
-        <div class="page-header-actions">
-          <span class="overview-date-pill"><i class="fa-regular fa-calendar-check"></i> ${new Date().toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
-        </div>
-      </div>
-
-      <!-- BANNER SLOGAN OVERVIEW -->
+      <!-- BANNER SLOGAN OVERVIEW - DUNG ANHNEN.PNG TRONG THU MUC GOC THAY THE TRUC TIEP GIAO DIEN CHO NAY -->
       <div class="welcome-slogan-card">
-        <img src="anh/anhnen.png" alt="Không phải tất cả chúng ta đều làm được những điều vĩ đại. Nhưng chúng ta có thể làm những điều nhỏ nhặt với tình yêu vĩ đại - Mẹ Thánh Têrêsa Calcutta" class="welcome-slogan-img">
+        <img src="anhnen.png" alt="Không phải tất cả chúng ta đều làm được những điều vĩ đại. Nhưng chúng ta có thể làm những điều nhỏ nhặt với tình yêu vĩ đại - Mẹ Thánh Têrêsa Calcutta" class="welcome-slogan-img" onerror="this.onerror=null;this.src='anh/anhnen.png';">
       </div>
 
       <!-- KPI METRICS GRID -->
