@@ -696,10 +696,14 @@
                 <i class="fa-solid fa-circle-info text-primary"></i> <strong>Cơ chế đồng bộ 2 Chủ nhiệm:</strong> Điền chính xác Gmail cá nhân của 2 GLV. Cả 2 sẽ cùng truy cập, quản lý danh sách học sinh, điểm danh và chấm điểm của lớp này bằng mật khẩu và tài khoản riêng của mỗi người mà không cần dùng chung mật khẩu.
               </p>
             </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary close-modal-btn" data-modal="class-modal">Hủy bỏ</button>
-            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Lưu Lớp Học</button>
+          <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+            <button type="button" id="class-modal-delete-btn" class="btn btn-outline-danger" style="display: none;" onclick="window.handleDeleteClassFromModal()">
+              <i class="fa-solid fa-trash"></i> Xóa Lớp Học Này
+            </button>
+            <div style="display: flex; gap: 8px; margin-left: auto;">
+              <button type="button" class="btn btn-secondary close-modal-btn" data-modal="class-modal">Hủy bỏ</button>
+              <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Lưu Lớp Học</button>
+            </div>
           </div>
         </form>
       </div>
@@ -1295,24 +1299,29 @@
         </div>
       </div>
     </div>
+  </div>
+
   <!-- UNIVERSAL CONFIRM MODAL -->
   <div id="universal-confirm-modal" class="modal-backdrop" style="display: none;">
-    <div class="modal-content" style="max-width: 440px;">
-      <div class="modal-header" style="background: #fef2f2; border-bottom: 1px solid #fecaca;">
-        <h3 style="color: #ef4444;"><i class="fa-solid fa-triangle-exclamation"></i> <span id="uni-confirm-title">Xác Nhận Xóa</span></h3>
-        <button class="close-modal-btn" data-modal="universal-confirm-modal"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <div class="modal-body" style="text-align: center; padding: 24px;">
-        <div style="width: 56px; height: 56px; border-radius: 50%; background: #fef2f2; color: #ef4444; display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 16px auto;">
-          <i class="fa-solid fa-trash-can"></i>
+    <div class="modal-dialog" style="max-width: 440px;">
+      <div class="modal-content">
+        <div class="modal-header" style="background: #fef2f2; border-bottom: 1px solid #fecaca;">
+          <h3 style="color: #ef4444;"><i class="fa-solid fa-triangle-exclamation"></i> <span id="uni-confirm-title">Xác Nhận Xóa</span></h3>
+          <button class="close-modal-btn" data-modal="universal-confirm-modal"><i class="fa-solid fa-xmark"></i></button>
         </div>
-        <p id="uni-confirm-msg" style="font-size: 14px; font-weight: 600; color: var(--dark-navy); margin-bottom: 12px; line-height: 1.5;">Bạn có chắc chắn muốn xóa bản ghi này khỏi hệ thống?</p>
-      </div>
-      <div class="modal-footer" style="justify-content: center; gap: 12px; background: #fafafa;">
-        <button type="button" class="btn btn-secondary close-modal-btn" data-modal="universal-confirm-modal">Hủy bỏ</button>
-        <button type="button" id="uni-confirm-btn" class="btn btn-danger"><i class="fa-solid fa-trash"></i> Đồng Ý Xóa</button>
+        <div class="modal-body" style="text-align: center; padding: 24px;">
+          <div style="width: 56px; height: 56px; border-radius: 50%; background: #fef2f2; color: #ef4444; display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 16px auto;">
+            <i class="fa-solid fa-trash-can"></i>
+          </div>
+          <p id="uni-confirm-msg" style="font-size: 14px; font-weight: 600; color: var(--dark-navy); margin-bottom: 12px; line-height: 1.5;">Bạn có chắc chắn muốn xóa bản ghi này khỏi hệ thống?</p>
+        </div>
+        <div class="modal-footer" style="justify-content: center; gap: 12px; background: #fafafa;">
+          <button type="button" class="btn btn-secondary close-modal-btn" data-modal="universal-confirm-modal">Hủy bỏ</button>
+          <button type="button" id="uni-confirm-btn" class="btn btn-danger"><i class="fa-solid fa-trash"></i> Đồng Ý Xóa</button>
+        </div>
       </div>
     </div>
+  </div>
   <!-- LIVE CAMERA CAPTURE & PHOTO UPLOAD MODAL -->
   <div id="camera-capture-modal" class="modal-backdrop" style="display: none;">
     <div class="modal-dialog" style="max-width: 650px; width: 95%;">
@@ -1402,6 +1411,6 @@
   <div id="toast-container" class="toast-container"></div>
 
   <!-- Application JS Code -->
-  <script src="app_v2.js?v=20261009_v2100"></script>
+  <script src="app_v2.js?v=20261009_v2200"></script>
 </body>
 </html>

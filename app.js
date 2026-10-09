@@ -1102,11 +1102,25 @@
       });
     }
 
-    // Modal Close Buttons
+    // Modal Close Buttons & Backdrop Dismissal
     document.querySelectorAll('.close-modal-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const modalId = btn.getAttribute('data-modal');
-        if (modalId) closeModal(modalId);
+        if (modalId) {
+          if (modalId === 'universal-confirm-modal') pendingConfirmCallback = null;
+          if (modalId === 'custom-confirm-modal') pendingDeleteAcc = null;
+          closeModal(modalId);
+        }
+      });
+    });
+
+    document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+      backdrop.addEventListener('click', (e) => {
+        if (e.target === backdrop) {
+          if (backdrop.id === 'universal-confirm-modal') pendingConfirmCallback = null;
+          if (backdrop.id === 'custom-confirm-modal') pendingDeleteAcc = null;
+          backdrop.style.display = 'none';
+        }
       });
     });
 
@@ -5352,7 +5366,7 @@
                             <i class="fa-solid fa-pen"></i>
                           </button>
                           ${(isSuper && acc.email.toLowerCase() !== 'philthienhao@gmail.com') ? `
-                            <button class="btn btn-sm btn-outline-danger" onclick="window.quickDeleteAdminUser('${acc.id}')" title="Xóa tài khoản" style="font-size: 11px; padding: 4px 7px;">
+                            <button class="btn btn-sm btn-outline-danger" onclick="window.quickDeleteAdminUser('${acc.email || acc.id}')" title="Xóa tài khoản" style="font-size: 11px; padding: 4px 7px;">
                               <i class="fa-solid fa-trash"></i>
                             </button>
                           ` : ''}
@@ -5399,6 +5413,7 @@
                   </tr>
                 ` : allParishClasses.map(cls => {
                   const sCount = allParishStudents.filter(s => s.classId === cls.id).length;
+                  const safeClassId = encodeURIComponent(cls.id || cls.name || '');
                   return `
                     <tr>
                       <td><strong>${cls.name}</strong></td>
@@ -5411,9 +5426,17 @@
                       <td><strong>${sCount}</strong> học viên</td>
                       <td>${cls.schedule || 'Chưa xếp'} ${cls.room ? ' - Phòng ' + cls.room : ''}</td>
                       <td>
-                        <button class="btn btn-xs btn-outline-info" onclick="window.openInspectUserModal('${cls.teacherEmail}')">
-                          <i class="fa-solid fa-users"></i> Xem Học Viên
-                        </button>
+                        <div style="display: flex; gap: 5px; flex-wrap: wrap; align-items: center;">
+                          <button class="btn btn-xs btn-outline-info" onclick="window.openInspectUserModal('${cls.teacherEmail}')" title="Xem học viên lớp này" style="font-size: 11px; padding: 3px 7px;">
+                            <i class="fa-solid fa-users"></i> Xem
+                          </button>
+                          <button class="btn btn-xs btn-outline-primary" onclick="window.editClass('${safeClassId}')" title="Sửa thông tin lớp học" style="font-size: 11px; padding: 3px 7px;">
+                            <i class="fa-solid fa-pen"></i> Sửa
+                          </button>
+                          <button class="btn btn-xs btn-outline-danger" onclick="window.deleteClass('${safeClassId}')" title="Xóa lớp học này" style="font-size: 11px; padding: 3px 7px;">
+                            <i class="fa-solid fa-trash"></i> Xóa
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   `;
@@ -5900,6 +5923,9 @@
     const modalTitle = document.getElementById('class-modal-title');
     if (modalTitle) modalTitle.innerHTML = '<i class="fa-solid fa-layer-group"></i> Tạo Lớp Học Mới';
 
+    const delBtn = document.getElementById('class-modal-delete-btn');
+    if (delBtn) delBtn.style.display = 'none';
+
     if (currentUser) {
       const teacherInput = document.getElementById('cls-teacher');
       const teacherEmailInput = document.getElementById('cls-teacher-email');
@@ -5923,15 +5949,16 @@
     let decodedId = rawId;
     try { decodedId = decodeURIComponent(rawId); } catch(e) {}
 
-    const allClasses = getAccessibleClasses();
+    const globalData = hasAdminAccess(currentUser) ? getParishGlobalData() : null;
+    const allClasses = (globalData ? globalData.classes : []).concat(appData.classes || []).concat(getAccessibleClasses());
     const cls = allClasses.find(c => c && (c.id === rawId || c.id === decodedId || c.name === rawId || c.name === decodedId));
     if (!cls) return;
 
     const modalTitle = document.getElementById('class-modal-title');
     if (modalTitle) modalTitle.innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Cập Nhật Thông Tin Lớp Học';
 
-    document.getElementById('class-form-id').value = cls.id;
-    document.getElementById('cls-name').value = cls.name;
+    document.getElementById('class-form-id').value = cls.id || rawId;
+    document.getElementById('cls-name').value = cls.name || '';
     document.getElementById('cls-grade').value = cls.grade || 'Khai Tâm';
     document.getElementById('cls-room').value = cls.room || '';
     document.getElementById('cls-schedule').value = cls.schedule || '';
@@ -5946,9 +5973,23 @@
       document.getElementById('cls-co-teacher-email').value = cls.coTeacherEmail || '';
     }
 
+    const delBtn = document.getElementById('class-modal-delete-btn');
+    if (delBtn) {
+      delBtn.style.display = 'inline-block';
+      delBtn.setAttribute('data-class-id', cls.id || rawId);
+    }
+
     populateCatechistDatalist();
     setupCoTeacherAutoFill();
     openModal('class-modal');
+  };
+
+  window.handleDeleteClassFromModal = function() {
+    const delBtn = document.getElementById('class-modal-delete-btn');
+    const clsId = (delBtn && delBtn.getAttribute('data-class-id')) || document.getElementById('class-form-id').value;
+    if (!clsId) return;
+    closeModal('class-modal');
+    window.deleteClass(clsId);
   };
 
   window.deleteClass = function (clsId) {
@@ -5958,7 +5999,7 @@
     try { decodedId = decodeURIComponent(rawId); } catch (e) {}
 
     const globalData = hasAdminAccess(currentUser) ? getParishGlobalData() : null;
-    const allClasses = (globalData ? globalData.classes : []).concat(appData.classes || []);
+    const allClasses = (globalData ? globalData.classes : []).concat(appData.classes || []).concat(getAccessibleClasses());
     const cls = allClasses.find(c =>
       c && (
         c.id === rawId ||
@@ -5972,51 +6013,151 @@
 
     const targetId = cls ? cls.id : (rawId !== decodedId ? decodedId : rawId);
     const targetName = cls ? cls.name : (decodedId || rawId);
+    const teacherEmail = cls ? (cls.teacherEmail || cls.ownerEmail || '') : '';
+    const coTeacherEmail = cls ? (cls.coTeacherEmail || '') : '';
 
-    const performDelete = function () {
-      appData.classes = (appData.classes || []).filter(c => {
-        if (!c) return false;
-        if (targetId && (c.id === targetId || String(c.id) === String(targetId))) return false;
-        if (targetName && c.name === targetName) return false;
-        return true;
-      });
-
-      Object.keys(allCloudUserDataMap).forEach(uEmail => {
-        const uData = allCloudUserDataMap[uEmail];
-        if (uData && Array.isArray(uData.classes)) {
-          uData.classes = uData.classes.filter(c => {
+    const performDelete = async function () {
+      try {
+        // 1. Remove from current working appData
+        if (Array.isArray(appData.classes)) {
+          appData.classes = appData.classes.filter(c => {
             if (!c) return false;
             if (targetId && (c.id === targetId || String(c.id) === String(targetId))) return false;
             if (targetName && c.name === targetName) return false;
             return true;
           });
-          try {
-            const k = STORAGE_PREFIX_DATA + uEmail.replace(/[^a-z0-9]/g, '_');
-            localStorage.setItem(k, JSON.stringify(uData));
-            if (window.supabaseClient) {
-              window.supabaseClient.from('user_data').upsert({ email: uEmail, data: uData, updated_at: new Date().toISOString() });
-            }
-          } catch(e) {}
         }
-      });
 
-      if (Array.isArray(appData.students)) {
-        appData.students.forEach(s => {
-          if ((targetId && (s.classId === targetId || String(s.classId) === String(targetId))) || (targetName && s.className === targetName)) {
-            s.classId = '';
-            s.className = 'Chưa xếp lớp';
+        // Unassign current user's students belonging to this class
+        if (Array.isArray(appData.students)) {
+          appData.students.forEach(s => {
+            if ((targetId && (s.classId === targetId || String(s.classId) === String(targetId))) || (targetName && s.className === targetName)) {
+              s.classId = '';
+              s.className = 'Chưa xếp lớp';
+            }
+          });
+        }
+        saveUserData();
+
+        // 2. Scan and clean all teachers in memory cache allCloudUserDataMap
+        const affectedEmails = new Set();
+        if (teacherEmail) affectedEmails.add(teacherEmail.toLowerCase());
+        if (coTeacherEmail) affectedEmails.add(coTeacherEmail.toLowerCase());
+
+        Object.keys(allCloudUserDataMap).forEach(uEmail => {
+          const uData = allCloudUserDataMap[uEmail];
+          if (uData && Array.isArray(uData.classes)) {
+            const hasCls = uData.classes.some(c => c && ((targetId && (c.id === targetId || String(c.id) === String(targetId))) || (targetName && c.name === targetName)));
+            if (hasCls) {
+              affectedEmails.add(uEmail.toLowerCase());
+              uData.classes = uData.classes.filter(c => {
+                if (!c) return false;
+                if (targetId && (c.id === targetId || String(c.id) === String(targetId))) return false;
+                if (targetName && c.name === targetName) return false;
+                return true;
+              });
+              if (Array.isArray(uData.students)) {
+                uData.students.forEach(s => {
+                  if ((targetId && (s.classId === targetId || String(s.classId) === String(targetId))) || (targetName && s.className === targetName)) {
+                    s.classId = '';
+                    s.className = 'Chưa xếp lớp';
+                  }
+                });
+              }
+            }
           }
         });
+
+        // 3. Scan all keys in localStorage starting with STORAGE_PREFIX_DATA
+        const allDataKeys = Object.keys(localStorage).filter(k => k.startsWith(STORAGE_PREFIX_DATA));
+        allDataKeys.forEach(k => {
+          try {
+            const raw = localStorage.getItem(k);
+            if (!raw) return;
+            const uData = JSON.parse(raw);
+            if (uData && Array.isArray(uData.classes)) {
+              const hasCls = uData.classes.some(c => c && ((targetId && (c.id === targetId || String(c.id) === String(targetId))) || (targetName && c.name === targetName)));
+              if (hasCls) {
+                const uEmail = (uData.account_info && uData.account_info.email) || k.replace(STORAGE_PREFIX_DATA, '').replace(/_/g, '@').toLowerCase();
+                affectedEmails.add(uEmail);
+                uData.classes = uData.classes.filter(c => {
+                  if (!c) return false;
+                  if (targetId && (c.id === targetId || String(c.id) === String(targetId))) return false;
+                  if (targetName && c.name === targetName) return false;
+                  return true;
+                });
+                if (Array.isArray(uData.students)) {
+                  uData.students.forEach(s => {
+                    if ((targetId && (s.classId === targetId || String(s.classId) === String(targetId))) || (targetName && s.className === targetName)) {
+                      s.classId = '';
+                      s.className = 'Chưa xếp lớp';
+                    }
+                  });
+                }
+                localStorage.setItem(k, JSON.stringify(uData));
+                allCloudUserDataMap[uEmail] = uData;
+              }
+            }
+          } catch (e) {}
+        });
+
+        // 4. Persist updated datasets to Supabase Cloud
+        if (window.supabaseClient && affectedEmails.size > 0) {
+          for (const uEmail of affectedEmails) {
+            try {
+              const uData = allCloudUserDataMap[uEmail];
+              if (uData) {
+                const storageKey = STORAGE_PREFIX_DATA + uEmail.replace(/[^a-z0-9]/g, '_');
+                localStorage.setItem(storageKey, JSON.stringify(uData));
+                await window.supabaseClient.from('user_data').upsert({
+                  email: uEmail,
+                  data: uData,
+                  updated_at: new Date().toISOString()
+                });
+              } else {
+                const { data: cloudRow } = await window.supabaseClient.from('user_data').select('data').eq('email', uEmail).maybeSingle();
+                if (cloudRow && cloudRow.data && Array.isArray(cloudRow.data.classes)) {
+                  const cData = cloudRow.data;
+                  cData.classes = cData.classes.filter(c => {
+                    if (!c) return false;
+                    if (targetId && (c.id === targetId || String(c.id) === String(targetId))) return false;
+                    if (targetName && c.name === targetName) return false;
+                    return true;
+                  });
+                  if (Array.isArray(cData.students)) {
+                    cData.students.forEach(s => {
+                      if ((targetId && (s.classId === targetId || String(s.classId) === String(targetId))) || (targetName && s.className === targetName)) {
+                        s.classId = '';
+                        s.className = 'Chưa xếp lớp';
+                      }
+                    });
+                  }
+                  await window.supabaseClient.from('user_data').upsert({
+                    email: uEmail,
+                    data: cData,
+                    updated_at: new Date().toISOString()
+                  });
+                  allCloudUserDataMap[uEmail] = cData;
+                }
+              }
+            } catch (cloudErr) {
+              console.warn('Supabase sync class delete notice:', cloudErr);
+            }
+          }
+        }
+
+        // 5. Update UI views
+        const container = document.getElementById('content-area');
+        if (activePage === 'classes' && container) renderClasses(container);
+        if (activePage === 'admin-users' && container) await renderAdminUsers(container);
+        if (activePage === 'students' && container) renderStudents(container);
+        if (typeof renderOverview === 'function' && activePage === 'overview' && container) renderOverview(container);
+
+        showToast(`Đã xóa vĩnh viễn lớp học "${targetName}" thành công!`, 'warning');
+      } catch (err) {
+        console.error('Error performing deleteClass:', err);
+        showToast('Có lỗi xảy ra khi xóa lớp: ' + err.message, 'danger');
       }
-
-      saveUserData();
-
-      const container = document.getElementById('content-area');
-      if (activePage === 'classes' && container) renderClasses(container);
-      if (activePage === 'students' && container) renderStudents(container);
-      if (typeof renderOverview === 'function' && activePage === 'overview' && container) renderOverview(container);
-
-      showToast(`Đã xóa lớp học "${targetName}" thành công!`, 'warning');
     };
 
     if (typeof window.showConfirmDialog === 'function') {
@@ -6772,7 +6913,33 @@
 
   // ADMIN USER EDIT HANDLERS
   window.openAdminEditModal = function (accId) {
-    const acc = accountsList.find(a => a.id === accId);
+    if (!accId) return;
+    const identifier = String(accId).trim();
+    let acc = accountsList.find(a => a && (a.id === identifier || a.email.toLowerCase() === identifier.toLowerCase()));
+    if (!acc) {
+      const uEmail = Object.keys(allCloudUserDataMap).find(e => 
+        e.toLowerCase() === identifier.toLowerCase() || 
+        ('acc_' + e.replace(/[^a-z0-9]/gi, '_')) === identifier
+      );
+      if (uEmail) {
+        const uData = allCloudUserDataMap[uEmail] || {};
+        const accInfo = uData.account_info || {};
+        acc = {
+          id: accInfo.id || ('acc_' + uEmail.replace(/[^a-z0-9]/gi, '_')),
+          email: uEmail,
+          name: accInfo.name || uEmail.split('@')[0],
+          holyName: accInfo.holyName || '',
+          phone: accInfo.phone || '',
+          parish: (uData.parishInfo && uData.parishInfo.name) || accInfo.parish || 'Giáo xứ Hòa Khánh',
+          role: accInfo.role || 'Giáo lý viên',
+          status: accInfo.status || 'active',
+          password: accInfo.password || '123456',
+          avatar: accInfo.avatar || ''
+        };
+        accountsList.push(acc);
+        saveAccounts();
+      }
+    }
     if (!acc) return;
 
     const isSuper = isSuperAdmin(currentUser);
@@ -6819,7 +6986,7 @@
   function handleSaveAdminUser(e) {
     e.preventDefault();
     const accId = document.getElementById('admin-target-id').value;
-    const acc = accountsList.find(a => a.id === accId);
+    const acc = accountsList.find(a => a.id === accId || a.email.toLowerCase() === accId.toLowerCase());
     if (!acc) return;
 
     const isSuper = isSuperAdmin(currentUser);
@@ -6875,77 +7042,202 @@
     showToast(`Đã cập nhật thông tin & mật khẩu tài khoản ${acc.name}!`, 'success');
   }
 
-  // ACCOUNT DELETION LOGIC WITH CUSTOM CONFIRMATION MODAL
-  let pendingDeleteAccId = null;
+  // ACCOUNT DELETION LOGIC WITH CUSTOM CONFIRMATION MODAL & SUPABASE INTEGRATION
+  let pendingDeleteAcc = null;
 
   window.confirmDeleteAccount = function (accId) {
     if (!accId) return;
-    const acc = accountsList.find(a => a.id === accId || a.email.toLowerCase() === accId.toLowerCase());
-    if (!acc) return;
+    const identifier = String(accId).trim();
 
-    if (currentUser && acc.email.toLowerCase() === currentUser.email.toLowerCase()) {
-      alert('Bạn không thể xóa tài khoản Admin hiện đang đăng nhập!');
+    // 1. Look up in accountsList
+    let acc = accountsList.find(a => a && (a.id === identifier || a.email.toLowerCase() === identifier.toLowerCase()));
+
+    // 2. Look up in allCloudUserDataMap if not found in accountsList
+    if (!acc) {
+      const uEmail = Object.keys(allCloudUserDataMap).find(e => 
+        e.toLowerCase() === identifier.toLowerCase() || 
+        ('acc_' + e.replace(/[^a-z0-9]/gi, '_')) === identifier
+      );
+      if (uEmail) {
+        const uData = allCloudUserDataMap[uEmail] || {};
+        const accInfo = uData.account_info || {};
+        acc = {
+          id: accInfo.id || ('acc_' + uEmail.replace(/[^a-z0-9]/gi, '_')),
+          email: uEmail,
+          name: accInfo.name || uEmail.split('@')[0],
+          holyName: accInfo.holyName || '',
+          role: accInfo.role || 'Giáo lý viên',
+          parish: (uData.parishInfo && uData.parishInfo.name) || accInfo.parish || 'Giáo xứ Hòa Khánh'
+        };
+      }
+    }
+
+    // 3. Fallback: if identifier has @ symbol
+    if (!acc && identifier.includes('@')) {
+      acc = {
+        id: 'acc_' + identifier.replace(/[^a-z0-9]/gi, '_'),
+        email: identifier,
+        name: identifier.split('@')[0],
+        holyName: '',
+        role: 'Giáo lý viên',
+        parish: 'Giáo xứ Hòa Khánh'
+      };
+    }
+
+    if (!acc) {
+      alert('Không tìm thấy thông tin tài khoản cần xóa!');
       return;
     }
 
-    pendingDeleteAccId = acc.id;
+    const targetEmail = (acc.email || '').toLowerCase().trim();
+
+    // Protection: Never allow deleting the Master Admin or the currently logged-in user
+    if (targetEmail === 'philthienhao@gmail.com') {
+      alert('Đây là tài khoản Admin Master tối cao của hệ thống (Võ Thiện Hảo), không thể xóa!');
+      return;
+    }
+
+    if (currentUser && currentUser.email && currentUser.email.toLowerCase().trim() === targetEmail) {
+      alert('Bạn không thể xóa tài khoản Admin hiện đang đăng nhập trên phiên này!');
+      return;
+    }
+
+    pendingDeleteAcc = acc;
 
     const doDeleteBtn = document.getElementById('confirm-do-delete-btn');
     if (doDeleteBtn) {
-      doDeleteBtn.setAttribute('data-target-id', acc.id);
+      doDeleteBtn.setAttribute('data-target-id', acc.id || '');
+      doDeleteBtn.setAttribute('data-target-email', acc.email || '');
+      doDeleteBtn.disabled = false;
+      doDeleteBtn.innerHTML = '<i class="fa-solid fa-trash"></i> Đồng Ý Xóa Ngay';
     }
 
     const targetName = document.getElementById('confirm-target-name');
-    const targetEmail = document.getElementById('confirm-target-email');
+    const targetEmailEl = document.getElementById('confirm-target-email');
     if (targetName) targetName.textContent = (acc.holyName ? acc.holyName + ' ' : '') + acc.name;
-    if (targetEmail) targetEmail.textContent = acc.email;
+    if (targetEmailEl) targetEmailEl.textContent = acc.email;
 
     openModal('custom-confirm-modal');
   };
 
-  window.executeAccountDeletion = function (btnElement) {
+  window.executeAccountDeletion = async function (btnElement) {
     try {
-      const targetId = (btnElement && btnElement.getAttribute('data-target-id')) || pendingDeleteAccId;
-      if (!targetId) {
-        alert('Không xác định được tài khoản cần xóa!');
+      const targetEmail = (btnElement && btnElement.getAttribute('data-target-email'))
+        || (pendingDeleteAcc && pendingDeleteAcc.email)
+        || '';
+      const targetId = (btnElement && btnElement.getAttribute('data-target-id'))
+        || (pendingDeleteAcc && pendingDeleteAcc.id)
+        || '';
+
+      if (!targetEmail) {
+        alert('Không xác định được email tài khoản cần xóa!');
         closeModal('custom-confirm-modal');
         return;
       }
 
-      const accIndex = accountsList.findIndex(a => a.id === targetId || a.email.toLowerCase() === targetId.toLowerCase());
-      if (accIndex === -1) {
-        alert('Tài khoản này không tồn tại hoặc đã bị xóa!');
+      const emailLower = targetEmail.toLowerCase().trim();
+
+      // Guard check
+      if (emailLower === 'philthienhao@gmail.com') {
+        alert('Không thể xóa tài khoản Admin Master!');
         closeModal('custom-confirm-modal');
         return;
       }
 
-      const targetAcc = accountsList[accIndex];
-      if (currentUser && targetAcc.email.toLowerCase() === currentUser.email.toLowerCase()) {
-        alert('Bạn không thể xóa tài khoản Admin đang sử dụng!');
+      if (currentUser && currentUser.email && currentUser.email.toLowerCase().trim() === emailLower) {
+        alert('Bạn không thể xóa tài khoản Admin hiện đang sử dụng!');
         closeModal('custom-confirm-modal');
         return;
       }
 
-      const deletedAcc = accountsList.splice(accIndex, 1)[0];
+      if (btnElement) {
+        btnElement.disabled = true;
+        btnElement.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xóa khỏi Cloud...';
+      }
+
+      // 1. Delete from Supabase Cloud
+      if (window.supabaseClient) {
+        try {
+          const { error } = await window.supabaseClient
+            .from('user_data')
+            .delete()
+            .eq('email', emailLower);
+          if (error) {
+            console.warn('Supabase user_data delete error:', error);
+          } else {
+            console.log('✅ Đã xóa thành công trên Supabase Cloud:', emailLower);
+          }
+        } catch (cloudErr) {
+          console.warn('Supabase delete exception:', cloudErr);
+        }
+      }
+
+      // 2. Remove from in-memory cache
+      delete allCloudUserDataMap[emailLower];
+
+      // 3. Remove from accountsList & persist to localStorage
+      const accIndex = accountsList.findIndex(a => 
+        (a.email && a.email.toLowerCase() === emailLower) || 
+        (targetId && a.id === targetId)
+      );
+      let deletedAccName = emailLower;
+      if (accIndex !== -1) {
+        deletedAccName = accountsList[accIndex].name || emailLower;
+        accountsList.splice(accIndex, 1);
+      } else if (pendingDeleteAcc && pendingDeleteAcc.name) {
+        deletedAccName = pendingDeleteAcc.name;
+      }
       saveAccounts();
 
-      if (deletedAcc && deletedAcc.email) {
-        const userKey = STORAGE_PREFIX_DATA + deletedAcc.email.toLowerCase().replace(/[^a-z0-9]/g, '_');
-        localStorage.removeItem(userKey);
+      // 4. Remove all LocalStorage data keys for this user
+      const userKey = STORAGE_PREFIX_DATA + emailLower.replace(/[^a-z0-9]/g, '_');
+      localStorage.removeItem(userKey);
+
+      // Clean any other variants in localStorage
+      Object.keys(localStorage).forEach(k => {
+        if (k.toLowerCase().includes(emailLower.replace(/[^a-z0-9]/g, '_'))) {
+          localStorage.removeItem(k);
+        }
+      });
+
+      // 5. Clean up any classes in current appData assigned to this teacher
+      if (Array.isArray(appData.classes)) {
+        appData.classes.forEach(c => {
+          if (c.teacherEmail && c.teacherEmail.toLowerCase() === emailLower) {
+            c.teacher = 'Chưa phân công';
+            c.teacherEmail = '';
+          }
+          if (c.coTeacherEmail && c.coTeacherEmail.toLowerCase() === emailLower) {
+            c.coTeacher = '';
+            c.coTeacherEmail = '';
+          }
+        });
+        saveUserData();
       }
+
+      pendingDeleteAcc = null;
 
       closeModal('admin-user-modal');
       closeModal('custom-confirm-modal');
 
+      // 6. Refresh views
       const contentArea = document.getElementById('content-area');
       if (contentArea && activePage === 'admin-users') {
-        renderAdminUsers(contentArea);
+        await renderAdminUsers(contentArea);
+      }
+      if (typeof renderSavedAccounts === 'function') {
+        renderSavedAccounts();
       }
 
-      showToast(`Đã xóa thành công tài khoản ${deletedAcc.name} (${deletedAcc.email}) khỏi hệ thống!`, 'danger');
+      showToast(`Đã xóa vĩnh viễn tài khoản "${deletedAccName}" (${emailLower}) khỏi hệ thống & Đám mây Supabase!`, 'danger');
     } catch (err) {
       console.error('Failure in executeAccountDeletion:', err);
       alert('Đã xảy ra lỗi khi xóa tài khoản: ' + err.message);
+    } finally {
+      if (btnElement) {
+        btnElement.disabled = false;
+        btnElement.innerHTML = '<i class="fa-solid fa-trash"></i> Đồng Ý Xóa Ngay';
+      }
     }
   };
 
