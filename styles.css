@@ -823,108 +823,80 @@ input, select, textarea {
 }
 
 /* ==========================================================================
-   Banner Card with Sacred Catholic Artwork & Slogan (Chúa và các em thiếu nhi)
+   Overview Header & Sacred Banner Card (anh/anhnen.png)
    ========================================================================== */
-.welcome-slogan-card {
-  position: relative;
-  background-color: #0b1536;
-  color: var(--white);
-  border-radius: var(--radius-lg);
-  padding: 30px 36px;
-  margin-bottom: 28px;
-  box-shadow: 
-    0 14px 34px -6px rgba(15, 23, 42, 0.28),
-    0 6px 16px -4px rgba(30, 64, 175, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+.overview-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.overview-date-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--white);
+  border: 1px solid var(--slate-border);
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--slate-dark);
+  box-shadow: var(--shadow-sm);
+  white-space: nowrap;
+}
+
+.overview-date-pill i {
+  color: var(--primary);
+}
+
+.welcome-slogan-card {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  border-radius: var(--radius-lg);
   overflow: hidden;
-  isolation: isolate;
-  transition: box-shadow 0.4s ease, border-color 0.4s ease;
+  box-shadow: 
+    0 10px 28px -4px rgba(15, 23, 42, 0.08),
+    0 4px 12px -2px rgba(37, 99, 235, 0.06);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  margin-bottom: 26px;
+  background-color: #f0f7ff;
+  line-height: 0;
+  display: block;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
 }
 
 .welcome-slogan-card:hover {
+  transform: translateY(-2px);
   box-shadow: 
-    0 18px 42px -6px rgba(15, 23, 42, 0.35),
-    0 8px 22px -4px rgba(30, 64, 175, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.35);
-  border-color: rgba(255, 255, 255, 0.3);
+    0 14px 36px -4px rgba(15, 23, 42, 0.12),
+    0 6px 16px -2px rgba(37, 99, 235, 0.09);
 }
 
-/* Base Artwork Layer: Jesus and the children */
-.welcome-slogan-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image: url('anh/ChuaandEm3.jpg');
-  background-size: cover;
-  background-position: 80% 26%;
-  background-repeat: no-repeat;
-  z-index: -2;
-  transform: scale(1.01);
-  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-  pointer-events: none;
+.welcome-slogan-img {
+  width: 100%;
+  height: auto;
+  max-height: 380px;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  border-radius: var(--radius-lg);
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.welcome-slogan-card:hover::before {
-  transform: scale(1.035);
+.welcome-slogan-card:hover .welcome-slogan-img {
+  transform: scale(1.012);
 }
 
-/* Harmonic Liturgical Gradient & Divine Halo Overlay Layer */
-.welcome-slogan-card::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: 
-    /* 1. Horizontal gradient: Deep liturgical navy on text side, royal blue bridge, delicate veil over sacred art */
-    linear-gradient(
-      90deg, 
-      rgba(11, 21, 54, 0.96) 0%, 
-      rgba(15, 30, 80, 0.92) 35%, 
-      rgba(29, 78, 216, 0.74) 58%, 
-      rgba(37, 99, 235, 0.40) 78%, 
-      rgba(15, 23, 42, 0.20) 100%
-    ),
-    /* 2. Catholic Celestial Gold Glow (Ánh sáng Chúa Kitô) centered gently over Christ and the children */
-    radial-gradient(
-      circle at 76% 28%, 
-      rgba(254, 240, 138, 0.24) 0%, 
-      rgba(245, 158, 11, 0.09) 42%, 
-      transparent 72%
-    ),
-    /* 3. Subtle edge vignette for cinematic depth */
-    linear-gradient(
-      180deg, 
-      rgba(11, 21, 54, 0.32) 0%, 
-      transparent 22%, 
-      transparent 78%, 
-      rgba(11, 21, 54, 0.42) 100%
-    );
-  z-index: -1;
-  pointer-events: none;
-}
-
+/* Fallback elements for backwards compatibility */
 .slogan-content {
   position: relative;
   z-index: 2;
   max-width: 760px;
   flex: 1;
-}
-
-.slogan-content h2 {
-  font-size: 22px;
-  font-weight: 800;
-  letter-spacing: -0.3px;
-  margin-bottom: 12px;
-  color: #ffffff;
-  text-shadow: 0 2px 10px rgba(11, 21, 54, 0.7);
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 6px;
 }
 
 .slogan-quote {
@@ -936,82 +908,22 @@ input, select, textarea {
   margin-bottom: 12px;
   background: rgba(11, 25, 60, 0.58);
   backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
   padding: 14px 20px;
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
   border-left: 4px solid #60a5fa;
-  box-shadow: 
-    0 6px 20px rgba(0, 0, 0, 0.24),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15);
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-  transition: background 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
-}
-
-.welcome-slogan-card:hover .slogan-quote {
-  background: rgba(11, 25, 60, 0.68);
-  border-color: rgba(255, 255, 255, 0.28);
-  border-left-color: #93c5fd;
-  transform: translateX(3px);
 }
 
 .slogan-author-banner {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
   font-size: 12.5px;
   font-weight: 700;
-  letter-spacing: 0.5px;
   color: #dbeafe;
-  text-shadow: 0 1px 4px rgba(11, 21, 54, 0.8);
-  padding: 4px 12px;
-  background: rgba(255, 255, 255, 0.10);
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  transition: background 0.25s ease, color 0.25s ease;
 }
 
-.welcome-slogan-card:hover .slogan-author-banner {
-  background: rgba(255, 255, 255, 0.16);
-  color: #ffffff;
-}
-
-/* The Sacred Cross (Cây Thánh Giá) with Divine Halo Medallion */
 .slogan-badge-icon {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 92px;
-  height: 92px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.24) 0%, rgba(255, 255, 255, 0.10) 65%, rgba(255, 255, 255, 0.03) 100%);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1.5px solid rgba(255, 255, 255, 0.42);
-  box-shadow: 
-    0 10px 28px rgba(11, 21, 54, 0.38), 
-    inset 0 0 18px rgba(255, 255, 255, 0.25), 
-    0 0 24px rgba(147, 197, 253, 0.4);
   font-size: 44px;
-  line-height: 1;
   color: #ffffff;
-  filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.9)) drop-shadow(0 2px 6px rgba(11, 21, 54, 0.6));
-  flex-shrink: 0;
-  margin-left: 20px;
-  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s ease, filter 0.4s ease;
-}
-
-.welcome-slogan-card:hover .slogan-badge-icon {
-  transform: scale(1.08) rotate(3deg);
-  box-shadow: 
-    0 14px 34px rgba(11, 21, 54, 0.45), 
-    inset 0 0 24px rgba(255, 255, 255, 0.38), 
-    0 0 32px rgba(191, 219, 254, 0.6);
-  filter: drop-shadow(0 0 16px rgba(255, 255, 255, 1)) drop-shadow(0 3px 8px rgba(11, 21, 54, 0.7));
 }
 
 /* KPI Summary Cards Grid */
@@ -2284,18 +2196,8 @@ body.is-fullscreen .kpi-grid {
   .hide-mobile {
     display: none;
   }
-  .welcome-slogan-card {
-    padding: 24px 26px;
-    gap: 18px;
-  }
-  .welcome-slogan-card::before {
-    background-position: 74% 26%;
-  }
-  .slogan-badge-icon {
-    width: 80px;
-    height: 80px;
-    font-size: 38px;
-    margin-left: 12px;
+  .welcome-slogan-img {
+    max-height: 300px;
   }
 }
 
@@ -2318,44 +2220,23 @@ body.is-fullscreen .kpi-grid {
   .kpi-grid {
     grid-template-columns: 1fr;
   }
-  .welcome-slogan-card {
+  .overview-header {
     flex-direction: column;
     align-items: flex-start;
-    padding: 22px 18px;
-    gap: 16px;
-    margin-bottom: 20px;
+    gap: 10px;
+    margin-bottom: 16px;
   }
-  .welcome-slogan-card::before {
-    background-position: center 20%;
+  .overview-date-pill {
+    padding: 6px 12px;
+    font-size: 12px;
   }
-  .welcome-slogan-card::after {
-    background: 
-      linear-gradient(
-        180deg, 
-        rgba(11, 21, 54, 0.96) 0%, 
-        rgba(15, 30, 80, 0.92) 55%, 
-        rgba(29, 78, 216, 0.75) 100%
-      ),
-      radial-gradient(
-        circle at 50% 90%, 
-        rgba(254, 240, 138, 0.22) 0%, 
-        transparent 65%
-      );
+  .welcome-slogan-card {
+    margin-bottom: 18px;
+    border-radius: var(--radius-md);
   }
-  .slogan-content h2 {
-    font-size: 19px;
-  }
-  .slogan-quote {
-    font-size: 13.5px;
-    padding: 12px 16px;
-  }
-  .slogan-badge-icon {
-    align-self: flex-end;
-    width: 64px;
-    height: 64px;
-    font-size: 30px;
-    margin-left: 0;
-    margin-top: 4px;
+  .welcome-slogan-img {
+    border-radius: var(--radius-md);
+    max-height: 220px;
   }
 }
 
