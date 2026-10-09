@@ -869,6 +869,45 @@
       });
     }
 
+    // Fullscreen Toggle
+    window.toggleFullScreen = function() {
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        if (document.documentElement.requestFullscreen) {
+          document.documentElement.requestFullscreen().catch(err => {
+            console.warn('Fullscreen request error:', err);
+          });
+        } else if (document.documentElement.webkitRequestFullscreen) {
+          document.documentElement.webkitRequestFullscreen();
+        }
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        }
+      }
+    };
+
+    function updateFullscreenIcon() {
+      const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+      const icon = document.getElementById('fullscreen-icon');
+      if (icon) {
+        icon.className = isFs ? 'fa-solid fa-compress' : 'fa-solid fa-expand';
+      }
+      const btn = document.getElementById('topbar-fullscreen-btn');
+      if (btn) {
+        btn.title = isFs ? 'Thu nhỏ giao diện' : 'Bật/Tắt toàn màn hình';
+      }
+      if (isFs) {
+        document.body.classList.add('is-fullscreen');
+      } else {
+        document.body.classList.remove('is-fullscreen');
+      }
+    }
+
+    document.addEventListener('fullscreenchange', updateFullscreenIcon);
+    document.addEventListener('webkitfullscreenchange', updateFullscreenIcon);
+
     // Hash change listener
     window.addEventListener('hashchange', () => {
       const page = window.location.hash.replace('#', '') || 'overview';
@@ -4843,54 +4882,54 @@
 
                   return `
                     <tr class="admin-account-row">
-                      <td>
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                          <img src="${acc.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80'}" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--slate-border);">
-                          <div>
-                            <strong>${acc.email}</strong>
+                      <td style="min-width: 170px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                          <img src="${acc.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80'}" style="width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--slate-border); flex-shrink: 0;">
+                          <div style="min-width: 0;">
+                            <strong style="font-size: 12.5px; word-break: break-all; display: block;">${acc.email}</strong>
                             <div style="font-size: 10px; color: var(--slate-muted);">ID: ${acc.id}</div>
                           </div>
                         </div>
                       </td>
-                      <td><strong>${acc.holyName || ''}</strong> ${acc.name}</td>
-                      <td>
+                      <td style="white-space: nowrap;"><strong>${acc.holyName || ''}</strong> ${acc.name}</td>
+                      <td style="white-space: nowrap;">
                         <span class="parish-badge ${badgeClass}">
                           <i class="fa-solid fa-church"></i> ${acc.parish || 'Giáo Xứ Hoà Khánh'}
                         </span>
                       </td>
-                      <td>${roleBadgeHtml}</td>
-                      <td>
+                      <td style="white-space: nowrap;">${roleBadgeHtml}</td>
+                      <td style="white-space: nowrap;">
                         <span class="pw-mask" id="pw-text-${acc.id}" data-raw="${acc.password || '123456'}" data-hidden="true">••••••</span>
                         <button type="button" class="pw-reveal-btn" onclick="window.toggleAdminPasswordVisibility('${acc.id}', this)" title="Ẩn/Hiện mật khẩu">
                           <i class="fa-solid fa-eye"></i>
                         </button>
                       </td>
-                      <td><span class="badge badge-info">${(acc.classes || []).length} lớp</span></td>
-                      <td><span class="badge badge-success">${(acc.students || []).length} em</span></td>
-                      <td><small style="color: var(--slate-muted); font-size: 11px;">${acc.lastSync}</small></td>
-                      <td>
+                      <td style="white-space: nowrap; text-align: center;"><span class="badge badge-info">${(acc.classes || []).length} lớp</span></td>
+                      <td style="white-space: nowrap; text-align: center;"><span class="badge badge-success">${(acc.students || []).length} em</span></td>
+                      <td style="white-space: nowrap;"><small style="color: var(--slate-muted); font-size: 11px;">${acc.lastSync}</small></td>
+                      <td style="white-space: nowrap;">
                         ${acc.status === 'active' 
                           ? '<span class="badge badge-success">🟢 Hoạt động</span>' 
                           : '<span class="badge badge-warning">🟡 Tạm khóa</span>'}
                       </td>
-                      <td>
-                        <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                      <td style="min-width: 210px;">
+                        <div style="display: flex; gap: 5px; flex-wrap: wrap; align-items: center;">
                           ${isSuper ? `
-                            <button class="btn btn-sm btn-warning" onclick="window.openRoleDelegationModal('${acc.id}')" title="Phân quyền Admin Cấp 2 hoặc đổi vai trò" style="font-weight: 700; font-size: 11.5px; padding: 4px 8px; border-radius: 6px;">
+                            <button class="btn btn-sm btn-warning" onclick="window.openRoleDelegationModal('${acc.id}')" title="Phân quyền Admin Cấp 2 hoặc đổi vai trò" style="font-weight: 700; font-size: 11px; padding: 4px 8px; border-radius: 6px; white-space: nowrap;">
                               <i class="fa-solid fa-user-shield"></i> Phân Quyền
                             </button>
                           ` : ''}
-                          <button class="btn btn-sm btn-outline-info" onclick="window.openInspectUserModal('${acc.email}')" title="Xem toàn bộ dữ liệu lớp học, học sinh, điểm danh của tài khoản này">
+                          <button class="btn btn-sm btn-outline-info" onclick="window.openInspectUserModal('${acc.email}')" title="Xem toàn bộ dữ liệu lớp học, học sinh, điểm danh của tài khoản này" style="font-size: 11px; padding: 4px 8px; white-space: nowrap;">
                             <i class="fa-solid fa-eye"></i> Dữ Liệu
                           </button>
-                          <button class="btn btn-sm btn-outline-primary" onclick="window.impersonateUser('${acc.email}')" title="Đăng nhập xem giao diện như giáo viên này">
+                          <button class="btn btn-sm btn-outline-primary" onclick="window.impersonateUser('${acc.email}')" title="Đăng nhập xem giao diện như giáo viên này" style="font-size: 11px; padding: 4px 8px; white-space: nowrap;">
                             <i class="fa-solid fa-right-to-bracket"></i> Vào Xem
                           </button>
-                          <button class="btn btn-sm btn-outline-secondary" onclick="window.openAdminEditModal('${acc.id}')" title="Sửa thông tin / Mật khẩu">
+                          <button class="btn btn-sm btn-outline-secondary" onclick="window.openAdminEditModal('${acc.id}')" title="Sửa thông tin / Mật khẩu" style="font-size: 11px; padding: 4px 7px;">
                             <i class="fa-solid fa-pen"></i>
                           </button>
                           ${(isSuper && acc.email.toLowerCase() !== 'philthienhao@gmail.com') ? `
-                            <button class="btn btn-sm btn-outline-danger" onclick="window.quickDeleteAdminUser('${acc.id}')" title="Xóa tài khoản">
+                            <button class="btn btn-sm btn-outline-danger" onclick="window.quickDeleteAdminUser('${acc.id}')" title="Xóa tài khoản" style="font-size: 11px; padding: 4px 7px;">
                               <i class="fa-solid fa-trash"></i>
                             </button>
                           ` : ''}

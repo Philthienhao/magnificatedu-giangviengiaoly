@@ -31,7 +31,7 @@
   </script>
   
   <!-- Custom Stylesheet -->
-  <link rel="stylesheet" href="styles.css?v=20261009_v1600">
+  <link rel="stylesheet" href="styles.css?v=20261009_v1800">
 </head>
 <body>
 
@@ -189,10 +189,15 @@
           </div>
 
           <!-- Notification Bell -->
-          <div class="topbar-action-btn" id="notif-dropdown-btn">
+          <div class="topbar-action-btn" id="notif-dropdown-btn" title="Thông báo hệ thống">
             <i class="fa-solid fa-bell"></i>
             <span class="pulse-dot"></span>
           </div>
+
+          <!-- Fullscreen Toggle Button -->
+          <button type="button" class="topbar-action-btn" id="topbar-fullscreen-btn" onclick="window.toggleFullScreen()" title="Bật/Tắt toàn màn hình">
+            <i class="fa-solid fa-expand" id="fullscreen-icon"></i>
+          </button>
 
           <!-- User Profile Dropdown Menu -->
           <div class="user-profile-menu-container">
@@ -1297,6 +1302,6 @@
   <div id="toast-container" class="toast-container"></div>
 
   <!-- Application JS Code -->
-  <script src="app_v2.js?v=20261009_v1700"></script>
+  <script src="app_v2.js?v=20261009_v1800"></script>
 </body>
 </html>
