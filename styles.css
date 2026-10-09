@@ -682,9 +682,62 @@ input, select, textarea {
   color: #d97706;
 }
 
+.role-parish-admin {
+  background: #e0e7ff;
+  color: #4338ca;
+  font-weight: 700;
+}
+
 .role-catechist {
   background: var(--primary-light);
   color: var(--primary);
+}
+
+.badge-role-master {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  color: #92400e;
+  border: 1px solid #fcd34d;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.badge-role-parish {
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  color: #1e40af;
+  border: 1px solid #93c5fd;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.badge-role-teacher {
+  background: #f8fafc;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.role-radio-card:hover {
+  border-color: var(--primary) !important;
+  background: rgba(59, 130, 246, 0.03) !important;
 }
 
 .dropdown-divider {

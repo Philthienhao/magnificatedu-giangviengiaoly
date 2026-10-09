@@ -31,7 +31,7 @@
   </script>
   
   <!-- Custom Stylesheet -->
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=20261009_v1600">
 </head>
 <body>
 
@@ -136,12 +136,12 @@
           <span>Thông tin Giáo Xứ</span>
         </a>
 
-        <!-- ADMIN SECTION (Visible to Admin user only) -->
+        <!-- ADMIN SECTION (Visible to Admin & Parish Admin) -->
         <div id="admin-menu-section" class="admin-only-block" style="display: none;">
-          <div class="nav-section-label text-warning">QUẢN TRỊ VIÊN</div>
+          <div class="nav-section-label text-warning" id="admin-menu-label">QUẢN TRỊ VIÊN</div>
           <a href="#admin-users" class="nav-item nav-admin-item" data-page="admin-users">
             <i class="fa-solid fa-church"></i>
-            <span>Quản trị Đa Giáo Xứ</span>
+            <span id="admin-menu-title">Quản trị Đa Giáo Xứ</span>
             <span class="badge badge-pill badge-danger" id="admin-badge">Admin Master</span>
           </a>
         </div>
@@ -710,9 +710,10 @@
 
             <div class="form-group mb-2">
               <label>Vai Trò Trong Hệ Thống:</label>
-              <select id="admin-target-role" class="form-control">
-                <option value="Giáo lý viên">Giáo lý viên / Huấn Luyện Viên</option>
-                <option value="Admin">Quản Trị Viên (Admin)</option>
+              <select id="admin-target-role" class="form-control" onchange="window.handleAdminTargetRoleChange(this.value)">
+                <option value="Giáo lý viên">👤 Giáo lý viên / Huấn Luyện Viên</option>
+                <option value="ParishAdmin">⛪ Admin Cấp 2 (Quản Trị Giáo Xứ)</option>
+                <option value="Admin">👑 Admin Master (Toàn Bộ Hệ Thống)</option>
               </select>
             </div>
 
@@ -727,6 +728,109 @@
           <div class="modal-footer">
             <button type="button" id="admin-delete-user-btn" onclick="window.confirmDeleteAccount(document.getElementById('admin-target-id').value)" class="btn btn-outline-danger"><i class="fa-solid fa-trash"></i> Xóa Tài Khoản</button>
             <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Lưu Thay Đổi</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROLE DELEGATION MODAL (ADMIN CẤP 2 PHÂN QUYỀN) -->
+  <div id="role-delegation-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header" style="background: linear-gradient(135deg, #1e293b, #0f172a); color: #fff; padding: 18px 24px; border-bottom: 1px solid #334155;">
+          <h3 style="font-size: 16.5px; font-weight: 800; display: flex; align-items: center; gap: 8px; color: #f8fafc; margin: 0;">
+            <i class="fa-solid fa-user-shield text-warning"></i> Phân Quyền Quản Trị Giáo Xứ (Admin Cấp 2)
+          </h3>
+          <button class="close-modal-btn" data-modal="role-delegation-modal" style="color: #cbd5e1;"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="role-delegation-form" onsubmit="window.saveRoleDelegation(event)">
+          <input type="hidden" id="delegation-target-id">
+          <input type="hidden" id="delegation-target-email">
+          <div class="modal-body" style="padding: 22px 24px;">
+            <!-- User summary card -->
+            <div style="display: flex; align-items: center; gap: 14px; background: var(--slate-bg); border: 1px solid var(--slate-border); border-radius: 12px; padding: 14px; margin-bottom: 20px;">
+              <img id="delegation-target-avatar" src="admin_avatar.png" alt="Avatar" style="width: 52px; height: 52px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary);">
+              <div style="flex: 1;">
+                <h4 id="delegation-target-name" style="margin: 0 0 4px 0; font-size: 15px; font-weight: 800; color: var(--dark-navy);">Võ Thiện Hảo</h4>
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                  <span id="delegation-target-email-txt" style="font-size: 12px; color: var(--slate-muted);">email@gmail.com</span>
+                  <span id="delegation-current-role-badge"></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Role Selection Options -->
+            <div class="form-group mb-3">
+              <label style="font-weight: 700; font-size: 13.5px; color: var(--dark-navy); margin-bottom: 10px; display: block;">
+                <i class="fa-solid fa-shield-halved text-primary"></i> Chọn Cấp Bậc Phân Quyền:
+              </label>
+              
+              <div class="role-option-cards" style="display: flex; flex-direction: column; gap: 10px;">
+                <!-- Option 1: Catechist -->
+                <label class="role-radio-card" style="display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border: 1.5px solid var(--slate-border); border-radius: 10px; cursor: pointer; transition: all 0.2s;">
+                  <input type="radio" name="delegation_role" value="Giáo lý viên" id="role-opt-catechist" style="margin-top: 3px;" onchange="window.handleRoleRadioChange(this.value)">
+                  <div style="flex: 1;">
+                    <div style="font-weight: 700; font-size: 13.5px; color: var(--dark-navy); display: flex; align-items: center; gap: 6px;">
+                      <i class="fa-solid fa-user text-muted"></i> Giáo Lý Viên Thông Thường
+                    </div>
+                    <div style="font-size: 12px; color: var(--slate-muted); margin-top: 2px;">
+                      Chỉ xem và quản lý danh sách lớp học & học sinh do chính mình giảng dạy.
+                    </div>
+                  </div>
+                </label>
+
+                <!-- Option 2: Parish Admin (Admin Cap 2) -->
+                <label class="role-radio-card" style="display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border: 1.5px solid var(--primary); background: rgba(59, 130, 246, 0.04); border-radius: 10px; cursor: pointer; transition: all 0.2s;">
+                  <input type="radio" name="delegation_role" value="ParishAdmin" id="role-opt-parish" style="margin-top: 3px;" onchange="window.handleRoleRadioChange(this.value)">
+                  <div style="flex: 1;">
+                    <div style="font-weight: 800; font-size: 14px; color: var(--primary); display: flex; align-items: center; gap: 6px;">
+                      <i class="fa-solid fa-church"></i> Admin Cấp 2 — Quản Trị Viên Giáo Xứ
+                      <span class="badge badge-info" style="font-size: 10.5px; padding: 2px 6px;">Đề xuất</span>
+                    </div>
+                    <div style="font-size: 12px; color: var(--slate-dark); margin-top: 2px;">
+                      Toàn quyền quản lý dữ liệu (Giáo viên, Lớp học, Học sinh, Báo cáo) trong phạm vi Giáo Xứ được chỉ định. Không can thiệp sang giáo xứ khác.
+                    </div>
+                  </div>
+                </label>
+
+                <!-- Option 3: Super Admin -->
+                <label class="role-radio-card" style="display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border: 1.5px solid var(--slate-border); border-radius: 10px; cursor: pointer; transition: all 0.2s;">
+                  <input type="radio" name="delegation_role" value="Admin" id="role-opt-master" style="margin-top: 3px;" onchange="window.handleRoleRadioChange(this.value)">
+                  <div style="flex: 1;">
+                    <div style="font-weight: 700; font-size: 13.5px; color: #b45309; display: flex; align-items: center; gap: 6px;">
+                      <i class="fa-solid fa-crown text-warning"></i> Admin Master (Toàn Bộ Hệ Thống)
+                    </div>
+                    <div style="font-size: 12px; color: var(--slate-muted); margin-top: 2px;">
+                      Toàn quyền quản trị tất cả các giáo xứ, phân quyền người dùng và kiểm soát hệ thống.
+                    </div>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Assigned Parish Selection for Admin Cap 2 -->
+            <div id="delegation-parish-group" class="form-group mb-3" style="display: none; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 14px;">
+              <label style="font-weight: 800; font-size: 13px; color: #1e40af; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-church text-primary"></i> Giáo Xứ Được Giao Quản Trị (Admin Cấp 2): <span class="text-danger">*</span>
+              </label>
+              <select id="delegation-target-parish-select" class="form-control" onchange="window.handleDelegationParishSelect(this.value)">
+                <!-- Dynamically populated via window.openRoleDelegationModal -->
+              </select>
+              <div id="delegation-custom-parish-wrap" style="display: none; margin-top: 8px;">
+                <input type="text" id="delegation-target-parish-custom" class="form-control" placeholder="Nhập tên Giáo xứ mới (Ví dụ: Giáo Xứ Tân Định...)">
+              </div>
+              <small style="color: #3b82f6; font-size: 11.5px; display: block; margin-top: 6px;">
+                <i class="fa-solid fa-circle-info"></i> Tài khoản này sẽ có quyền quản trị các lớp học và giáo lý viên trực thuộc Giáo Xứ được chỉ định ở đây.
+              </small>
+            </div>
+          </div>
+
+          <div class="modal-footer" style="padding: 14px 24px; border-top: 1px solid var(--slate-border); display: flex; justify-content: flex-end; gap: 10px;">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('role-delegation-modal')">Hủy bỏ</button>
+            <button type="submit" class="btn btn-primary" style="font-weight: 700;">
+              <i class="fa-solid fa-floppy-disk"></i> Lưu & Áp Dụng Phân Quyền
+            </button>
           </div>
         </form>
       </div>
@@ -1193,6 +1297,6 @@
   <div id="toast-container" class="toast-container"></div>
 
   <!-- Application JS Code -->
-  <script src="app_v2.js?v=20261009_v1500"></script>
+  <script src="app_v2.js?v=20261009_v1600"></script>
 </body>
 </html>

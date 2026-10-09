@@ -168,6 +168,32 @@
   let appData = null;
   let activePage = 'overview';
 
+  // Role & Multi-Tenancy Hierarchy Helpers
+  function isSuperAdmin(user = currentUser) {
+    if (!user) return false;
+    const email = (user.email || '').toLowerCase().trim();
+    return email === 'philthienhao@gmail.com' || user.role === 'Admin' || user.role === 'SuperAdmin';
+  }
+
+  function isParishAdmin(user = currentUser) {
+    if (!user) return false;
+    return user.role === 'ParishAdmin' || user.role === 'Admin Cấp 2';
+  }
+
+  function hasAdminAccess(user = currentUser) {
+    return isSuperAdmin(user) || isParishAdmin(user);
+  }
+
+  function getUserManagedParish(user = currentUser) {
+    if (!user) return 'Giáo Xứ Hoà Khánh';
+    return (user.managedParish && user.managedParish.trim()) || (user.parish && user.parish.trim()) || 'Giáo Xứ Hoà Khánh';
+  }
+
+  window.isSuperAdmin = isSuperAdmin;
+  window.isParishAdmin = isParishAdmin;
+  window.hasAdminAccess = hasAdminAccess;
+  window.getUserManagedParish = getUserManagedParish;
+
   function startNienHocSanitizer() {
     const cleanDOM = () => {
       try {
@@ -255,6 +281,7 @@
         const accInfo = uData.account_info || {};
         const parish = (uData.parishInfo && uData.parishInfo.name) || accInfo.parish || 'Giáo Xứ Hoà Khánh';
         const role = (uEmail === 'philthienhao@gmail.com') ? 'Admin' : (accInfo.role || 'Giáo lý viên');
+        const managedParish = accInfo.managedParish || parish;
 
         const existing = accountsList.find(a => a.email.toLowerCase() === uEmail);
         if (!existing) {
@@ -267,6 +294,7 @@
             phone: accInfo.phone || '',
             parish: parish,
             role: role,
+            managedParish: managedParish,
             avatar: accInfo.avatar || 'admin_avatar.png',
             status: accInfo.status || 'active',
             lastLogin: r.updated_at ? new Date(r.updated_at).toLocaleString('vi-VN') : 'Đồng bộ từ Cloud',
@@ -288,6 +316,14 @@
           }
           if (parish && existing.parish !== parish) {
             existing.parish = parish;
+            changed = true;
+          }
+          if (accInfo.role && existing.role !== accInfo.role && uEmail !== 'philthienhao@gmail.com') {
+            existing.role = accInfo.role;
+            changed = true;
+          }
+          if (accInfo.managedParish && existing.managedParish !== accInfo.managedParish) {
+            existing.managedParish = accInfo.managedParish;
             changed = true;
           }
         }
@@ -952,6 +988,7 @@
                 phone: accInfo.phone || '',
                 parish: (uData.parishInfo && uData.parishInfo.name) || accInfo.parish || 'Giáo Xứ Hoà Khánh',
                 role: (email === 'philthienhao@gmail.com') ? 'Admin' : (accInfo.role || 'Giáo lý viên'),
+                managedParish: accInfo.managedParish || (uData.parishInfo && uData.parishInfo.name) || accInfo.parish || 'Giáo Xứ Hoà Khánh',
                 avatar: accInfo.avatar || 'admin_avatar.png',
                 status: accInfo.status || 'active',
                 lastLogin: new Date().toLocaleString(),
@@ -1225,10 +1262,10 @@
           renderSettings(container);
           break;
         case 'admin-users':
-          if (currentUser.role === 'Admin') {
+          if (hasAdminAccess(currentUser)) {
             renderAdminUsers(container);
           } else {
-            showToast('Bạn không có quyền truy cập trang Admin!', 'danger');
+            showToast('Bạn không có quyền truy cập trang Quản trị!', 'danger');
             navigateTo('overview');
           }
           break;
@@ -1246,6 +1283,10 @@
   function renderAppHeaderAndSidebar() {
     if (!currentUser) return;
 
+    const superAdmin = isSuperAdmin(currentUser);
+    const parishAdmin = isParishAdmin(currentUser);
+    const myManagedParish = getUserManagedParish(currentUser);
+
     // Topbar User Info
     const topAvatar = document.getElementById('topbar-user-avatar');
     const topName = document.getElementById('topbar-user-name');
@@ -1255,11 +1296,29 @@
 
     if (topAvatar) topAvatar.src = currentUser.avatar;
     if (topName) topName.textContent = (currentUser.holyName ? currentUser.holyName + ' ' : '') + currentUser.name;
-    if (topTag) topTag.innerHTML = currentUser.role === 'Admin' ? '<i class="fa-solid fa-shield-halved"></i> Admin' : '<i class="fa-solid fa-user"></i> Giáo lý viên';
+    
+    if (topTag) {
+      if (superAdmin) {
+        topTag.innerHTML = '<i class="fa-solid fa-crown text-warning"></i> Admin Tổng';
+      } else if (parishAdmin) {
+        topTag.innerHTML = '<i class="fa-solid fa-church text-info"></i> Admin Cấp 2';
+      } else {
+        topTag.innerHTML = '<i class="fa-solid fa-user"></i> Giáo lý viên';
+      }
+    }
+
     if (dropEmail) dropEmail.textContent = currentUser.email;
     if (dropRoleTag) {
-      dropRoleTag.textContent = currentUser.role === 'Admin' ? 'Tài Khoản Admin' : 'Tài Khoản Giáo Lý Viên';
-      dropRoleTag.className = 'role-badge ' + (currentUser.role === 'Admin' ? 'role-admin' : 'role-catechist');
+      if (superAdmin) {
+        dropRoleTag.textContent = 'Admin Master (Toàn Hệ Thống)';
+        dropRoleTag.className = 'role-badge role-admin';
+      } else if (parishAdmin) {
+        dropRoleTag.textContent = `Admin Cấp 2 — ${myManagedParish}`;
+        dropRoleTag.className = 'role-badge role-parish-admin';
+      } else {
+        dropRoleTag.textContent = 'Tài Khoản Giáo Lý Viên';
+        dropRoleTag.className = 'role-badge role-catechist';
+      }
     }
 
     // Sidebar User Info
@@ -1272,9 +1331,12 @@
     if (sideHoly) sideHoly.textContent = currentUser.holyName || 'T. Giuse';
     if (sideFull) sideFull.textContent = currentUser.name;
     if (sideRole) {
-      if (currentUser.role === 'Admin' || currentUser.email.toLowerCase() === 'philthienhao@gmail.com') {
-        sideRole.innerHTML = '<i class="fa-solid fa-crown text-warning"></i> Admin / Quản Trị Viên';
+      if (superAdmin) {
+        sideRole.innerHTML = '<i class="fa-solid fa-crown text-warning"></i> Admin Master / Quản Trị Hệ Thống';
         sideRole.className = 'user-role-badge text-warning';
+      } else if (parishAdmin) {
+        sideRole.innerHTML = `<i class="fa-solid fa-user-shield text-info"></i> Admin Cấp 2 (${myManagedParish})`;
+        sideRole.className = 'user-role-badge text-info';
       } else {
         sideRole.textContent = currentUser.role || 'Giáo lý viên';
         sideRole.className = 'user-role-badge';
@@ -1299,7 +1361,30 @@
     // Admin Menu Section Toggle
     const adminBlock = document.getElementById('admin-menu-section');
     if (adminBlock) {
-      adminBlock.style.display = (currentUser.role === 'Admin') ? 'block' : 'none';
+      if (superAdmin || parishAdmin) {
+        adminBlock.style.display = 'block';
+        const adminMenuLabel = document.getElementById('admin-menu-label');
+        const adminMenuTitle = document.getElementById('admin-menu-title');
+        const adminBadge = document.getElementById('admin-badge');
+        
+        if (superAdmin) {
+          if (adminMenuLabel) adminMenuLabel.textContent = 'QUẢN TRỊ TỔNG';
+          if (adminMenuTitle) adminMenuTitle.textContent = 'Quản trị Đa Giáo Xứ';
+          if (adminBadge) {
+            adminBadge.textContent = 'Admin Master';
+            adminBadge.className = 'badge badge-pill badge-danger';
+          }
+        } else {
+          if (adminMenuLabel) adminMenuLabel.textContent = 'QUẢN TRỊ GIÁO XỨ';
+          if (adminMenuTitle) adminMenuTitle.textContent = 'Quản trị Giáo Xứ';
+          if (adminBadge) {
+            adminBadge.textContent = 'Admin Cấp 2';
+            adminBadge.className = 'badge badge-pill badge-primary';
+          }
+        }
+      } else {
+        adminBlock.style.display = 'none';
+      }
     }
 
     // Dynamic Notification Count Badge Update
@@ -1595,6 +1680,9 @@
 
   // Helper: Multi-tenant Global Data Aggregation for Admin
   function getParishGlobalData() {
+    const isParish = isParishAdmin(currentUser);
+    const myParish = getUserManagedParish(currentUser);
+
     const allKeys = Object.keys(localStorage).filter(k => k.startsWith(STORAGE_PREFIX_DATA));
     let aggregatedClasses = [];
     let aggregatedStudents = [];
@@ -1602,8 +1690,16 @@
     
     allKeys.forEach(k => {
       try {
-        const data = JSON.parse(localStorage.getItem(k));
+        const raw = localStorage.getItem(k);
+        if (!raw) return;
+        const data = JSON.parse(raw);
         if (data) {
+          if (isParish) {
+            const pName = (data.parishInfo && data.parishInfo.name) || (data.account_info && data.account_info.parish);
+            if (pName && pName.toLowerCase().trim() !== myParish.toLowerCase().trim()) {
+              return;
+            }
+          }
           if (Array.isArray(data.classes)) aggregatedClasses = aggregatedClasses.concat(data.classes);
           if (Array.isArray(data.students)) aggregatedStudents = aggregatedStudents.concat(data.students);
           if (Array.isArray(data.catechists)) aggregatedCatechists = aggregatedCatechists.concat(data.catechists);
@@ -3942,16 +4038,16 @@
     `;
   }
 
-  // PAGE 11: BÁO CÁO GIÁO LÝ (REPORTS - SUPER ADMIN MULTI-TENANT PARISH OVERVIEW)
+  // PAGE 11: BÁO CÁO GIÁO LÝ (REPORTS - MULTI-TENANT PARISH OVERVIEW)
   function renderReports(container) {
-    const isAdmin = currentUser && currentUser.role === 'Admin';
+    const isAdmin = hasAdminAccess(currentUser);
     const globalData = getParishGlobalData();
 
     container.innerHTML = `
       <div class="page-header">
         <div>
           <h2 class="page-title"><i class="fa-solid fa-chart-column text-primary"></i> Báo Cáo Giáo Lý Toàn Giáo Xứ</h2>
-          <p class="page-subtitle">${isAdmin ? '👑 Chế độ Admin: Tổng hợp theo dõi toàn bộ các lớp của tất cả GLV trong Giáo xứ' : 'Tổng hợp số liệu lớp học cá nhân'}</p>
+          <p class="page-subtitle">${isSuperAdmin(currentUser) ? '👑 Chế độ Admin Master: Tổng hợp theo dõi toàn bộ các lớp của tất cả GLV trong hệ thống' : (isParishAdmin(currentUser) ? `⛪ Chế độ Admin Cấp 2: Tổng hợp dữ liệu toàn Giáo Xứ ${getUserManagedParish(currentUser)}` : 'Tổng hợp số liệu lớp học cá nhân')}</p>
         </div>
         <button class="btn btn-outline-primary" onclick="window.print()"><i class="fa-solid fa-print"></i> In Báo Cáo PDF</button>
       </div>
@@ -4372,10 +4468,15 @@
     const allParishes = Array.from(uniqueParishesSet);
 
     // Apply Parish Selection Filter
-    const activeParish = window.adminSelectedParish || 'Giáo Xứ Hoà Khánh';
-    const filteredAccounts = (activeParish === 'ALL')
+    const isSuper = isSuperAdmin(currentUser);
+    const isParish = isParishAdmin(currentUser);
+    const myManagedParish = getUserManagedParish(currentUser);
+
+    // Apply Parish Selection Filter
+    let activeParish = (isParish && !isSuper) ? myManagedParish : (window.adminSelectedParish || 'Giáo Xứ Hoà Khánh');
+    const filteredAccounts = (activeParish === 'ALL' && isSuper)
       ? combinedAccounts
-      : combinedAccounts.filter(a => a.parish.toLowerCase().trim() === activeParish.toLowerCase().trim());
+      : combinedAccounts.filter(a => (a.parish || '').toLowerCase().trim() === activeParish.toLowerCase().trim());
 
     // Aggregate statistics for the filtered parish
     let allParishClasses = [];
@@ -4403,8 +4504,16 @@
     container.innerHTML = `
       <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 20px;">
         <div>
-          <h2 class="page-title"><i class="fa-solid fa-church text-warning"></i> Quản Trị Hệ Thống Đa Giáo Xứ (Super Admin Hub)</h2>
-          <p class="page-subtitle">Quản lý toàn bộ tài khoản giáo viên, mật khẩu, và dữ liệu lớp học phân chia chi tiết theo từng Giáo xứ</p>
+          <h2 class="page-title">
+            ${isSuper 
+              ? '<i class="fa-solid fa-crown text-warning"></i> Quản Trị Hệ Thống Đa Giáo Xứ (Admin Master Hub)' 
+              : `<i class="fa-solid fa-church text-primary"></i> Quản Trị Giáo Xứ ${myManagedParish} (Admin Cấp 2)`}
+          </h2>
+          <p class="page-subtitle">
+            ${isSuper 
+              ? 'Quản lý toàn bộ tài khoản giáo viên, phân quyền Admin Cấp 2 cho từng giáo xứ và kiểm soát hệ thống' 
+              : `Toàn quyền quản lý giáo lý viên, lớp học, học sinh và báo cáo thuộc phạm vi ${myManagedParish}`}
+          </p>
         </div>
         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
           <button class="btn btn-success" onclick="window.exportParishMasterExcel()">
@@ -4419,19 +4528,25 @@
       <!-- PARISH SELECTION FILTER TOOLBAR -->
       <div class="parish-filter-toolbar">
         <div class="parish-filter-left">
-          <label style="font-size: 13.5px; font-weight: 800; color: var(--dark-navy); margin: 0; display: flex; align-items: center; gap: 6px;">
-            <i class="fa-solid fa-filter text-primary"></i> Xem Dữ Liệu Theo Giáo Xứ:
-          </label>
-          <div class="parish-select-wrapper">
-            <i class="fa-solid fa-church text-primary"></i>
-            <select id="admin-parish-filter" onchange="window.changeAdminParishFilter(this.value)">
-              <option value="ALL" ${activeParish === 'ALL' ? 'selected' : ''}>🌐 Tất Cả Giáo Xứ (${combinedAccounts.length} tài khoản)</option>
-              ${allParishes.map(p => {
-                const count = combinedAccounts.filter(a => a.parish.toLowerCase().trim() === p.toLowerCase().trim()).length;
-                return `<option value="${p}" ${activeParish === p ? 'selected' : ''}>⛪ ${p} (${count} tài khoản)</option>`;
-              }).join('')}
-            </select>
-          </div>
+          ${isSuper ? `
+            <label style="font-size: 13.5px; font-weight: 800; color: var(--dark-navy); margin: 0; display: flex; align-items: center; gap: 6px;">
+              <i class="fa-solid fa-filter text-primary"></i> Xem Dữ Liệu Theo Giáo Xứ:
+            </label>
+            <div class="parish-select-wrapper">
+              <i class="fa-solid fa-church text-primary"></i>
+              <select id="admin-parish-filter" onchange="window.changeAdminParishFilter(this.value)">
+                <option value="ALL" ${activeParish === 'ALL' ? 'selected' : ''}>🌐 Tất Cả Giáo Xứ (${combinedAccounts.length} tài khoản)</option>
+                ${allParishes.map(p => {
+                  const count = combinedAccounts.filter(a => (a.parish || '').toLowerCase().trim() === p.toLowerCase().trim()).length;
+                  return `<option value="${p}" ${activeParish === p ? 'selected' : ''}>⛪ ${p} (${count} tài khoản)</option>`;
+                }).join('')}
+              </select>
+            </div>
+          ` : `
+            <div style="display: flex; align-items: center; gap: 8px; background: #eff6ff; border: 1.5px solid #bfdbfe; color: #1e40af; padding: 7px 16px; border-radius: 8px; font-weight: 700; font-size: 13.5px;">
+              <i class="fa-solid fa-church text-primary"></i> Phạm Vi Quản Trị Của Bạn: <strong>${myManagedParish}</strong>
+            </div>
+          `}
         </div>
 
         <div style="display: flex; align-items: center; gap: 10px;">
@@ -4498,18 +4613,19 @@
                   <th>Tài Khoản Gmail & ID</th>
                   <th>Tên Thánh & Họ Tên</th>
                   <th>Giáo Xứ Trực Thuộc</th>
+                  <th>Vai Trò & Quyền Hạn</th>
                   <th>Mật Khẩu</th>
                   <th>Lớp Phụ Trách</th>
                   <th>Học Viên</th>
                   <th>Lần Đăng Nhập Cuối</th>
                   <th>Trạng Thái</th>
-                  <th>Thao Tác Admin Master</th>
+                  <th>Thao Tác Quản Trị</th>
                 </tr>
               </thead>
               <tbody>
                 ${filteredAccounts.length === 0 ? `
                   <tr>
-                    <td colspan="9" style="text-align: center; padding: 40px; color: var(--slate-muted);">
+                    <td colspan="10" style="text-align: center; padding: 40px; color: var(--slate-muted);">
                       <i class="fa-solid fa-church" style="font-size: 32px; opacity: 0.3; margin-bottom: 8px; display: block;"></i>
                       Chưa có tài khoản nào thuộc giáo xứ này.
                     </td>
@@ -4517,6 +4633,15 @@
                 ` : filteredAccounts.map(acc => {
                   const isHK = acc.parish && acc.parish.includes('Hoà Khánh');
                   const badgeClass = isHK ? 'badge-hk' : 'badge-other';
+
+                  let roleBadgeHtml = '';
+                  if (acc.email.toLowerCase() === 'philthienhao@gmail.com' || acc.role === 'Admin') {
+                    roleBadgeHtml = '<span class="badge-role-master"><i class="fa-solid fa-crown text-warning"></i> Admin Master</span>';
+                  } else if (acc.role === 'ParishAdmin' || acc.role === 'Admin Cấp 2') {
+                    roleBadgeHtml = `<span class="badge-role-parish" title="Admin Cấp 2 quản lý ${acc.parish || 'Giáo xứ'}"><i class="fa-solid fa-church"></i> Admin Cấp 2</span>`;
+                  } else {
+                    roleBadgeHtml = '<span class="badge-role-teacher"><i class="fa-solid fa-user"></i> Giáo lý viên</span>';
+                  }
 
                   return `
                     <tr class="admin-account-row">
@@ -4535,6 +4660,7 @@
                           <i class="fa-solid fa-church"></i> ${acc.parish || 'Giáo Xứ Hoà Khánh'}
                         </span>
                       </td>
+                      <td>${roleBadgeHtml}</td>
                       <td>
                         <span class="pw-mask" id="pw-text-${acc.id}" data-raw="${acc.password || '123456'}" data-hidden="true">••••••</span>
                         <button type="button" class="pw-reveal-btn" onclick="window.toggleAdminPasswordVisibility('${acc.id}', this)" title="Ẩn/Hiện mật khẩu">
@@ -4551,8 +4677,13 @@
                       </td>
                       <td>
                         <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                          ${isSuper ? `
+                            <button class="btn btn-sm btn-warning" onclick="window.openRoleDelegationModal('${acc.id}')" title="Phân quyền Admin Cấp 2 hoặc đổi vai trò" style="font-weight: 700; font-size: 11.5px; padding: 4px 8px; border-radius: 6px;">
+                              <i class="fa-solid fa-user-shield"></i> Phân Quyền
+                            </button>
+                          ` : ''}
                           <button class="btn btn-sm btn-outline-info" onclick="window.openInspectUserModal('${acc.email}')" title="Xem toàn bộ dữ liệu lớp học, học sinh, điểm danh của tài khoản này">
-                            <i class="fa-solid fa-eye"></i> Xem Dữ Liệu
+                            <i class="fa-solid fa-eye"></i> Dữ Liệu
                           </button>
                           <button class="btn btn-sm btn-outline-primary" onclick="window.impersonateUser('${acc.email}')" title="Đăng nhập xem giao diện như giáo viên này">
                             <i class="fa-solid fa-right-to-bracket"></i> Vào Xem
@@ -4560,9 +4691,11 @@
                           <button class="btn btn-sm btn-outline-secondary" onclick="window.openAdminEditModal('${acc.id}')" title="Sửa thông tin / Mật khẩu">
                             <i class="fa-solid fa-pen"></i>
                           </button>
-                          <button class="btn btn-sm btn-outline-danger" onclick="window.quickDeleteAdminUser('${acc.id}')" title="Xóa tài khoản">
-                            <i class="fa-solid fa-trash"></i>
-                          </button>
+                          ${(isSuper && acc.email.toLowerCase() !== 'philthienhao@gmail.com') ? `
+                            <button class="btn btn-sm btn-outline-danger" onclick="window.quickDeleteAdminUser('${acc.id}')" title="Xóa tài khoản">
+                              <i class="fa-solid fa-trash"></i>
+                            </button>
+                          ` : ''}
                         </div>
                       </td>
                     </tr>
@@ -5620,10 +5753,178 @@
     openModal('certificate-modal');
   };
 
+  // ROLE DELEGATION MODAL HANDLERS FOR SUPER ADMIN
+  window.openRoleDelegationModal = function (accId) {
+    if (!isSuperAdmin(currentUser)) {
+      showToast('Chỉ Admin Master mới có quyền phân quyền quản trị!', 'warning');
+      return;
+    }
+    const acc = accountsList.find(a => a.id === accId || a.email.toLowerCase() === accId.toLowerCase());
+    if (!acc) return;
+
+    document.getElementById('delegation-target-id').value = acc.id;
+    document.getElementById('delegation-target-email').value = acc.email;
+    document.getElementById('delegation-target-name').textContent = (acc.holyName ? acc.holyName + ' ' : '') + acc.name;
+    document.getElementById('delegation-target-email-txt').textContent = acc.email;
+    document.getElementById('delegation-target-avatar').src = acc.avatar || 'admin_avatar.png';
+
+    // Current Role Badge
+    const badgeWrap = document.getElementById('delegation-current-role-badge');
+    if (badgeWrap) {
+      if (acc.email.toLowerCase() === 'philthienhao@gmail.com' || acc.role === 'Admin') {
+        badgeWrap.innerHTML = '<span class="badge-role-master"><i class="fa-solid fa-crown text-warning"></i> Admin Master</span>';
+      } else if (acc.role === 'ParishAdmin' || acc.role === 'Admin Cấp 2') {
+        badgeWrap.innerHTML = `<span class="badge-role-parish"><i class="fa-solid fa-church"></i> Admin Cấp 2 (${acc.parish || 'Hoà Khánh'})</span>`;
+      } else {
+        badgeWrap.innerHTML = '<span class="badge-role-teacher"><i class="fa-solid fa-user"></i> Giáo lý viên</span>';
+      }
+    }
+
+    // Set Radio Value
+    let currentRoleVal = 'Giáo lý viên';
+    if (acc.email.toLowerCase() === 'philthienhao@gmail.com' || acc.role === 'Admin') {
+      currentRoleVal = 'Admin';
+    } else if (acc.role === 'ParishAdmin' || acc.role === 'Admin Cấp 2') {
+      currentRoleVal = 'ParishAdmin';
+    }
+
+    const radios = document.getElementsByName('delegation_role');
+    radios.forEach(r => {
+      r.checked = (r.value === currentRoleVal);
+    });
+
+    // Populate parish dropdown
+    const parishSelect = document.getElementById('delegation-target-parish-select');
+    if (parishSelect) {
+      const parishSet = new Set(['Giáo Xứ Hoà Khánh', 'Giáo Xứ Chính Tòa Đà Nẵng', 'Giáo Xứ An Ngãi', 'Giáo Xứ Tam Tòa', 'Giáo Xứ Thanh Đức', 'Giáo Xứ Cẩm Lệ', 'Giáo Xứ Phước Tường', 'Giáo Xứ Phú Thượng', 'Giáo Xứ Hòa Cường']);
+      accountsList.forEach(a => { if (a.parish) parishSet.add(a.parish); });
+      const currentAccParish = acc.parish || 'Giáo Xứ Hoà Khánh';
+      parishSet.add(currentAccParish);
+
+      parishSelect.innerHTML = Array.from(parishSet).map(p => `
+        <option value="${p}" ${p === currentAccParish ? 'selected' : ''}>⛪ ${p}</option>
+      `).join('') + '<option value="OTHER">➕ Giáo Xứ Khác (Tự nhập tên...)</option>';
+    }
+
+    const customWrap = document.getElementById('delegation-custom-parish-wrap');
+    if (customWrap) customWrap.style.display = 'none';
+
+    const parishGroup = document.getElementById('delegation-parish-group');
+    if (parishGroup) {
+      parishGroup.style.display = (currentRoleVal === 'ParishAdmin') ? 'block' : 'none';
+    }
+
+    openModal('role-delegation-modal');
+  };
+
+  window.handleRoleRadioChange = function (val) {
+    const parishGroup = document.getElementById('delegation-parish-group');
+    if (parishGroup) {
+      parishGroup.style.display = (val === 'ParishAdmin') ? 'block' : 'none';
+    }
+  };
+
+  window.handleDelegationParishSelect = function (val) {
+    const customWrap = document.getElementById('delegation-custom-parish-wrap');
+    if (customWrap) {
+      customWrap.style.display = (val === 'OTHER') ? 'block' : 'none';
+      if (val === 'OTHER') {
+        const customInput = document.getElementById('delegation-target-parish-custom');
+        if (customInput) customInput.focus();
+      }
+    }
+  };
+
+  window.saveRoleDelegation = async function (e) {
+    if (e) e.preventDefault();
+    if (!isSuperAdmin(currentUser)) {
+      showToast('Chỉ Admin Master mới có quyền phân quyền quản trị!', 'warning');
+      return;
+    }
+
+    const accId = document.getElementById('delegation-target-id').value;
+    const acc = accountsList.find(a => a.id === accId);
+    if (!acc) return;
+
+    let selectedRole = 'Giáo lý viên';
+    const radios = document.getElementsByName('delegation_role');
+    radios.forEach(r => {
+      if (r.checked) selectedRole = r.value;
+    });
+
+    let assignedParish = acc.parish || 'Giáo Xứ Hoà Khánh';
+    if (selectedRole === 'ParishAdmin') {
+      const parishSelect = document.getElementById('delegation-target-parish-select');
+      if (parishSelect) {
+        if (parishSelect.value === 'OTHER') {
+          const customP = document.getElementById('delegation-target-parish-custom');
+          if (customP && customP.value.trim()) {
+            assignedParish = customP.value.trim();
+          }
+        } else {
+          assignedParish = parishSelect.value;
+        }
+      }
+      acc.parish = assignedParish;
+      acc.managedParish = assignedParish;
+    }
+
+    acc.role = selectedRole;
+    saveAccounts();
+
+    // Sync to Supabase Cloud
+    if (window.supabaseClient && acc.email) {
+      try {
+        const { data } = await window.supabaseClient
+          .from('user_data')
+          .select('data')
+          .eq('email', acc.email.toLowerCase())
+          .maybeSingle();
+
+        let uData = (data && data.data) ? data.data : {};
+        if (!uData.account_info) uData.account_info = {};
+        uData.account_info.role = acc.role;
+        uData.account_info.parish = acc.parish;
+        if (acc.managedParish) uData.account_info.managedParish = acc.managedParish;
+        if (uData.parishInfo && selectedRole === 'ParishAdmin') {
+          uData.parishInfo.name = acc.parish;
+        }
+
+        await window.supabaseClient.from('user_data').upsert({
+          email: acc.email.toLowerCase(),
+          data: uData,
+          updated_at: new Date().toISOString()
+        });
+      } catch (err) {
+        console.warn('Sync delegation to Supabase error:', err);
+      }
+    }
+
+    closeModal('role-delegation-modal');
+    if (activePage === 'admin-users') {
+      renderAdminUsers(document.getElementById('content-area'));
+    }
+    
+    let roleText = 'Giáo lý viên';
+    if (selectedRole === 'Admin') roleText = 'Admin Master (Toàn hệ thống)';
+    if (selectedRole === 'ParishAdmin') roleText = `Admin Cấp 2 quản trị ${assignedParish}`;
+
+    showToast(`Đã phân quyền thành công: ${acc.holyName ? acc.holyName + ' ' : ''}${acc.name} là ${roleText}!`, 'success');
+  };
+
+  window.handleAdminTargetRoleChange = function (val) {
+    const parishInput = document.getElementById('admin-target-parish');
+    if (val === 'ParishAdmin' && parishInput) {
+      parishInput.focus();
+    }
+  };
+
   // ADMIN USER EDIT HANDLERS
   window.openAdminEditModal = function (accId) {
     const acc = accountsList.find(a => a.id === accId);
     if (!acc) return;
+
+    const isSuper = isSuperAdmin(currentUser);
 
     document.getElementById('admin-target-id').value = acc.id;
     document.getElementById('admin-target-avatar').src = acc.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80';
@@ -5631,11 +5932,24 @@
     document.getElementById('admin-target-email').textContent = acc.email;
     document.getElementById('admin-target-fullname').value = (acc.holyName ? acc.holyName + ' ' : '') + acc.name;
     const parishInput = document.getElementById('admin-target-parish');
-    if (parishInput) parishInput.value = acc.parish || 'Giáo Xứ Hoà Khánh';
+    if (parishInput) {
+      parishInput.value = acc.parish || 'Giáo Xứ Hoà Khánh';
+      parishInput.readOnly = !isSuper; // Only Super Admin can change parish
+    }
     const pwInput = document.getElementById('admin-target-password');
     if (pwInput) pwInput.value = acc.password || '123456';
-    document.getElementById('admin-target-role').value = acc.role;
+    
+    const roleSelect = document.getElementById('admin-target-role');
+    if (roleSelect) {
+      roleSelect.value = acc.role || 'Giáo lý viên';
+      roleSelect.disabled = !isSuper; // Only Super Admin can change role here
+    }
     document.getElementById('admin-target-status').value = acc.status;
+
+    const deleteBtn = document.getElementById('admin-delete-user-btn');
+    if (deleteBtn) {
+      deleteBtn.style.display = (isSuper && acc.email.toLowerCase() !== 'philthienhao@gmail.com') ? 'inline-block' : 'none';
+    }
 
     openModal('admin-user-modal');
   };
@@ -5646,11 +5960,19 @@
     const acc = accountsList.find(a => a.id === accId);
     if (!acc) return;
 
-    acc.role = document.getElementById('admin-target-role').value;
+    const isSuper = isSuperAdmin(currentUser);
+
+    if (isSuper) {
+      const targetRoleInput = document.getElementById('admin-target-role');
+      if (targetRoleInput) acc.role = targetRoleInput.value;
+    }
     acc.status = document.getElementById('admin-target-status').value;
 
     const parishInput = document.getElementById('admin-target-parish');
-    if (parishInput && parishInput.value.trim()) acc.parish = parishInput.value.trim();
+    if (parishInput && parishInput.value.trim() && isSuper) {
+      acc.parish = parishInput.value.trim();
+      if (acc.role === 'ParishAdmin') acc.managedParish = acc.parish;
+    }
 
     const pwInput = document.getElementById('admin-target-password');
     if (pwInput && pwInput.value.trim()) acc.password = pwInput.value.trim();
@@ -5671,7 +5993,8 @@
           uData.account_info.status = acc.status;
           uData.account_info.parish = acc.parish;
           uData.account_info.password = acc.password;
-          if (uData.parishInfo) uData.parishInfo.name = acc.parish;
+          if (acc.managedParish) uData.account_info.managedParish = acc.managedParish;
+          if (uData.parishInfo && acc.role === 'ParishAdmin') uData.parishInfo.name = acc.parish;
           window.supabaseClient.from('user_data').upsert({
             email: acc.email.toLowerCase(),
             data: uData,
@@ -5799,7 +6122,11 @@
       alert('Chưa kết nối Supabase Cloud để tải dữ liệu toàn giáo xứ.');
       return;
     }
-    showToast('Đang tổng hợp dữ liệu toàn Giáo xứ từ Cloud...', 'info');
+    const isParish = isParishAdmin(currentUser);
+    const myParish = getUserManagedParish(currentUser);
+    const targetParish = isParish ? myParish : (window.adminSelectedParish || 'ALL');
+
+    showToast(`Đang tổng hợp dữ liệu ${targetParish === 'ALL' ? 'toàn hệ thống' : targetParish} từ Cloud...`, 'info');
     try {
       const { data, error } = await window.supabaseClient.from('user_data').select('*');
       if (error || !data) throw error || new Error('Không thể tải dữ liệu');
@@ -5808,12 +6135,18 @@
       data.forEach(row => {
         const uData = row.data;
         const email = row.email;
+        const parish = (uData && uData.parishInfo && uData.parishInfo.name) || (uData && uData.account_info && uData.account_info.parish) || 'Giáo Xứ Hoà Khánh';
+        if (targetParish !== 'ALL' && parish.toLowerCase().trim() !== targetParish.toLowerCase().trim()) {
+          return;
+        }
+
         const teacherName = (row.account_info && row.account_info.name ? row.account_info.name : email);
         if (uData && Array.isArray(uData.students)) {
           uData.students.forEach((s, idx) => {
             const cls = (uData.classes || []).find(c => c.id === s.classId);
             allRows.push({
               'STT': idx + 1,
+              'Giáo Xứ': parish,
               'Giáo Lý Viên Phụ Trách': teacherName,
               'Email': email,
               'Tên Lớp': cls ? cls.name : (s.classId || 'Chưa xếp lớp'),
@@ -5833,15 +6166,16 @@
       });
 
       if (allRows.length === 0) {
-        alert('Chưa có dữ liệu học viên nào trong toàn bộ hệ thống Giáo xứ.');
+        alert(`Chưa có dữ liệu học viên nào thuộc ${targetParish === 'ALL' ? 'toàn hệ thống' : targetParish}.`);
         return;
       }
 
       const ws = XLSX.utils.json_to_sheet(allRows);
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "BaoCao_ToanGiaoXu");
-      XLSX.writeFile(wb, `MagnificatEdu_BaoCao_ToanGiaoXu_${new Date().toISOString().slice(0,10)}.xlsx`);
-      showToast('✓ Đã xuất thành công Báo Cáo Excel Toàn Giáo Xứ!', 'success');
+      const sheetName = targetParish === 'ALL' ? "BaoCao_ToanHeThong" : targetParish.replace(/[^a-zA-Z0-9]/g, '_').slice(0, 28);
+      XLSX.utils.book_append_sheet(wb, ws, sheetName);
+      XLSX.writeFile(wb, `MagnificatEdu_BaoCao_${targetParish.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().slice(0,10)}.xlsx`);
+      showToast(`✓ Đã xuất thành công Báo Cáo Excel (${allRows.length} học viên)!`, 'success');
     } catch (err) {
       alert('Lỗi khi tải dữ liệu từ Cloud: ' + err.message);
     }
