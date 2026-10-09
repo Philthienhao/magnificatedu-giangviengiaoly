@@ -1505,10 +1505,10 @@
     const isAdmin = hasAdminAccess(currentUser);
     const globalData = isAdmin ? getParishGlobalData() : null;
 
-    const effectiveClasses = (isAdmin && globalData) ? globalData.classes : (appData.classes || []);
-    const effectiveStudents = (isAdmin && globalData) ? globalData.students : (appData.students || []);
+    const effectiveClasses = getAccessibleClasses();
+    const effectiveStudents = getAccessibleStudents();
     const effectiveCatechists = (isAdmin && globalData) ? globalData.catechists : (appData.catechists || []);
-    const allAttendanceLogs = (isAdmin && globalData && globalData.attendanceLogs.length > 0) ? globalData.attendanceLogs : (appData.attendanceLogs || []);
+    const allAttendanceLogs = getAccessibleAttendanceLogs();
 
     const totalClasses = effectiveClasses.length;
     const totalStudents = effectiveStudents.length;
@@ -1915,18 +1915,237 @@
     };
   }
 
+  // --- MULTI-TEACHER CO-HOMEROOM / SHARED CLASS DATA ACCESSORS ---
+  function populateCatechistDatalist() {
+    const datalist = document.getElementById('catechist-email-list');
+    if (!datalist) return;
+    const seen = new Set();
+    const options = [];
+
+    (accountsList || []).forEach(a => {
+      if (!a || !a.email) return;
+      const em = a.email.toLowerCase().trim();
+      if (seen.has(em)) return;
+      seen.add(em);
+      const name = `${a.holyName ? a.holyName + ' ' : ''}${a.name || ''}`.trim();
+      options.push(`<option value="${a.email}">${name ? name + ' — ' + a.email : a.email}</option>`);
+    });
+
+    const catechists = (appData && Array.isArray(appData.catechists)) ? appData.catechists : [];
+    catechists.forEach(c => {
+      if (!c || !c.email) return;
+      const em = c.email.toLowerCase().trim();
+      if (seen.has(em)) return;
+      seen.add(em);
+      const name = `${c.holyName ? c.holyName + ' ' : ''}${c.fullName || c.name || ''}`.trim();
+      options.push(`<option value="${c.email}">${name ? name + ' — ' + c.email : c.email}</option>`);
+    });
+
+    datalist.innerHTML = options.join('');
+  }
+
+  function getAccessibleClasses() {
+    const isAdmin = hasAdminAccess(currentUser);
+    const globalData = isAdmin ? getParishGlobalData() : null;
+    if (isAdmin && globalData) {
+      return globalData.classes || [];
+    }
+
+    const myEmail = (currentUser && currentUser.email ? currentUser.email.toLowerCase().trim() : '');
+    const myName = (currentUser && currentUser.name ? currentUser.name.toLowerCase().trim() : '');
+
+    const classMap = new Map();
+
+    // 1. Current user's own classes
+    (appData.classes || []).forEach(c => {
+      if (c && (c.id || c.name)) {
+        classMap.set(String(c.id || c.name), c);
+      }
+    });
+
+    // 2. Co-taught classes from allCloudUserDataMap
+    Object.keys(allCloudUserDataMap).forEach(uEmail => {
+      const uData = allCloudUserDataMap[uEmail];
+      if (uData && Array.isArray(uData.classes)) {
+        uData.classes.forEach(c => {
+          if (!c || (!c.id && !c.name)) return;
+          const key = String(c.id || c.name);
+          const tEmail = (c.teacherEmail || '').toLowerCase().trim();
+          const coEmail = (c.coTeacherEmail || '').toLowerCase().trim();
+          const tName = (c.teacher || '').toLowerCase();
+          const coName = (c.coTeacher || '').toLowerCase();
+
+          const isDirectEmailMatch = (tEmail && tEmail === myEmail) || (coEmail && coEmail === myEmail);
+          const isNameMatch = (myName.length > 2 && (tName.includes(myName) || coName.includes(myName)));
+
+          if (isDirectEmailMatch || isNameMatch) {
+            if (!classMap.has(key)) {
+              classMap.set(key, { ...c, ownerEmail: uEmail });
+            }
+          }
+        });
+      }
+    });
+
+    return Array.from(classMap.values());
+  }
+
+  function getAccessibleStudents() {
+    const isAdmin = hasAdminAccess(currentUser);
+    const globalData = isAdmin ? getParishGlobalData() : null;
+    if (isAdmin && globalData) {
+      return globalData.students || [];
+    }
+
+    const accessibleClasses = getAccessibleClasses();
+    const classIds = new Set(accessibleClasses.map(c => String(c.id || '')).filter(Boolean));
+    const classNames = new Set(accessibleClasses.map(c => String(c.name || '').toLowerCase().trim()).filter(Boolean));
+
+    const studentMap = new Map();
+
+    // 1. Current user's own students
+    (appData.students || []).forEach(s => {
+      if (s && s.id) {
+        studentMap.set(String(s.id), s);
+      }
+    });
+
+    // 2. Students belonging to accessible classes from allCloudUserDataMap
+    Object.keys(allCloudUserDataMap).forEach(uEmail => {
+      const uData = allCloudUserDataMap[uEmail];
+      if (uData && Array.isArray(uData.students)) {
+        uData.students.forEach(s => {
+          if (!s || !s.id) return;
+          const sClassId = String(s.classId || '');
+          const sClassName = String(s.className || '').toLowerCase().trim();
+          if (classIds.has(sClassId) || classNames.has(sClassName)) {
+            if (!studentMap.has(String(s.id))) {
+              studentMap.set(String(s.id), { ...s, ownerEmail: uEmail });
+            }
+          }
+        });
+      }
+    });
+
+    return Array.from(studentMap.values());
+  }
+
+  function getAccessibleAttendanceLogs() {
+    const isAdmin = hasAdminAccess(currentUser);
+    const globalData = isAdmin ? getParishGlobalData() : null;
+    if (isAdmin && globalData) {
+      return globalData.attendanceLogs || [];
+    }
+
+    const accessibleClasses = getAccessibleClasses();
+    const classIds = new Set(accessibleClasses.map(c => String(c.id || '')).filter(Boolean));
+
+    const logMap = new Map();
+
+    (appData.attendanceLogs || []).forEach(l => {
+      if (l && l.id) logMap.set(String(l.id), l);
+    });
+
+    Object.keys(allCloudUserDataMap).forEach(uEmail => {
+      const uData = allCloudUserDataMap[uEmail];
+      if (uData && Array.isArray(uData.attendanceLogs)) {
+        uData.attendanceLogs.forEach(l => {
+          if (!l || !l.id) return;
+          if (classIds.has(String(l.classId))) {
+            if (!logMap.has(String(l.id))) {
+              logMap.set(String(l.id), l);
+            }
+          }
+        });
+      }
+    });
+
+    return Array.from(logMap.values());
+  }
+
+  function syncAttendanceLogToCoTeachers(logEntry) {
+    if (!logEntry || !logEntry.classId) return;
+    const cls = getAccessibleClasses().find(c => String(c.id) === String(logEntry.classId));
+    if (!cls) return;
+    const targetEmails = new Set();
+    if (cls.teacherEmail) targetEmails.add(cls.teacherEmail.toLowerCase());
+    if (cls.coTeacherEmail) targetEmails.add(cls.coTeacherEmail.toLowerCase());
+    if (cls.ownerEmail) targetEmails.add(cls.ownerEmail.toLowerCase());
+
+    const myEmail = currentUser && currentUser.email ? currentUser.email.toLowerCase() : '';
+
+    targetEmails.forEach(tEmail => {
+      if (tEmail === myEmail) return;
+      let uData = allCloudUserDataMap[tEmail];
+      if (!uData) {
+        try {
+          const raw = localStorage.getItem(STORAGE_PREFIX_DATA + tEmail.replace(/[^a-z0-9]/g, '_'));
+          if (raw) uData = JSON.parse(raw);
+        } catch(e) {}
+      }
+      if (uData) {
+        if (!Array.isArray(uData.attendanceLogs)) uData.attendanceLogs = [];
+        const idx = uData.attendanceLogs.findIndex(l => String(l.classId) === String(logEntry.classId) && l.date === logEntry.date && l.sessionType === logEntry.sessionType);
+        if (idx >= 0) uData.attendanceLogs[idx] = logEntry;
+        else uData.attendanceLogs.push(logEntry);
+        allCloudUserDataMap[tEmail] = uData;
+        try {
+          localStorage.setItem(STORAGE_PREFIX_DATA + tEmail.replace(/[^a-z0-9]/g, '_'), JSON.stringify(uData));
+          if (window.supabaseClient) {
+            window.supabaseClient.from('user_data').upsert({ email: tEmail, data: uData, updated_at: new Date().toISOString() });
+          }
+        } catch(e) {}
+      }
+    });
+  }
+
+  function syncStudentToCoTeachers(stdData) {
+    if (!stdData || !stdData.classId) return;
+    const cls = getAccessibleClasses().find(c => String(c.id) === String(stdData.classId));
+    if (!cls) return;
+    const targetEmails = new Set();
+    if (cls.teacherEmail) targetEmails.add(cls.teacherEmail.toLowerCase());
+    if (cls.coTeacherEmail) targetEmails.add(cls.coTeacherEmail.toLowerCase());
+    if (cls.ownerEmail) targetEmails.add(cls.ownerEmail.toLowerCase());
+
+    const myEmail = currentUser && currentUser.email ? currentUser.email.toLowerCase() : '';
+
+    targetEmails.forEach(tEmail => {
+      if (tEmail === myEmail) return;
+      let uData = allCloudUserDataMap[tEmail];
+      if (!uData) {
+        try {
+          const raw = localStorage.getItem(STORAGE_PREFIX_DATA + tEmail.replace(/[^a-z0-9]/g, '_'));
+          if (raw) uData = JSON.parse(raw);
+        } catch(e) {}
+      }
+      if (uData) {
+        if (!Array.isArray(uData.students)) uData.students = [];
+        const idx = uData.students.findIndex(s => s.id === stdData.id);
+        if (idx >= 0) uData.students[idx] = stdData;
+        else uData.students.push(stdData);
+        allCloudUserDataMap[tEmail] = uData;
+        try {
+          localStorage.setItem(STORAGE_PREFIX_DATA + tEmail.replace(/[^a-z0-9]/g, '_'), JSON.stringify(uData));
+          if (window.supabaseClient) {
+            window.supabaseClient.from('user_data').upsert({ email: tEmail, data: uData, updated_at: new Date().toISOString() });
+          }
+        } catch(e) {}
+      }
+    });
+  }
+
   // PAGE 2: QUẢN LÝ LỚP HỌC (CLASSES)
   function renderClasses(container) {
     const isAdmin = hasAdminAccess(currentUser);
-    const globalData = isAdmin ? getParishGlobalData() : null;
-    const classes = (isAdmin && globalData) ? globalData.classes : (appData.classes || []);
-    const students = (isAdmin && globalData) ? globalData.students : (appData.students || []);
+    const classes = getAccessibleClasses();
+    const students = getAccessibleStudents();
 
     container.innerHTML = `
       <div class="page-header">
         <div>
           <h2 class="page-title"><i class="fa-solid fa-layer-group"></i> Quản Lý Lớp Học Giáo Lý</h2>
-          <p class="page-subtitle">${isAdmin ? '👑 Danh sách liên thông tất cả các lớp học giáo lý của các GLV trong hệ thống' : 'Danh sách các lớp học giáo lý của bạn'} (${classes.length} lớp)</p>
+          <p class="page-subtitle">${isAdmin ? '👑 Danh sách liên thông tất cả các lớp học giáo lý của các GLV trong hệ thống' : 'Danh sách các lớp học giáo lý phụ trách & đồng chủ nhiệm'} (${classes.length} lớp)</p>
         </div>
         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
           <button class="btn btn-outline-primary" onclick="window.downloadCSVTemplate()"><i class="fa-solid fa-file-excel"></i> Tải Mẫu CSV/Excel</button>
@@ -1953,19 +2172,43 @@
             const safeId = encodeURIComponent(cid);
             const classStudentCount = c.studentCount || students.filter(s => s.classId === c.id || s.className === c.name).length;
             const teacherDisplay = c.teacher || (currentUser.holyName ? currentUser.holyName + ' ' : '') + currentUser.name;
+            const teacher1 = c.teacher || teacherDisplay;
+            const teacher1Email = c.teacherEmail || '';
+            const teacher2 = c.coTeacher || '';
+            const teacher2Email = c.coTeacherEmail || '';
+            const hasCoTeacher = Boolean(teacher2 || teacher2Email);
+
             return `
             <div class="card" style="margin-bottom: 0;">
               <div class="card-header" style="background: var(--primary-light); display: flex; justify-content: space-between; align-items: center;">
                 <h4 style="font-size: 16px; font-weight: 800; color: var(--primary); margin: 0;"><i class="fa-solid fa-book-bookmark"></i> ${c.name}</h4>
-                <div style="display: flex; gap: 4px; align-items: center;">
+                <div style="display: flex; gap: 4px; align-items: center; flex-wrap: wrap;">
+                  ${hasCoTeacher ? `<span class="badge" style="background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; font-size: 11px;"><i class="fa-solid fa-user-group"></i> 2 Chủ nhiệm</span>` : ''}
                   ${c.parish ? `<span class="badge badge-secondary" style="font-size: 10px;">${c.parish}</span>` : ''}
                   <span class="badge badge-primary">${c.grade || 'Giáo lý'}</span>
                 </div>
               </div>
               <div class="card-body">
                 <p style="font-size: 13px; margin-bottom: 6px;"><strong>Phòng học:</strong> ${c.room || 'Chưa xếp'}</p>
-                <p style="font-size: 13px; margin-bottom: 6px;"><strong>Lịch học:</strong> ${c.schedule || 'Chúa Nhật'}</p>
-                <p style="font-size: 13px; margin-bottom: 12px;"><strong>GLV Phụ trách:</strong> <span style="font-weight: 700; color: var(--primary);"><i class="fa-solid fa-user-tie"></i> ${teacherDisplay}</span></p>
+                <p style="font-size: 13px; margin-bottom: 8px;"><strong>Lịch học:</strong> ${c.schedule || 'Chúa Nhật'}</p>
+                
+                ${hasCoTeacher ? `
+                  <div style="background: #f8fafc; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; border: 1px solid #e2e8f0; font-size: 12px;">
+                    <div style="margin-bottom: 6px;">
+                      <strong style="color: var(--primary);"><i class="fa-solid fa-user-tie"></i> GLV CN 1 (Chính):</strong>
+                      <span style="font-weight: 700; color: var(--dark-navy);">${teacher1}</span>
+                      ${teacher1Email ? `<div style="font-size: 11px; color: var(--slate-muted); margin-left: 18px;"><i class="fa-solid fa-envelope"></i> ${teacher1Email}</div>` : ''}
+                    </div>
+                    <div>
+                      <strong style="color: #0284c7;"><i class="fa-solid fa-user-group"></i> GLV CN 2 (Đồng phụ trách):</strong>
+                      <span style="font-weight: 700; color: #0284c7;">${teacher2}</span>
+                      ${teacher2Email ? `<div style="font-size: 11px; color: var(--slate-muted); margin-left: 18px;"><i class="fa-solid fa-envelope-open-text"></i> ${teacher2Email}</div>` : ''}
+                    </div>
+                  </div>
+                ` : `
+                  <p style="font-size: 13px; margin-bottom: 12px;"><strong>GLV Phụ trách:</strong> <span style="font-weight: 700; color: var(--primary);"><i class="fa-solid fa-user-tie"></i> ${teacher1}</span> ${teacher1Email ? `<span style="font-size: 11px; color: var(--slate-muted);">(${teacher1Email})</span>` : ''}</p>
+                `}
+
                 <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--slate-border); padding-top: 12px;">
                   <span style="font-weight: 700; color: var(--slate-dark);"><i class="fa-solid fa-users text-primary"></i> ${classStudentCount} Học viên</span>
                   <div style="display: flex; gap: 6px;">
@@ -1985,9 +2228,8 @@
   // PAGE 3: QUẢN LÝ HỌC VIÊN (STUDENTS)
   function renderStudents(container) {
     const isAdmin = hasAdminAccess(currentUser);
-    const globalData = isAdmin ? getParishGlobalData() : null;
-    const students = (isAdmin && globalData) ? globalData.students : (appData.students || []);
-    const classes = (isAdmin && globalData) ? globalData.classes : (appData.classes || []);
+    const students = getAccessibleStudents();
+    const classes = getAccessibleClasses();
 
     container.innerHTML = `
       <div class="page-header">
@@ -2014,7 +2256,10 @@
             <div class="col-4">
               <select id="std-filter-class" class="form-control" onchange="window.filterStudentTable()">
                 <option value="">-- Tất cả Lớp Học (${classes.length} lớp) --</option>
-                ${classes.map(c => `<option value="${c.id}">${c.name}${c.teacher ? ' (' + c.teacher + ')' : ''}</option>`).join('')}
+                ${classes.map(c => {
+                  const teacherStr = c.teacher ? ' (' + c.teacher + (c.coTeacher ? ' & ' + c.coTeacher : '') + ')' : '';
+                  return `<option value="${c.id}">${c.name}${teacherStr}</option>`;
+                }).join('')}
               </select>
             </div>
             <div class="col-4">
@@ -2201,9 +2446,8 @@
   function renderAttendance(container) {
     const today = new Date().toISOString().split('T')[0];
     const isAdmin = hasAdminAccess(currentUser);
-    const globalData = isAdmin ? getParishGlobalData() : null;
-    const classes = (isAdmin && globalData) ? globalData.classes : (appData.classes || []);
-    const allStudents = (isAdmin && globalData) ? globalData.students : (appData.students || []);
+    const classes = getAccessibleClasses();
+    const allStudents = getAccessibleStudents();
     const selectedClassId = window._selectedAttendanceClassId || (classes.length > 0 ? classes[0].id : '');
     const selectedDate = window._selectedAttendanceDate || today;
     const selectedSessionType = window._selectedAttendanceSessionType || 'Giáo lý';
@@ -2214,22 +2458,33 @@
   // Initialize seatingChart state if missing
   if (!appData.seatingCharts) appData.seatingCharts = {};
   if (selectedClassId && !appData.seatingCharts[selectedClassId]) {
-    const seats = {};
-    const defaultSpd = 2; // Default 2 students per desk
-    filteredStudents.forEach((st, idx) => {
-      const deskIdx = Math.floor(idx / defaultSpd);
-      const r = Math.floor(deskIdx / 5);
-      const c = deskIdx % 5;
-      const s = idx % defaultSpd;
-      seats[`r${r}_c${c}_s${s}`] = st.id;
+    let foundChart = null;
+    Object.keys(allCloudUserDataMap).forEach(uEmail => {
+      const uData = allCloudUserDataMap[uEmail];
+      if (uData && uData.seatingCharts && uData.seatingCharts[selectedClassId]) {
+        foundChart = uData.seatingCharts[selectedClassId];
+      }
     });
-    appData.seatingCharts[selectedClassId] = {
-      rows: Math.max(4, Math.ceil((filteredStudents.length || 1) / (5 * defaultSpd))),
-      cols: 5,
-      seatsPerDesk: defaultSpd,
-      seats: seats,
-      absentSeats: []
-    };
+    if (foundChart) {
+      appData.seatingCharts[selectedClassId] = JSON.parse(JSON.stringify(foundChart));
+    } else {
+      const seats = {};
+      const defaultSpd = 2; // Default 2 students per desk
+      filteredStudents.forEach((st, idx) => {
+        const deskIdx = Math.floor(idx / defaultSpd);
+        const r = Math.floor(deskIdx / 5);
+        const c = deskIdx % 5;
+        const s = idx % defaultSpd;
+        seats[`r${r}_c${c}_s${s}`] = st.id;
+      });
+      appData.seatingCharts[selectedClassId] = {
+        rows: Math.max(4, Math.ceil((filteredStudents.length || 1) / (5 * defaultSpd))),
+        cols: 5,
+        seatsPerDesk: defaultSpd,
+        seats: seats,
+        absentSeats: []
+      };
+    }
   }
 
   const currentChart = appData.seatingCharts[selectedClassId] || { rows: 4, cols: 5, seatsPerDesk: 2, seats: {}, absentSeats: [] };
@@ -2237,8 +2492,8 @@
   if (!currentChart.seatsPerDesk) currentChart.seatsPerDesk = 2;
 
     // Find saved historical record for current (selectedClassId, selectedDate, selectedSessionType)
-    const logs = appData.attendanceLogs || [];
-    const savedLog = logs.find(l => l.classId === selectedClassId && l.date === selectedDate && l.sessionType === selectedSessionType);
+    const logs = getAccessibleAttendanceLogs();
+    const savedLog = logs.find(l => String(l.classId) === String(selectedClassId) && l.date === selectedDate && l.sessionType === selectedSessionType);
 
     container.innerHTML = `
       <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
@@ -3228,6 +3483,7 @@
       appData.attendanceLogs.push(logEntry);
     }
 
+    syncAttendanceLogToCoTeachers(logEntry);
     saveUserData();
     showToast(`✓ Đã lưu vĩnh viễn kết quả điểm danh AI cho lớp lên Supabase Cloud! (Vắng ${absentSeats.length} em)`, 'success');
   };
@@ -3345,14 +3601,14 @@
     const classId = classSelect.value;
     const date = dateInput.value;
     const sessionType = sessionSelect ? sessionSelect.value : 'Giáo lý';
-    const targetClass = appData.classes.find(c => c.id === classId);
+    const targetClass = getAccessibleClasses().find(c => String(c.id) === String(classId));
 
     if (!targetClass) {
       showToast('Vui lòng chọn lớp học!', 'warning');
       return;
     }
 
-    const filteredStudents = appData.students.filter(s => s.classId === classId);
+    const filteredStudents = getAccessibleStudents().filter(s => String(s.classId) === String(classId));
     if (filteredStudents.length === 0) {
       showToast('Lớp học này chưa có học viên nào!', 'warning');
       return;
@@ -3386,7 +3642,7 @@
     }
 
     // Check if log for classId + date + sessionType already exists
-    const existingIndex = appData.attendanceLogs.findIndex(l => l.classId === classId && l.date === date && l.sessionType === sessionType);
+    const existingIndex = appData.attendanceLogs.findIndex(l => String(l.classId) === String(classId) && l.date === date && l.sessionType === sessionType);
 
     const logEntry = {
       id: existingIndex >= 0 ? appData.attendanceLogs[existingIndex].id : 'att_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
@@ -3412,6 +3668,7 @@
       appData.attendanceLogs.push(logEntry);
     }
 
+    syncAttendanceLogToCoTeachers(logEntry);
     saveUserData();
     renderAttendance(document.getElementById('content-area'));
     showToast(`✅ Đã lưu vĩnh viễn lịch sử điểm danh ngày ${date} (${sessionType}) lên hệ thống Cloud!`, 'success');
@@ -3865,7 +4122,7 @@
   };
 
   function renderGradebook(container) {
-    const classes = appData.classes || [];
+    const classes = getAccessibleClasses();
     const selectedClassId = window._selectedGradeClassId || (classes.length > 0 ? classes[0].id : '');
     const selectedSemester = window._selectedGradeSemester || 'semester1';
 
@@ -3875,7 +4132,7 @@
 
     const targetClass = classes.find(c => c.id === selectedClassId || String(c.id) === String(selectedClassId));
     const targetClassName = targetClass ? targetClass.name : '';
-    const filteredStudents = (appData.students || []).filter(s =>
+    const filteredStudents = getAccessibleStudents().filter(s =>
       !selectedClassId ||
       s.classId === selectedClassId ||
       String(s.classId) === String(selectedClassId) ||
@@ -4063,9 +4320,9 @@
 
   // PAGE 7: ĐÁNH GIÁ RÈN LUYỆN (CONDUCT)
   function renderConduct(container) {
-    const classes = appData.classes || [];
+    const classes = getAccessibleClasses();
     const selectedClassId = window._selectedConductClassId || (classes.length > 0 ? classes[0].id : '');
-    const filteredStudents = appData.students.filter(s => !selectedClassId || s.classId === selectedClassId);
+    const filteredStudents = getAccessibleStudents().filter(s => !selectedClassId || s.classId === selectedClassId);
 
     container.innerHTML = `
       <div class="page-header">
@@ -4233,6 +4490,7 @@
 
   // PAGE 10: BẰNG & CHỨNG CHỈ (CERTIFICATES)
   function renderCertificates(container) {
+    const students = getAccessibleStudents();
     container.innerHTML = `
       <div class="page-header">
         <div>
@@ -4246,14 +4504,14 @@
           <h3 class="card-title"><i class="fa-solid fa-sliders"></i> Cấu Hình Chứng Nhận In</h3>
         </div>
         <div class="card-body">
-          ${appData.students.length === 0 ? `
+          ${students.length === 0 ? `
             <p style="color: var(--slate-muted); text-align: center;">Chưa có học viên nào trong hệ thống để in chứng chỉ. Vui lòng thêm học viên hoặc tải file CSV lên!</p>
           ` : `
             <div class="form-row">
               <div class="col-6">
                 <label>Chọn Học Viên In Chứng Nhận:</label>
                 <select id="cert-student-select" class="form-control">
-                  ${appData.students.map(s => `<option value="${s.id}">${s.holyName} ${s.fullName} (${s.code})</option>`).join('')}
+                  ${students.map(s => `<option value="${s.id}">${s.holyName ? s.holyName + ' ' : ''}${s.fullName || s.name || ''} (${s.code || s.id})</option>`).join('')}
                 </select>
               </div>
               <div class="col-6">
@@ -5288,7 +5546,7 @@
     if (photoUrlEl) photoUrlEl.value = '';
 
     const select = document.getElementById('std-class');
-    const classes = hasAdminAccess(currentUser) ? getParishGlobalData().classes : (appData.classes || []);
+    const classes = getAccessibleClasses();
     if (select) {
       select.innerHTML = classes.map(c => `<option value="${c.id}">${c.name} (${c.grade || 'Giáo lý'})</option>`).join('');
     }
@@ -5297,15 +5555,14 @@
   };
 
   window.editStudent = function (stdId) {
-    const globalData = hasAdminAccess(currentUser) ? getParishGlobalData() : null;
-    const student = (appData.students || []).find(s => s.id === stdId) || (globalData && globalData.students.find(s => s.id === stdId));
+    const student = getAccessibleStudents().find(s => s.id === stdId || String(s.id) === String(stdId));
     if (!student) return;
 
     document.getElementById('student-form-id').value = student.id;
     document.getElementById('student-modal-title').innerHTML = '<i class="fa-solid fa-user-pen"></i> Chỉnh Sửa Sơ Yếu Lý Lịch Học Viên';
 
     const select = document.getElementById('std-class');
-    const classes = hasAdminAccess(currentUser) ? (globalData ? globalData.classes : appData.classes) : (appData.classes || []);
+    const classes = getAccessibleClasses();
     if (select) {
       select.innerHTML = classes.map(c => `<option value="${c.id}" ${c.id === student.classId ? 'selected' : ''}>${c.name} (${c.grade || 'Giáo lý'})</option>`).join('');
     }
@@ -5335,8 +5592,7 @@
   function handleSaveStudent(e) {
     e.preventDefault();
     const id = document.getElementById('student-form-id').value;
-    const globalData = hasAdminAccess(currentUser) ? getParishGlobalData() : null;
-    const existingStudent = (appData.students || []).find(s => s.id === id) || (globalData && globalData.students.find(s => s.id === id));
+    const existingStudent = getAccessibleStudents().find(s => s.id === id || String(s.id) === String(id));
     const photoVal = document.getElementById('std-photo-url') ? document.getElementById('std-photo-url').value : '';
     const subParishVal = document.getElementById('std-subparish') ? document.getElementById('std-subparish').value.trim() : '';
 
@@ -5394,6 +5650,7 @@
       appData.students.push(stdData);
     }
 
+    syncStudentToCoTeachers(stdData);
     saveUserData();
     closeModal('student-modal');
     if (activePage === 'students') renderStudents(document.getElementById('content-area'));
@@ -5440,10 +5697,59 @@
   };
 
   // CLASS MODAL HANDLERS
+  function setupCoTeacherAutoFill() {
+    const bindEmailListener = (emailId, nameId) => {
+      const emailInput = document.getElementById(emailId);
+      const nameInput = document.getElementById(nameId);
+      if (!emailInput || !nameInput || emailInput._hasAutoFillBound) return;
+      emailInput._hasAutoFillBound = true;
+      emailInput.addEventListener('change', () => {
+        const val = emailInput.value.trim().toLowerCase();
+        if (!val) return;
+        const matchAcc = (accountsList || []).find(a => a.email && a.email.toLowerCase() === val);
+        if (matchAcc) {
+          const fullName = `${matchAcc.holyName ? matchAcc.holyName + ' ' : ''}${matchAcc.name || ''}`.trim();
+          if (fullName && (!nameInput.value || nameInput.value.trim() === '')) {
+            nameInput.value = fullName;
+          }
+          return;
+        }
+        const catechists = (appData && Array.isArray(appData.catechists)) ? appData.catechists : [];
+        const matchCat = catechists.find(c => c.email && c.email.toLowerCase() === val);
+        if (matchCat) {
+          const fullName = `${matchCat.holyName ? matchCat.holyName + ' ' : ''}${matchCat.fullName || matchCat.name || ''}`.trim();
+          if (fullName && (!nameInput.value || nameInput.value.trim() === '')) {
+            nameInput.value = fullName;
+          }
+        }
+      });
+    };
+    bindEmailListener('cls-teacher-email', 'cls-teacher');
+    bindEmailListener('cls-co-teacher-email', 'cls-co-teacher');
+  }
+
   window.openAddClassModal = function () {
     const form = document.getElementById('class-form');
     if (form) form.reset();
     document.getElementById('class-form-id').value = '';
+    const modalTitle = document.getElementById('class-modal-title');
+    if (modalTitle) modalTitle.innerHTML = '<i class="fa-solid fa-layer-group"></i> Tạo Lớp Học Mới';
+
+    if (currentUser) {
+      const teacherInput = document.getElementById('cls-teacher');
+      const teacherEmailInput = document.getElementById('cls-teacher-email');
+      if (teacherInput) {
+        teacherInput.value = (currentUser.holyName ? currentUser.holyName + ' ' : '') + currentUser.name;
+      }
+      if (teacherEmailInput) {
+        teacherEmailInput.value = currentUser.email || '';
+      }
+    }
+    if (document.getElementById('cls-co-teacher')) document.getElementById('cls-co-teacher').value = '';
+    if (document.getElementById('cls-co-teacher-email')) document.getElementById('cls-co-teacher-email').value = '';
+
+    populateCatechistDatalist();
+    setupCoTeacherAutoFill();
     openModal('class-modal');
   };
 
@@ -5452,10 +5758,12 @@
     let decodedId = rawId;
     try { decodedId = decodeURIComponent(rawId); } catch(e) {}
 
-    const globalData = hasAdminAccess(currentUser) ? getParishGlobalData() : null;
-    const allClasses = (globalData ? globalData.classes : []).concat(appData.classes || []);
+    const allClasses = getAccessibleClasses();
     const cls = allClasses.find(c => c && (c.id === rawId || c.id === decodedId || c.name === rawId || c.name === decodedId));
     if (!cls) return;
+
+    const modalTitle = document.getElementById('class-modal-title');
+    if (modalTitle) modalTitle.innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Cập Nhật Thông Tin Lớp Học';
 
     document.getElementById('class-form-id').value = cls.id;
     document.getElementById('cls-name').value = cls.name;
@@ -5463,6 +5771,18 @@
     document.getElementById('cls-room').value = cls.room || '';
     document.getElementById('cls-schedule').value = cls.schedule || '';
     document.getElementById('cls-teacher').value = cls.teacher || '';
+    if (document.getElementById('cls-teacher-email')) {
+      document.getElementById('cls-teacher-email').value = cls.teacherEmail || (currentUser ? currentUser.email : '');
+    }
+    if (document.getElementById('cls-co-teacher')) {
+      document.getElementById('cls-co-teacher').value = cls.coTeacher || '';
+    }
+    if (document.getElementById('cls-co-teacher-email')) {
+      document.getElementById('cls-co-teacher-email').value = cls.coTeacherEmail || '';
+    }
+
+    populateCatechistDatalist();
+    setupCoTeacherAutoFill();
     openModal('class-modal');
   };
 
@@ -5549,19 +5869,28 @@
     e.preventDefault();
     const id = document.getElementById('class-form-id').value;
 
+    const teacherName = document.getElementById('cls-teacher').value.trim() || currentUser.name;
+    const teacherEmail = (document.getElementById('cls-teacher-email') ? document.getElementById('cls-teacher-email').value.trim() : '') || (currentUser ? currentUser.email : '');
+    const coTeacherName = document.getElementById('cls-co-teacher') ? document.getElementById('cls-co-teacher').value.trim() : '';
+    const coTeacherEmail = document.getElementById('cls-co-teacher-email') ? document.getElementById('cls-co-teacher-email').value.trim() : '';
+
     const clsData = {
       id: id || 'cls_' + Date.now(),
       name: document.getElementById('cls-name').value.trim(),
       grade: document.getElementById('cls-grade').value,
       room: document.getElementById('cls-room').value.trim() || 'Phòng 101',
       schedule: document.getElementById('cls-schedule').value.trim() || 'Chúa Nhật (08:00 - 09:30)',
-      teacher: document.getElementById('cls-teacher').value.trim() || currentUser.name,
+      teacher: teacherName,
+      teacherEmail: teacherEmail,
+      coTeacher: coTeacherName,
+      coTeacherEmail: coTeacherEmail,
       studentCount: 0
     };
 
     if (id) {
       const idx = appData.classes.findIndex(c => c.id === id);
       if (idx !== -1) {
+        clsData.studentCount = appData.classes[idx].studentCount || 0;
         appData.classes[idx] = clsData;
       } else {
         let foundInCloud = false;
@@ -5570,6 +5899,7 @@
           if (uData && Array.isArray(uData.classes)) {
             const cIdx = uData.classes.findIndex(c => c.id === id);
             if (cIdx !== -1) {
+              clsData.studentCount = uData.classes[cIdx].studentCount || 0;
               uData.classes[cIdx] = clsData;
               foundInCloud = true;
               try {
@@ -5588,11 +5918,43 @@
       appData.classes.push(clsData);
     }
 
+    // Synchronize this class across both teachers' cloud datasets
+    const syncTargetEmails = new Set();
+    if (teacherEmail) syncTargetEmails.add(teacherEmail.toLowerCase());
+    if (coTeacherEmail) syncTargetEmails.add(coTeacherEmail.toLowerCase());
+
+    syncTargetEmails.forEach(tEmail => {
+      if (tEmail === (currentUser && currentUser.email ? currentUser.email.toLowerCase() : '')) return;
+      let uData = allCloudUserDataMap[tEmail];
+      if (!uData) {
+        try {
+          const raw = localStorage.getItem(STORAGE_PREFIX_DATA + tEmail.replace(/[^a-z0-9]/g, '_'));
+          if (raw) uData = JSON.parse(raw);
+        } catch(e) {}
+      }
+      if (uData) {
+        if (!Array.isArray(uData.classes)) uData.classes = [];
+        const cIdx = uData.classes.findIndex(c => c.id === clsData.id);
+        if (cIdx !== -1) {
+          uData.classes[cIdx] = clsData;
+        } else {
+          uData.classes.push(clsData);
+        }
+        allCloudUserDataMap[tEmail] = uData;
+        try {
+          localStorage.setItem(STORAGE_PREFIX_DATA + tEmail.replace(/[^a-z0-9]/g, '_'), JSON.stringify(uData));
+          if (window.supabaseClient) {
+            window.supabaseClient.from('user_data').upsert({ email: tEmail, data: uData, updated_at: new Date().toISOString() });
+          }
+        } catch(e) {}
+      }
+    });
+
     saveUserData();
     closeModal('class-modal');
     if (activePage === 'classes') renderClasses(document.getElementById('content-area'));
     if (activePage === 'overview') renderOverview(document.getElementById('content-area'));
-    showToast('Đã lưu thông tin lớp học thành công!', 'success');
+    showToast('Đã lưu thông tin lớp học & liên kết đồng chủ nhiệm thành công!', 'success');
   }
 
   // CATECHIST CRUD HANDLERS

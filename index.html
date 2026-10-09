@@ -607,9 +607,35 @@
                 <input type="text" id="cls-schedule" class="form-control" placeholder="Chúa Nhật (08:00 - 09:30)">
               </div>
             </div>
-            <div class="form-group">
-              <label>Giáo Lý Viên Phụ Trách:</label>
-              <input type="text" id="cls-teacher" class="form-control" placeholder="T. Giuse Võ Thiện Hảo">
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; margin-top: 10px;">
+              <div style="font-weight: 700; color: var(--primary); font-size: 13px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px;">
+                <span><i class="fa-solid fa-user-group"></i> Ban Giáo Lý Viên Chủ Nhiệm (Đồng Phụ Trách)</span>
+                <span class="badge badge-info" style="font-size: 11px;">Mỗi GLV dùng Gmail cá nhân riêng tư</span>
+              </div>
+              <div class="form-row">
+                <div class="form-group col-6">
+                  <label><i class="fa-solid fa-user-tie"></i> GLV Chủ Nhiệm 1 (Chính): <span class="text-danger">*</span></label>
+                  <input type="text" id="cls-teacher" class="form-control" placeholder="T. Giuse Võ Thiện Hảo" required>
+                </div>
+                <div class="form-group col-6">
+                  <label><i class="fa-solid fa-envelope"></i> Gmail GLV Chủ Nhiệm 1:</label>
+                  <input type="email" id="cls-teacher-email" class="form-control" placeholder="glv1@gmail.com" list="catechist-email-list">
+                </div>
+              </div>
+              <div class="form-row" style="margin-top: 6px;">
+                <div class="form-group col-6">
+                  <label><i class="fa-solid fa-user-plus"></i> GLV Chủ Nhiệm 2 (Đồng phụ trách):</label>
+                  <input type="text" id="cls-co-teacher" class="form-control" placeholder="C. Maria Phạm Thị B (nếu có)">
+                </div>
+                <div class="form-group col-6">
+                  <label><i class="fa-solid fa-envelope-open-text"></i> Gmail GLV Chủ Nhiệm 2:</label>
+                  <input type="email" id="cls-co-teacher-email" class="form-control" placeholder="glv2@gmail.com (để liên kết lớp)" list="catechist-email-list">
+                </div>
+              </div>
+              <datalist id="catechist-email-list"></datalist>
+              <p style="font-size: 11px; color: var(--slate-muted); margin: 6px 0 0 0; line-height: 1.4;">
+                <i class="fa-solid fa-circle-info text-primary"></i> <strong>Cơ chế đồng bộ 2 Chủ nhiệm:</strong> Điền chính xác Gmail cá nhân của 2 GLV. Cả 2 sẽ cùng truy cập, quản lý danh sách học sinh, điểm danh và chấm điểm của lớp này bằng mật khẩu và tài khoản riêng của mỗi người mà không cần dùng chung mật khẩu.
+              </p>
             </div>
           </div>
           <div class="modal-footer">
@@ -1302,6 +1328,6 @@
   <div id="toast-container" class="toast-container"></div>
 
   <!-- Application JS Code -->
-  <script src="app_v2.js?v=20261009_v1800"></script>
+  <script src="app_v2.js?v=20261009_v2000"></script>
 </body>
 </html>

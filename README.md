@@ -260,4 +260,64 @@ curl -sL https://magnificatedu.vercel.app | grep -i "<title>"
 
 ---
 
+## 👥 6. KIẾN TRÚC XỬ LÝ LỚP HỌC 2 GIÁO VIÊN ĐỒNG CHỦ NHIỆM (CO-TEACHER PRIVACY & SHARED ACCESS ARCHITECTURE)
+
+### 📌 1. Bối cảnh & Thách thức thực tế
+Tại các Xứ đoàn Giáo lý Công giáo, một lớp học thường có **2 Giáo lý viên cùng phụ trách** (1 GLV Chủ nhiệm chính + 1 GLV Đồng phụ trách/trợ tá, hoặc 2 GLV đồng chủ nhiệm).
+Yêu cầu đặt ra:
+- **Bảo mật & Riêng tư 100%**: Mỗi GLV phải dùng tài khoản Gmail, mật khẩu, ảnh đại diện và thông tin cá nhân của riêng mình; **tuyệt đối không dùng chung tài khoản Gmail hoặc chia sẻ mật khẩu**.
+- **Dữ liệu thống nhất & Không trùng lặp**: Cả 2 GLV đều phải truy cập vào đúng **1 lớp học duy nhất**, thấy cùng một danh sách học viên, cùng bảng điểm và nhật ký điểm danh theo thời gian thực mà không bị lệch dữ liệu.
+- **Minh bạch trách nhiệm (Audit Trail)**: Khi Thầy A hoặc Cô B điểm danh hay sửa điểm, hệ thống phải ghi nhận chính xác ai là người thực hiện (`savedBy`).
+
+---
+
+### 📌 2. So sánh các phương án & Lý do chọn phương án tối ưu
+
+| Tiêu chí | Phương án 1: Dùng chung 1 Gmail lớp (VD: `lop1a@gmail.com`) | Phương án 2: Nhân bản dữ liệu (Copy sang 2 tài khoản) | **Phương án 3: Liên kết Đồng Chủ nhiệm (Co-Teacher Linkage) ⭐ [ĐƯỢC CHỌN]** |
+| :--- | :--- | :--- | :--- |
+| **Tính riêng tư** | ❌ **Kém**: 2 người phải biết chung mật khẩu, lộ email cá nhân | ⚠️ Tạm ổn | ✅ **Tuyệt đối**: Mỗi GLV dùng Gmail & mật khẩu riêng 100% |
+| **Tính toàn vẹn dữ liệu** | ⚠️ Dễ xung đột session đăng nhập | ❌ **Nguy hiểm**: Split-brain, GLV A điểm danh thì GLV B không thấy | ✅ **Đồng bộ thời gian thực**: Cùng trỏ vào 1 mã lớp `classId` |
+| **Lịch sử thao tác** | ❌ Không biết ai điểm danh, ai sửa điểm | ❌ Lệch lịch sử | ✅ Ghi nhận rõ: `savedBy: T. Võ Thiện Hảo` hoặc `C. Thanh Thảo` |
+| **Trải nghiệm sử dụng** | ❌ Phải đăng xuất tài khoản riêng để vào tài khoản lớp | ⚠️ Phức tạp khi sync | ✅ Đăng nhập 1 lần bằng tài khoản cá nhân là thấy lớp ngay |
+
+---
+
+### 📌 3. Chi tiết triển khai kỹ thuật trong hệ thống MagnificatEdu
+
+1. **Cấu trúc Dữ liệu Lớp Học (`Class Model`)**:
+   ```javascript
+   {
+     id: "cls_1791519...",
+     name: "Thiếu Nhi 2A",
+     grade: "Thiếu Nhi",
+     room: "Phòng 204",
+     schedule: "Chúa Nhật (08:00 - 09:30)",
+     teacher: "Philiphê Võ Thiện Hảo",        // Tên GLV Chủ nhiệm 1
+     teacherEmail: "philthienhao@gmail.com",     // Gmail GLV Chủ nhiệm 1
+     coTeacher: "Matta Phạm Thị Thanh Thảo",    // Tên GLV Chủ nhiệm 2 (Đồng phụ trách)
+     coTeacherEmail: "phamthithanhthao0103@gmail.com", // Gmail GLV Chủ nhiệm 2
+     studentCount: 32
+   }
+   ```
+
+2. **Hàm Truy Xuất Dữ Liệu Đa Chiều (`getAccessibleClasses`, `getAccessibleStudents`, `getAccessibleAttendanceLogs`)**:
+   - Khi GLV đăng nhập, hệ thống tự động xác định các lớp mà GLV có quyền truy cập:
+     ```javascript
+     isMatch = (c.teacherEmail === myEmail) || (c.coTeacherEmail === myEmail);
+     ```
+   - Tự động gom toàn bộ học sinh và lịch sử điểm danh của lớp đó hiển thị cho cả 2 GLV.
+
+3. **Cơ Chế Đồng Bộ 2 Chiều Lên Supabase Cloud & LocalStorage**:
+   - Khi GLV Chủ nhiệm 1 hoặc 2 lưu thông tin lớp học, học viên hay điểm danh:
+     - `syncAttendanceLogToCoTeachers(logEntry)`: Đẩy bản ghi điểm danh vào dữ liệu của cả 2 GLV trên đám mây.
+     - `syncStudentToCoTeachers(stdData)`: Đồng bộ hồ sơ học sinh mới/chỉnh sửa cho cả 2 tài khoản.
+     - `syncSeatingChartToCoTeachers(classId, chartData)`: Sơ đồ lớp học AI được cả 2 cùng quản lý.
+
+4. **Giao Diện Trực Quan (UI/UX)**:
+   - Trong Form Tạo/Sửa Lớp: Có bảng phân chia rõ ràng **GLV Chủ Nhiệm 1 (Chính)** và **GLV Chủ Nhiệm 2 (Đồng phụ trách)** kèm gợi ý Datalist từ danh sách GLV trong Giáo xứ.
+   - Trên Thẻ Lớp Học: Hiển thị huy hiệu `👥 2 Chủ nhiệm`, tên và email của cả 2 GLV phụ trách.
+
+---
+
 *Hệ Thống Quản Lý Giáo Lý Công Giáo - MagnificatEdu © 2026*
+
