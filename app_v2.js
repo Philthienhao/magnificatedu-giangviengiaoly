@@ -285,7 +285,7 @@
      -------------------------------------------------------------------------- */
   let accountsList = [];
   let currentUser = null;
-  let appData = null;
+  let appData = generateDefaultUserData();
   let allCloudUserDataMap = {};
   let activePage = 'overview';
 
@@ -2539,7 +2539,7 @@
   function renderCatechists(container) {
     const isAdmin = hasAdminAccess(currentUser);
     const globalData = isAdmin ? getParishGlobalData() : null;
-    const catechists = (isAdmin && globalData) ? globalData.catechists : (appData.catechists || []);
+    const catechists = (isAdmin && globalData) ? (globalData.catechists || []) : ((appData && appData.catechists) || []);
 
     container.innerHTML = `
       <div class="page-header">
