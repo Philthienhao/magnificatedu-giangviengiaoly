@@ -176,6 +176,24 @@ Hệ thống tính điểm được thiết kế minh bạch với các chế đ
 
 ---
 
+### ⚡ Sự cố 7: Nhầm lẫn tên miền `magnificat.vercel.app` & Thiếu Cổng Giao diện Đăng Nhập (Auth Gate)
+* **Hiện tượng**:
+  - Truy cập `magnificat.vercel.app` bị lỗi 403 Forbidden (`Request to GET / on magnificat.vercel.app not allowed by policy`).
+  - Mở website không thấy giao diện đăng nhập, tự động nhảy thẳng vào Dashboard Quản trị viên của Thầy Hảo mà không hỏi tài khoản của giáo viên.
+  - Giáo viên không biết đăng nhập ở đâu, hoặc khi bấm Đăng xuất thì không thoát hẳn phiên làm việc.
+* **Nguyên nhân**:
+  1. Tên miền `magnificat.vercel.app` không thuộc dự án và bị chính sách tường lửa Vercel chặn. Tên miền chuẩn duy nhất của hệ thống là **`https://magnificatedu.vercel.app`**.
+  2. Hàm `loadCurrentUser()` trước đây tự động gán tài khoản mặc định `philthienhao@gmail.com` khi `localStorage` trống, làm mất màn hình đăng nhập.
+  3. Cổng đăng nhập (`#google-auth-modal`) trước đây chỉ là một pop-up ẩn với `display: none` thay vì cơ chế Cổng Đăng Nhập (Auth Gate) bảo vệ toàn bộ ứng dụng.
+* **Cách khắc phục triệt để**:
+  1. Thiết lập Cổng Đăng Nhập toàn màn hình (**Auth Gate**): Nếu chưa đăng nhập hoặc vừa bấm Đăng xuất, ẩn toàn bộ ứng dụng và hiển thị Giao diện Đăng Nhập & Đăng Ký Giáo Lý Viên trang trọng, đậm chất Công Giáo.
+  2. Bổ sung nút **⚡ Đăng Nhập Nhanh: Quản Trị Viên (Võ Thiện Hảo)** (1 chạm) giúp kiểm thử nhanh hoặc dành cho Admin.
+  3. Bổ sung nút **Đăng Xuất Trực Tiếp** ở cả Topbar Header và Sidebar Footer để giáo viên thoát tài khoản an toàn bất cứ lúc nào.
+  4. Đồng bộ tài khoản đám mây (**Supabase Cloud User Sync**): Tự động đồng bộ tài khoản đăng ký từ Supabase để giáo viên đăng ký ở thiết bị/điện thoại nào cũng có thể đăng nhập trên máy tính khác.
+  5. Đồng bộ mã nguồn giữa `app_v2.js` và `app.js`, nâng cache buster lên `v=20261009_v1300`.
+
+---
+
 ## 🚀 4. Hướng Dẫn Cập Nhật & Deploy Dự Án Chuẩn 4 Bước
 
 Khi có thay đổi mã nguồn, thực hiện đúng quy trình sau:

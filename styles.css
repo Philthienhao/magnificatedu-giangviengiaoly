@@ -1865,3 +1865,134 @@ input, select, textarea {
   width: 95%;
 }
 
+/* --------------------------------------------------------------------------
+   11. AUTH GATE & STANDALONE LOGIN PORTAL
+   -------------------------------------------------------------------------- */
+body.auth-gate-active {
+  background: radial-gradient(circle at 50% 15%, #1e293b 0%, #0f172a 60%, #080d1a 100%) !important;
+  min-height: 100vh;
+  overflow-y: auto;
+}
+
+body.auth-gate-active #app {
+  display: none !important;
+}
+
+body.auth-gate-active #google-auth-modal {
+  position: relative !important;
+  min-height: 100vh !important;
+  background: transparent !important;
+  backdrop-filter: none !important;
+  padding: 40px 16px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 99999 !important;
+}
+
+body.auth-gate-active #google-auth-modal .auth-modal {
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 40px rgba(59, 130, 246, 0.25) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 20px !important;
+  max-width: 500px;
+  width: 100%;
+}
+
+.auth-header {
+  position: relative;
+}
+
+.auth-modal-close-btn {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  background: rgba(148, 163, 184, 0.15);
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: var(--slate-dark);
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.auth-modal-close-btn:hover {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+.auth-quick-admin-btn {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  border: 1px solid #f59e0b;
+  color: #92400e;
+  padding: 11px 16px;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  font-size: 13px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: var(--transition);
+  margin-top: 10px;
+}
+
+.auth-quick-admin-btn:hover {
+  background: linear-gradient(135deg, #fde68a, #fcd34d);
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
+  transform: translateY(-1px);
+}
+
+.topbar-direct-logout-btn {
+  background: rgba(239, 68, 68, 0.08);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: var(--radius-md);
+  padding: 7px 12px;
+  font-size: 12.5px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: var(--transition);
+  margin-left: 8px;
+}
+
+.topbar-direct-logout-btn:hover {
+  background: #ef4444;
+  color: #ffffff;
+  border-color: #ef4444;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.sidebar-logout-btn {
+  width: 100%;
+  margin-top: 10px;
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.sidebar-logout-btn:hover {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+

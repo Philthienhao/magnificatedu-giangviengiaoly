@@ -160,6 +160,9 @@
             <span id="sidebar-user-role" class="user-role-badge text-warning"><i class="fa-solid fa-crown"></i> Admin / Quản Trị Viên</span>
           </div>
         </div>
+        <button type="button" class="sidebar-logout-btn" onclick="window.handleAppLogout()" title="Đăng xuất khỏi phiên làm việc">
+          <i class="fa-solid fa-right-from-bracket"></i> Đăng Xuất An Toàn
+        </button>
       </div>
     </aside>
 
@@ -229,11 +232,16 @@
               <button id="switch-account-btn" class="dropdown-item">
                 <i class="fa-brands fa-google text-danger"></i> Đổi Tài Khoản Google
               </button>
-              <button id="logout-btn" class="dropdown-item text-danger">
+              <button id="logout-btn" class="dropdown-item text-danger" onclick="window.handleAppLogout()">
                 <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
               </button>
             </div>
           </div>
+
+          <!-- Direct Logout Action Button in Topbar -->
+          <button id="topbar-direct-logout-btn" class="topbar-direct-logout-btn" onclick="window.handleAppLogout()" title="Đăng xuất khỏi hệ thống">
+            <i class="fa-solid fa-right-from-bracket"></i> <span class="hide-mobile">Đăng Xuất</span>
+          </button>
         </div>
       </header>
 
@@ -261,6 +269,9 @@
     <div class="modal-dialog auth-modal">
       <div class="modal-content">
         <div class="auth-header">
+          <button type="button" id="auth-modal-close-btn" class="auth-modal-close-btn" onclick="window.closeAuthModal()" title="Đóng và quay lại" style="display: none;">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
           <div class="auth-logo">
             <div class="brand-icon" style="width: 46px; height: 46px;">
               <img src="brand_logo.jpg" alt="Chân Phước Anrê Phú Yên" class="brand-avatar-img">
@@ -305,8 +316,18 @@
                 </div>
               </div>
 
+              <div class="form-check mb-3" style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                <input type="checkbox" id="teacher-login-remember" checked style="width: 16px; height: 16px; cursor: pointer;">
+                <label for="teacher-login-remember" style="margin: 0; cursor: pointer; color: var(--slate-dark); font-weight: 500;">Ghi nhớ đăng nhập trên thiết bị này</label>
+              </div>
+
               <button type="submit" class="btn btn-primary btn-block" style="padding: 10px 16px; font-weight: 700;">
                 <i class="fa-solid fa-right-to-bracket"></i> Đăng Nhập Ngay
+              </button>
+
+              <!-- Quick Admin Login Shortcut -->
+              <button type="button" class="auth-quick-admin-btn" onclick="window.quickLoginAdminMaster()" title="Đăng nhập ngay tài khoản Quản Trị Viên Võ Thiện Hảo">
+                <i class="fa-solid fa-crown text-warning"></i> ⚡ Đăng Nhập Nhanh: Quản Trị Viên (Võ Thiện Hảo)
               </button>
             </form>
 
@@ -1191,6 +1212,6 @@
   <div id="toast-container" class="toast-container"></div>
 
   <!-- Application JS Code -->
-  <script src="app_v2.js?v=20261008_v1200"></script>
+  <script src="app_v2.js?v=20261009_v1300"></script>
 </body>
 </html>

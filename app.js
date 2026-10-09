@@ -187,16 +187,21 @@
   // Initialize App
   function initApp() {
     loadAccounts();
-    loadCurrentUser();
+    const isAuthenticated = loadCurrentUser();
     bindGlobalEvents();
-    renderAppHeaderAndSidebar();
     startNienHocSanitizer();
 
-    const initialHash = window.location.hash.replace('#', '');
-    if (initialHash) {
-      navigateTo(initialHash);
+    if (isAuthenticated && currentUser) {
+      hideAuthGate();
+      renderAppHeaderAndSidebar();
+      const initialHash = window.location.hash.replace('#', '');
+      if (initialHash) {
+        navigateTo(initialHash);
+      } else {
+        navigateTo(activePage || 'overview');
+      }
     } else {
-      navigateTo(activePage);
+      showAuthGate(false);
     }
   }
 
@@ -212,23 +217,89 @@
         // Ensure admin account philthienhao@gmail.com is present with Admin role & updated info
         const adminMatch = loaded.find(a => a.email.toLowerCase() === 'philthienhao@gmail.com');
         if (!adminMatch) {
-          loaded.unshift(SEED_ACCOUNTS[0]);
+          loaded.unshift({ ...SEED_ACCOUNTS[0] });
         } else {
           adminMatch.holyName = adminMatch.holyName || 'Philiphê';
           adminMatch.name = adminMatch.name || 'Võ Thiện Hảo';
           adminMatch.role = 'Admin';
+          adminMatch.password = adminMatch.password || '123';
           adminMatch.avatar = adminMatch.avatar || 'admin_avatar.png';
           adminMatch.status = 'active';
         }
 
         accountsList = loaded;
       } catch (e) {
-        accountsList = SEED_ACCOUNTS;
+        accountsList = [...SEED_ACCOUNTS];
       }
     } else {
-      accountsList = SEED_ACCOUNTS;
+      accountsList = [...SEED_ACCOUNTS];
     }
     saveAccounts();
+
+    // Sync accounts in background with Supabase Cloud
+    syncAccountsWithCloud();
+  }
+
+  // Sync accounts from Supabase user_data so accounts registered anywhere work on this device
+  async function syncAccountsWithCloud() {
+    if (!window.supabaseClient) return;
+    try {
+      const { data, error } = await window.supabaseClient.from('user_data').select('email, data, updated_at');
+      if (error || !Array.isArray(data)) return;
+
+      let changed = false;
+      data.forEach(r => {
+        if (!r.email) return;
+        const uEmail = r.email.toLowerCase();
+        const uData = r.data || {};
+        const accInfo = uData.account_info || {};
+        const parish = (uData.parishInfo && uData.parishInfo.name) || accInfo.parish || 'Giáo Xứ Hoà Khánh';
+        const role = (uEmail === 'philthienhao@gmail.com') ? 'Admin' : (accInfo.role || 'Giáo lý viên');
+
+        const existing = accountsList.find(a => a.email.toLowerCase() === uEmail);
+        if (!existing) {
+          accountsList.push({
+            id: accInfo.id || ('acc_' + uEmail.replace(/[^a-z0-9]/gi, '_')),
+            email: uEmail,
+            password: accInfo.password || '123456',
+            name: accInfo.name || uEmail.split('@')[0].toUpperCase(),
+            holyName: accInfo.holyName || 'T. Giuse',
+            phone: accInfo.phone || '',
+            parish: parish,
+            role: role,
+            avatar: accInfo.avatar || 'admin_avatar.png',
+            status: accInfo.status || 'active',
+            lastLogin: r.updated_at ? new Date(r.updated_at).toLocaleString('vi-VN') : 'Đồng bộ từ Cloud',
+            loginCount: accInfo.loginCount || 1
+          });
+          changed = true;
+        } else {
+          if (accInfo.password && existing.password !== accInfo.password) {
+            existing.password = accInfo.password;
+            changed = true;
+          }
+          if (accInfo.name && existing.name !== accInfo.name) {
+            existing.name = accInfo.name;
+            changed = true;
+          }
+          if (accInfo.holyName && existing.holyName !== accInfo.holyName) {
+            existing.holyName = accInfo.holyName;
+            changed = true;
+          }
+          if (parish && existing.parish !== parish) {
+            existing.parish = parish;
+            changed = true;
+          }
+        }
+      });
+
+      if (changed) {
+        saveAccounts();
+        renderSavedAccounts();
+      }
+    } catch (e) {
+      console.warn('Sync accounts with cloud notice:', e);
+    }
   }
 
   function isDefaultAvatar(url) {
@@ -248,82 +319,83 @@
   // Load current logged in user & isolate user data
   function loadCurrentUser() {
     const storedUser = localStorage.getItem(STORAGE_KEY_CURRENT_USER);
+    if (!storedUser) {
+      currentUser = null;
+      return false;
+    }
+
     let storedAvatar = null;
+    try {
+      let u = JSON.parse(storedUser);
+      if (!u || !u.email) {
+        currentUser = null;
+        return false;
+      }
 
-    if (storedUser) {
+      if (u.avatar && !isDefaultAvatar(u.avatar)) {
+        storedAvatar = u.avatar;
+      }
+
+      let match = accountsList.find(a => a.email.toLowerCase() === u.email.toLowerCase());
+      if (!match) {
+        match = u;
+        accountsList.push(match);
+        saveAccounts();
+      }
+
+      currentUser = match;
+
+      // Check if suspended
+      if (currentUser.status === 'suspended') {
+        alert('Tài khoản của bạn hiện đang bị TẠM KHÓA bởi Quản trị viên hệ thống.');
+        currentUser = null;
+        try { localStorage.removeItem(STORAGE_KEY_CURRENT_USER); } catch (e) {}
+        return false;
+      }
+
+      // Dedicated Avatar Persistence Key (Bulletproof Layer 0)
+      const emailKey = currentUser.email.toLowerCase().replace(/[^a-z0-9]/g, '_');
+      const customKey = 'gvl_custom_avatar_' + emailKey;
+      let dedicatedAvatar = null;
       try {
-        let u = JSON.parse(storedUser);
-        if (u && u.avatar && !isDefaultAvatar(u.avatar)) {
-          storedAvatar = u.avatar;
+        const raw = localStorage.getItem(customKey);
+        if (raw && !isDefaultAvatar(raw)) dedicatedAvatar = raw;
+      } catch (e) {}
+
+      // Check saved appData for custom avatar as robust fallback
+      const userKey = STORAGE_PREFIX_DATA + emailKey;
+      let savedDataAvatar = null;
+      try {
+        const raw = localStorage.getItem(userKey);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && parsed.userAvatar && !isDefaultAvatar(parsed.userAvatar)) {
+            savedDataAvatar = parsed.userAvatar;
+          }
         }
-        if (u.email.toLowerCase() === 'vothienhao.catechist@gmail.com' || u.email.toLowerCase() === 'mariahuyen.glv@gmail.com') {
-          currentUser = accountsList.find(a => a.email.toLowerCase() === 'philthienhao@gmail.com') || SEED_ACCOUNTS[0];
-        } else {
-          currentUser = accountsList.find(a => a.email.toLowerCase() === u.email.toLowerCase()) || u;
-        }
-      } catch (e) {
-        currentUser = accountsList.find(a => a.email.toLowerCase() === 'philthienhao@gmail.com') || SEED_ACCOUNTS[0];
-      }
-    } else {
-      currentUser = accountsList.find(a => a.email.toLowerCase() === 'philthienhao@gmail.com') || SEED_ACCOUNTS[0];
-    }
+      } catch (e) {}
 
-    if (!currentUser || currentUser.email.toLowerCase() === 'philthienhao@gmail.com') {
-      const adminAcc = accountsList.find(a => a.email.toLowerCase() === 'philthienhao@gmail.com');
-      currentUser = adminAcc || currentUser || SEED_ACCOUNTS[0];
-      currentUser.holyName = currentUser.holyName || 'Philiphê';
-      currentUser.name = currentUser.name || 'Võ Thiện Hảo';
-      currentUser.role = 'Admin';
-      if (adminAcc) adminAcc.role = 'Admin';
-    }
+      const bestAv = dedicatedAvatar
+        || (!isDefaultAvatar(storedAvatar)
+          ? storedAvatar
+          : ((currentUser && currentUser.avatar && !isDefaultAvatar(currentUser.avatar))
+            ? currentUser.avatar
+            : (match && match.avatar && !isDefaultAvatar(match.avatar) ? match.avatar : (savedDataAvatar || 'admin_avatar.png'))));
 
-    // Dedicated Avatar Persistence Key (Bulletproof Layer 0)
-    const emailKey = (currentUser && currentUser.email) ? currentUser.email.toLowerCase().replace(/[^a-z0-9]/g, '_') : 'default';
-    const customKey = 'gvl_custom_avatar_' + emailKey;
-    let dedicatedAvatar = null;
-    try {
-      const raw = localStorage.getItem(customKey);
-      if (raw && !isDefaultAvatar(raw)) dedicatedAvatar = raw;
-    } catch (e) {}
-
-    // Check saved appData for custom avatar as robust fallback
-    const userKey = STORAGE_PREFIX_DATA + emailKey;
-    let savedDataAvatar = null;
-    try {
-      const raw = localStorage.getItem(userKey);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (parsed && parsed.userAvatar && !isDefaultAvatar(parsed.userAvatar)) {
-          savedDataAvatar = parsed.userAvatar;
-        }
-      }
-    } catch (e) {}
-
-    const match = accountsList.find(a => currentUser && currentUser.email && a.email.toLowerCase() === currentUser.email.toLowerCase());
-    const bestAv = dedicatedAvatar
-      || (!isDefaultAvatar(storedAvatar)
-        ? storedAvatar
-        : ((currentUser && currentUser.avatar && !isDefaultAvatar(currentUser.avatar))
-          ? currentUser.avatar
-          : (match && match.avatar && !isDefaultAvatar(match.avatar) ? match.avatar : (savedDataAvatar || 'admin_avatar.png'))));
-
-    if (currentUser) {
       currentUser.avatar = bestAv;
-      if (match) match.avatar = bestAv;
+      match.avatar = bestAv;
       if (bestAv && !isDefaultAvatar(bestAv)) {
         try { localStorage.setItem(customKey, bestAv); } catch (e) {}
       }
-    }
 
-    saveCurrentUser();
+      saveCurrentUser();
 
-    // Async IndexedDB Check & Restore
-    if (currentUser && currentUser.email) {
+      // Async IndexedDB Check & Restore
       idbAvatar.get(currentUser.email).then(idbAv => {
         if (idbAv && !isDefaultAvatar(idbAv)) {
           if (currentUser.avatar !== idbAv) {
             currentUser.avatar = idbAv;
-            if (match) match.avatar = idbAv;
+            match.avatar = idbAv;
             if (!appData) appData = {};
             appData.userAvatar = idbAv;
             try { localStorage.setItem(customKey, idbAv); } catch (e) {}
@@ -333,25 +405,19 @@
           }
         }
       });
-    }
 
-    // Verify if account is suspended
-    if (match && match.status === 'suspended') {
-      alert('Tài khoản của bạn hiện đang bị TẠM KHÓA bởi Quản trị viên hệ thống.');
-      const activeAcc = accountsList.find(a => a.status === 'active');
-      if (activeAcc) {
-        currentUser = activeAcc;
-        saveCurrentUser();
-      }
-    }
-
-    // Load isolated data for this user email
-    if (currentUser && currentUser.email) {
+      // Load isolated data for this user email
       loadUserData(currentUser.email);
+      return true;
+    } catch (e) {
+      console.warn('LocalStorage loadCurrentUser notice:', e);
+      currentUser = null;
+      return false;
     }
   }
 
   function saveCurrentUser() {
+    if (!currentUser) return;
     try {
       localStorage.setItem(STORAGE_KEY_CURRENT_USER, JSON.stringify(currentUser));
       if (currentUser && currentUser.avatar && !isDefaultAvatar(currentUser.avatar) && currentUser.email) {
@@ -361,6 +427,93 @@
       }
     } catch (e) {
       console.warn('LocalStorage saveCurrentUser notice:', e);
+    }
+  }
+
+  // Auth Gate Control (Show Login Screen vs Main App)
+  function showAuthGate(isSwitchMode = false) {
+    const appEl = document.getElementById('app');
+    const modalEl = document.getElementById('google-auth-modal');
+    const closeBtn = document.getElementById('auth-modal-close-btn');
+
+    if (!isSwitchMode) {
+      document.body.classList.add('auth-gate-active');
+      if (appEl) appEl.style.display = 'none';
+      if (closeBtn) closeBtn.style.display = 'none';
+    } else {
+      document.body.classList.remove('auth-gate-active');
+      if (appEl) appEl.style.display = 'flex';
+      if (closeBtn) closeBtn.style.display = 'flex';
+    }
+
+    if (modalEl) modalEl.style.display = 'flex';
+    renderSavedAccounts();
+    if (typeof window.switchAuthTab === 'function') window.switchAuthTab('login');
+  }
+
+  function hideAuthGate() {
+    document.body.classList.remove('auth-gate-active');
+    const appEl = document.getElementById('app');
+    const modalEl = document.getElementById('google-auth-modal');
+    if (modalEl) modalEl.style.display = 'none';
+    if (appEl) appEl.style.display = 'flex';
+  }
+
+  window.closeAuthModal = function() {
+    if (currentUser) {
+      hideAuthGate();
+    } else {
+      showToast('Vui lòng đăng nhập hoặc chọn tài khoản để tiếp tục!', 'warning');
+    }
+  };
+
+  // Quick 1-click Admin Login
+  window.quickLoginAdminMaster = function() {
+    let admin = accountsList.find(a => a.email.toLowerCase() === 'philthienhao@gmail.com');
+    if (!admin) {
+      admin = { ...SEED_ACCOUNTS[0] };
+      accountsList.unshift(admin);
+      saveAccounts();
+    }
+    const emailInput = document.getElementById('teacher-login-email');
+    const passInput = document.getElementById('teacher-login-password');
+    if (emailInput) emailInput.value = admin.email;
+    if (passInput) passInput.value = admin.password || '123';
+    
+    loginWithAccount(admin);
+  };
+
+  // Logout Handler
+  window.handleAppLogout = function() {
+    try {
+      localStorage.removeItem(STORAGE_KEY_CURRENT_USER);
+    } catch (e) {}
+    currentUser = null;
+    showAuthGate(false);
+    showToast('✓ Đã đăng xuất khỏi hệ thống an toàn.', 'info');
+  };
+
+  function renderSavedAccounts() {
+    const container = document.getElementById('google-accounts-list');
+    if (!container) return;
+
+    if (accountsList.length === 0) {
+      container.innerHTML = '<p style="color: var(--slate-muted); font-size: 12px; text-align: center; margin: 10px 0;">Chưa có tài khoản nào được lưu trên máy này.</p>';
+    } else {
+      container.innerHTML = accountsList.map(acc => `
+        <div class="google-account-card" onclick="window.selectTeacherAccountQuick('${acc.id}')" title="Bấm để đăng nhập nhanh bằng tài khoản ${acc.email}">
+          <img src="${acc.avatar || 'admin_avatar.png'}" alt="Avatar" class="account-avatar">
+          <div class="account-info">
+            <div class="name">${acc.holyName ? acc.holyName + ' ' : ''}${acc.name}</div>
+            <div class="email">${acc.email}</div>
+            <div style="font-size: 11px; color: var(--primary); font-weight: 700; margin-top: 2px;">
+              <i class="fa-solid fa-church"></i> ${acc.parish || 'Giáo Xứ Hoà Khánh'} • 
+              <span>${acc.role === 'Admin' ? '👑 Admin Master' : '⛪ Giáo lý viên'}</span>
+            </div>
+          </div>
+          ${acc.status === 'suspended' ? '<span class="badge badge-danger">Tạm khóa</span>' : '<i class="fa-solid fa-chevron-right text-muted"></i>'}
+        </div>
+      `).join('');
     }
   }
 
@@ -681,8 +834,9 @@
     // Account Switcher Button
     const switchBtn = document.getElementById('switch-account-btn');
     if (switchBtn) {
-      switchBtn.addEventListener('click', () => {
-        openGoogleAuthModal();
+      switchBtn.addEventListener('click', (e) => {
+        if (e) e.preventDefault();
+        showAuthGate(true);
       });
     }
 
@@ -705,8 +859,9 @@
     // Logout Button
     const logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) {
-      logoutBtn.addEventListener('click', () => {
-        openGoogleAuthModal();
+      logoutBtn.addEventListener('click', (e) => {
+        if (e) e.preventDefault();
+        window.handleAppLogout();
       });
     }
 
@@ -760,7 +915,7 @@
     // Teacher Login Form Submit
     const teacherLoginForm = document.getElementById('teacher-login-form');
     if (teacherLoginForm) {
-      teacherLoginForm.addEventListener('submit', (e) => {
+      teacherLoginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const emailInput = document.getElementById('teacher-login-email');
         const passInput = document.getElementById('teacher-login-password');
@@ -775,13 +930,48 @@
         }
 
         let match = accountsList.find(a => a.email && a.email.toLowerCase() === email);
+
+        // If not found locally, query Supabase Cloud
+        if (!match && window.supabaseClient) {
+          try {
+            const { data } = await window.supabaseClient
+              .from('user_data')
+              .select('email, data, updated_at')
+              .eq('email', email)
+              .maybeSingle();
+
+            if (data && data.data) {
+              const uData = data.data;
+              const accInfo = uData.account_info || {};
+              match = {
+                id: accInfo.id || ('acc_' + email.replace(/[^a-z0-9]/gi, '_')),
+                email: email,
+                password: accInfo.password || '123456',
+                name: accInfo.name || email.split('@')[0].toUpperCase(),
+                holyName: accInfo.holyName || 'T. Giuse',
+                phone: accInfo.phone || '',
+                parish: (uData.parishInfo && uData.parishInfo.name) || accInfo.parish || 'Giáo Xứ Hoà Khánh',
+                role: (email === 'philthienhao@gmail.com') ? 'Admin' : (accInfo.role || 'Giáo lý viên'),
+                avatar: accInfo.avatar || 'admin_avatar.png',
+                status: accInfo.status || 'active',
+                lastLogin: new Date().toLocaleString(),
+                loginCount: 1
+              };
+              accountsList.push(match);
+              saveAccounts();
+            }
+          } catch (err) {
+            console.warn('Supabase login check error:', err);
+          }
+        }
+
         if (match) {
           if (match.status === 'suspended') {
             alert('Tài khoản này đang bị TẠM KHÓA bởi Admin.');
             return;
           }
           if (match.password && match.password !== password) {
-            alert('Mật khẩu không chính xác! Vui lòng kiểm tra lại hoặc liên hệ Admin Master.');
+            alert('Mật khẩu không chính xác! Vui lòng kiểm tra lại hoặc liên hệ Admin Master (Võ Thiện Hảo).');
             return;
           }
           if (!match.password) match.password = password;
@@ -795,25 +985,25 @@
             holyName: 'T. Giuse',
             phone: '',
             parish: 'Giáo Xứ Hoà Khánh',
-            role: accountsList.length === 0 ? 'Admin' : 'Giáo lý viên',
-            avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80',
+            role: (email === 'philthienhao@gmail.com') ? 'Admin' : 'Giáo lý viên',
+            avatar: 'admin_avatar.png',
             status: 'active',
             createdDate: new Date().toISOString().split('T')[0],
             lastLogin: new Date().toLocaleString(),
             loginCount: 1
           };
           accountsList.push(match);
+          saveAccounts();
         }
 
         loginWithAccount(match);
-        closeModal('google-auth-modal');
       });
     }
 
     // Teacher Register Form Submit
     const teacherRegForm = document.getElementById('teacher-register-form');
     if (teacherRegForm) {
-      teacherRegForm.addEventListener('submit', (e) => {
+      teacherRegForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const emailInput = document.getElementById('teacher-reg-email');
         const passInput = document.getElementById('teacher-reg-password');
@@ -857,8 +1047,8 @@
             holyName: holyName,
             phone: phone,
             parish: parishName,
-            role: accountsList.length === 0 ? 'Admin' : 'Giáo lý viên',
-            avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80',
+            role: (email === 'philthienhao@gmail.com') ? 'Admin' : 'Giáo lý viên',
+            avatar: 'admin_avatar.png',
             status: 'active',
             createdDate: new Date().toISOString().split('T')[0],
             lastLogin: new Date().toLocaleString(),
@@ -867,8 +1057,25 @@
           accountsList.push(match);
         }
 
+        saveAccounts();
+
+        // Also sync registration directly to Supabase Cloud
+        if (window.supabaseClient) {
+          try {
+            const initData = generateDefaultUserData(email);
+            if (initData.parishInfo) initData.parishInfo.name = parishName;
+            initData.account_info = { ...match };
+            await window.supabaseClient.from('user_data').upsert({
+              email: email,
+              data: initData,
+              updated_at: new Date().toISOString()
+            });
+          } catch (err) {
+            console.warn('Sync register to Supabase notice:', err);
+          }
+        }
+
         loginWithAccount(match);
-        closeModal('google-auth-modal');
       });
     }
 
@@ -4432,33 +4639,7 @@
 
   // GOOGLE LOGIN & TEACHER AUTH MODAL FLOW
   function openGoogleAuthModal() {
-    const modal = document.getElementById('google-auth-modal');
-    const container = document.getElementById('google-accounts-list');
-    if (!modal) return;
-
-    if (container) {
-      if (accountsList.length === 0) {
-        container.innerHTML = '<p style="color: var(--slate-muted); font-size: 12px; text-align: center; margin: 10px 0;">Chưa có tài khoản nào được lưu trên máy này.</p>';
-      } else {
-        container.innerHTML = accountsList.map(acc => `
-          <div class="google-account-card" onclick="window.selectTeacherAccountQuick('${acc.id}')">
-            <img src="${acc.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80'}" alt="Avatar" class="account-avatar">
-            <div class="account-info">
-              <div class="name">${acc.holyName ? acc.holyName + ' ' : ''}${acc.name}</div>
-              <div class="email">${acc.email}</div>
-              <div style="font-size: 11px; color: var(--primary); font-weight: 700; margin-top: 2px;">
-                <i class="fa-solid fa-church"></i> ${acc.parish || 'Giáo Xứ Hoà Khánh'} • 
-                <span>${acc.role === 'Admin' ? '👑 Admin Master' : '⛪ Giáo lý viên'}</span>
-              </div>
-            </div>
-            ${acc.status === 'suspended' ? '<span class="badge badge-danger">Tạm khóa</span>' : '<i class="fa-solid fa-chevron-right text-muted"></i>'}
-          </div>
-        `).join('');
-      }
-    }
-
-    if (typeof window.switchAuthTab === 'function') window.switchAuthTab('login');
-    openModal('google-auth-modal');
+    showAuthGate(currentUser !== null);
   }
 
   window.selectTeacherAccountQuick = function (accId) {
@@ -4476,7 +4657,6 @@
     if (passInput) passInput.value = target.password || '123456';
 
     loginWithAccount(target);
-    closeModal('google-auth-modal');
   };
   window.selectGoogleAccount = window.selectTeacherAccountQuick;
 
@@ -4491,6 +4671,8 @@
       match.loginCount = (match.loginCount || 0) + 1;
       if (acc.password) match.password = acc.password;
       if (acc.parish) match.parish = acc.parish;
+      if (acc.name) match.name = acc.name;
+      if (acc.holyName) match.holyName = acc.holyName;
     }
 
     saveAccounts();
@@ -4501,9 +4683,10 @@
     // Notify Admin Master
     notifyAdminMasterOfLogin(match);
 
+    hideAuthGate();
     renderAppHeaderAndSidebar();
-    navigateTo(activePage);
-    showToast(`Đã đăng nhập thành công tài khoản: ${currentUser.name} (${currentUser.parish || 'Giáo Xứ Hoà Khánh'})`, 'success');
+    navigateTo(activePage || 'overview');
+    showToast(`Đã đăng nhập thành công tài khoản: ${currentUser.holyName ? currentUser.holyName + ' ' : ''}${currentUser.name} (${currentUser.parish || 'Giáo Xứ Hoà Khánh'})`, 'success');
   }
 
   // INSPECT USER FULL DATA MODAL
@@ -5992,6 +6175,12 @@
   window.openInspectUserModal = window.openInspectUserModal;
   window.impersonateUser = window.impersonateUser;
   window.exitImpersonation = window.exitImpersonation;
+  window.openGoogleAuthModal = openGoogleAuthModal;
+  window.showAuthGate = showAuthGate;
+  window.hideAuthGate = hideAuthGate;
+  window.closeAuthModal = window.closeAuthModal;
+  window.quickLoginAdminMaster = window.quickLoginAdminMaster;
+  window.handleAppLogout = window.handleAppLogout;
 
   // Initialize application on DOM content loaded or immediate if ready
   if (document.readyState === 'loading') {
