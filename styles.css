@@ -2152,44 +2152,6 @@ body.auth-gate-active #google-auth-modal {
 }
 
 
-.holy-dove-emblem {
-  position: absolute;
-  top: 8px;
-  left: calc(50% + 46px);
-  width: auto;
-  height: auto;
-  border-radius: 0 !important;
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  color: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 30px;
-  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.55)) 
-          drop-shadow(0 0 10px rgba(255, 255, 255, 0.95)) 
-          drop-shadow(0 0 20px rgba(251, 191, 36, 0.75));
-  animation: holyDoveBesideCross 3.4s ease-in-out infinite alternate;
-  pointer-events: none;
-  z-index: 12;
-}
-
-@keyframes holyDoveBesideCross {
-  0% {
-    transform: translateY(0) rotate(-3deg) scale(1);
-    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 10px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 20px rgba(251, 191, 36, 0.7));
-  }
-  50% {
-    transform: translateY(-6px) rotate(2deg) scale(1.05);
-    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.65)) drop-shadow(0 0 16px rgba(255, 255, 255, 1)) drop-shadow(0 0 28px rgba(251, 191, 36, 0.85));
-  }
-  100% {
-    transform: translateY(0) rotate(-3deg) scale(1);
-    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 10px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 20px rgba(251, 191, 36, 0.7));
-  }
-}
-
 .sacred-motto-ribbon {
   margin-top: 6px;
   background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.95) 20%, rgba(255, 255, 255, 0.95) 80%, transparent 100%);
@@ -2838,17 +2800,6 @@ body.is-fullscreen .kpi-grid {
   .sacred-aura-pulse {
     width: 110px;
     height: 110px;
-  }
-  .holy-dove-emblem {
-    top: 4px;
-    left: calc(50% + 36px);
-    font-size: 24px;
-    width: auto;
-    height: auto;
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    transform: none;
   }
   body.auth-gate-active .auth-body {
     padding: 8px 16px 22px 16px !important;
