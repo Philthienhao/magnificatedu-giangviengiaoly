@@ -2151,15 +2151,6 @@ body.auth-gate-active #google-auth-modal {
   50% { transform: translateY(-5px); }
 }
 
-.celestial-rays {
-  animation: raysRotate 35s linear infinite;
-  transform-origin: 0 0;
-}
-
-@keyframes raysRotate {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
 
 .holy-dove-emblem {
   position: absolute;
