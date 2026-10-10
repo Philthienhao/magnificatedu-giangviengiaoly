@@ -2255,25 +2255,6 @@ body.auth-gate-active .auth-body {
   z-index: 4;
 }
 
-/* Gothic Filigree Corners */
-.gothic-filigree-corner {
-  position: absolute;
-  width: 38px;
-  height: 38px;
-  pointer-events: none;
-  z-index: 3;
-  opacity: 0.9;
-}
-.gothic-filigree-corner path {
-  stroke: #d97706 !important;
-}
-.gothic-filigree-corner circle {
-  fill: #d97706 !important;
-}
-.gothic-corner-tl { top: 8px; left: 8px; }
-.gothic-corner-tr { top: 8px; right: 8px; transform: scaleX(-1); }
-.gothic-corner-bl { bottom: 8px; left: 8px; transform: scaleY(-1); }
-.gothic-corner-br { bottom: 8px; right: 8px; transform: scale(-1); }
 
 /* Header & Avatar */
 .auth-brand-emblem-wrap {
