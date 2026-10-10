@@ -2053,7 +2053,7 @@ input, select, textarea {
 body.auth-gate-active {
   background: 
     radial-gradient(circle at 50% 25%, rgba(255, 255, 255, 0.45) 0%, rgba(224, 242, 254, 0.3) 50%, rgba(15, 23, 42, 0.16) 100%),
-    url('catholic_pastoral_bg.jpg?v=20261010_tntt') center top / cover no-repeat fixed !important;
+    url('catholic_pastoral_bg.jpg?v=20261010_chibi_v1') center top / cover no-repeat fixed !important;
   min-height: 100vh;
   overflow-x: hidden;
   overflow-y: auto;
