@@ -2052,8 +2052,8 @@ input, select, textarea {
    -------------------------------------------------------------------------- */
 body.auth-gate-active {
   background: 
-    radial-gradient(ellipse at 50% 12%, rgba(20, 38, 85, 0.45) 0%, rgba(8, 14, 30, 0.88) 55%, rgba(2, 6, 18, 0.98) 100%),
-    url('catholic_cathedral_bg.jpg') center top / cover no-repeat fixed !important;
+    radial-gradient(circle at 50% 25%, rgba(255, 255, 255, 0.45) 0%, rgba(224, 242, 254, 0.35) 50%, rgba(15, 23, 42, 0.28) 100%),
+    url('catholic_pastoral_bg.jpg') center top / cover no-repeat fixed !important;
   min-height: 100vh;
   overflow-x: hidden;
   overflow-y: auto;
@@ -2085,7 +2085,8 @@ body.auth-gate-active #google-auth-modal {
   transform: translateX(-50%);
   width: min(840px, 94vw);
   height: 100vh;
-  background: radial-gradient(ellipse at 50% 0%, rgba(254, 240, 138, 0.24) 0%, rgba(245, 158, 11, 0.14) 28%, rgba(37, 99, 235, 0.09) 55%, transparent 75%);
+  background: radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.8) 0%, rgba(254, 240, 138, 0.5) 40%, transparent 80%);
+  mix-blend-mode: screen;
   pointer-events: none;
   z-index: 1;
   animation: celestialBeamPulse 6.5s ease-in-out infinite alternate;
@@ -2200,16 +2201,16 @@ body.auth-gate-active #google-auth-modal {
 
 .sacred-motto-ribbon {
   margin-top: 6px;
-  background: linear-gradient(90deg, transparent 0%, rgba(13, 22, 45, 0.92) 20%, rgba(13, 22, 45, 0.92) 80%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.95) 20%, rgba(255, 255, 255, 0.95) 80%, transparent 100%);
   padding: 4px 22px;
-  border-top: 1px solid rgba(245, 158, 11, 0.45);
-  border-bottom: 1px solid rgba(245, 158, 11, 0.45);
+  border-top: 1.5px solid rgba(217, 119, 6, 0.6);
+  border-bottom: 1.5px solid rgba(217, 119, 6, 0.6);
   letter-spacing: 1.6px;
-  font-size: 10px;
+  font-size: 10.5px;
   font-weight: 800;
-  color: #fef08a;
+  color: #92400e;
   text-transform: uppercase;
-  text-shadow: 0 0 10px rgba(245, 158, 11, 0.65);
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
 }
 
 /* Modal Dialog & Frame */
@@ -2235,18 +2236,17 @@ body.auth-gate-active #google-auth-modal .auth-modal,
 
 body.auth-gate-active #google-auth-modal .modal-content.auth-modal-content {
   position: relative;
-  background: rgba(13, 22, 45, 0.9) !important;
-  backdrop-filter: blur(28px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
-  border: 1px solid rgba(245, 158, 11, 0.4) !important;
+  background: rgba(255, 255, 255, 0.93) !important;
+  backdrop-filter: blur(28px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
+  border: 2px solid rgba(245, 158, 11, 0.55) !important;
   border-radius: 34px 34px 24px 24px !important;
   box-shadow: 
-    0 35px 80px -15px rgba(0, 0, 0, 0.92),
-    0 0 50px rgba(37, 99, 235, 0.28),
-    0 0 80px rgba(245, 158, 11, 0.2),
-    inset 0 1px 1px rgba(255, 255, 255, 0.22) !important;
+    0 25px 65px -10px rgba(15, 23, 42, 0.22),
+    0 0 50px rgba(254, 240, 138, 0.5),
+    inset 0 1px 1px rgba(255, 255, 255, 1) !important;
   overflow: hidden;
-  color: #f8fafc;
+  color: #0f172a;
 }
 
 body.auth-gate-active .auth-body {
@@ -2262,7 +2262,13 @@ body.auth-gate-active .auth-body {
   height: 38px;
   pointer-events: none;
   z-index: 3;
-  opacity: 0.85;
+  opacity: 0.9;
+}
+.gothic-filigree-corner path {
+  stroke: #d97706 !important;
+}
+.gothic-filigree-corner circle {
+  fill: #d97706 !important;
 }
 .gothic-corner-tl { top: 8px; left: 8px; }
 .gothic-corner-tr { top: 8px; right: 8px; transform: scaleX(-1); }
@@ -2284,8 +2290,8 @@ body.auth-gate-active .auth-body {
   position: absolute;
   inset: -6px;
   border-radius: 50%;
-  border: 2px dashed rgba(245, 158, 11, 0.7);
-  box-shadow: 0 0 16px rgba(245, 158, 11, 0.5), inset 0 0 10px rgba(245, 158, 11, 0.3);
+  border: 2px dashed rgba(217, 119, 6, 0.6) !important;
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.4), inset 0 0 10px rgba(245, 158, 11, 0.2);
   animation: haloRotate 20s linear infinite;
 }
 
@@ -2299,9 +2305,9 @@ body.auth-gate-active .auth-body {
   height: 58px;
   border-radius: 50%;
   overflow: hidden;
-  border: 2.5px solid #fef08a;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
-  background: #0f172a;
+  border: 2.5px solid #f59e0b;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.25);
+  background: #ffffff;
   z-index: 2;
 }
 
@@ -2324,7 +2330,7 @@ body.auth-gate-active .auth-body {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid #0f172a;
+  border: 2px solid #ffffff;
   box-shadow: 0 0 10px rgba(245, 158, 11, 0.85);
   z-index: 3;
   animation: crossPulse 2.5s ease-in-out infinite;
@@ -2344,24 +2350,24 @@ body.auth-gate-active .auth-header {
 body.auth-gate-active .auth-logo h2 {
   font-size: 26px;
   font-weight: 800;
-  color: #ffffff !important;
+  color: #0f172a !important;
   letter-spacing: -0.5px;
   margin: 0;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
 }
 
 .gold-gradient {
-  background: linear-gradient(135deg, #fef08a 0%, #f59e0b 50%, #d97706 100%);
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%) !important;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 0 12px rgba(245, 158, 11, 0.45));
+  filter: drop-shadow(0 0 12px rgba(245, 158, 11, 0.35));
 }
 
 body.auth-gate-active .auth-subtitle {
-  color: rgba(226, 232, 240, 0.85) !important;
+  color: #475569 !important;
   font-size: 13px;
   font-weight: 600;
   margin-top: 5px;
@@ -2369,40 +2375,40 @@ body.auth-gate-active .auth-subtitle {
 }
 
 .chi-rho-symbol {
-  color: #f59e0b;
+  color: #d97706 !important;
   font-weight: 800;
   font-size: 14px;
-  text-shadow: 0 0 8px rgba(245, 158, 11, 0.65);
+  text-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
 }
 
-/* Slogan Quote Card (Illuminated Manuscript Style) */
+/* Slogan Quote Card (Pastoral Warmth & Candle Glow) */
 body.auth-gate-active .slogan-card-auth {
   display: flex;
   align-items: center;
   gap: 14px;
-  background: linear-gradient(135deg, rgba(30, 58, 138, 0.38) 0%, rgba(245, 158, 11, 0.1) 100%) !important;
-  border: 1px solid rgba(245, 158, 11, 0.35) !important;
-  border-left: 4px solid #f59e0b !important;
+  background: linear-gradient(135deg, rgba(254, 243, 199, 0.88) 0%, rgba(254, 249, 195, 0.78) 100%) !important;
+  border: 1.5px solid rgba(245, 158, 11, 0.55) !important;
+  border-left: 4px solid #d97706 !important;
   border-radius: 14px !important;
   padding: 13px 16px !important;
   margin-bottom: 20px !important;
   text-align: left !important;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 6px 18px rgba(217, 119, 6, 0.12) !important;
 }
 
 .sacred-candle-glow {
   width: 38px;
   height: 38px;
   border-radius: 10px;
-  background: rgba(245, 158, 11, 0.16);
-  border: 1px solid rgba(245, 158, 11, 0.42);
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 1.5px solid rgba(245, 158, 11, 0.55) !important;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #f59e0b;
+  color: #d97706 !important;
   font-size: 18px;
   flex-shrink: 0;
-  box-shadow: 0 0 14px rgba(245, 158, 11, 0.35);
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.45);
 }
 
 .candle-flame-anim {
@@ -2416,15 +2422,16 @@ body.auth-gate-active .slogan-card-auth {
 }
 
 body.auth-gate-active .slogan-card-auth p {
-  color: #e2e8f0 !important;
+  color: #1e293b !important;
   font-size: 12.5px;
   font-style: italic;
   line-height: 1.5;
   margin: 0;
+  font-weight: 500;
 }
 
 body.auth-gate-active .slogan-card-auth span {
-  color: #fef08a !important;
+  color: #92400e !important;
   font-size: 11px;
   font-weight: 700;
   margin-top: 4px;
@@ -2433,8 +2440,8 @@ body.auth-gate-active .slogan-card-auth span {
 
 /* Tabs */
 body.auth-gate-active .auth-tabs-nav {
-  background: rgba(15, 23, 42, 0.65) !important;
-  border: 1px solid rgba(245, 158, 11, 0.28) !important;
+  background: rgba(241, 245, 249, 0.92) !important;
+  border: 1px solid rgba(203, 213, 225, 0.9) !important;
   border-radius: 12px !important;
   padding: 4px !important;
   display: flex;
@@ -2449,7 +2456,7 @@ body.auth-gate-active .auth-tab-btn {
   font-weight: 700;
   border: none;
   background: transparent;
-  color: rgba(203, 213, 225, 0.8) !important;
+  color: #475569 !important;
   border-radius: 9px !important;
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
@@ -2460,20 +2467,20 @@ body.auth-gate-active .auth-tab-btn {
 }
 
 body.auth-gate-active .auth-tab-btn:hover {
-  color: #ffffff !important;
-  background: rgba(255, 255, 255, 0.08) !important;
+  color: #0284c7 !important;
+  background: rgba(255, 255, 255, 0.7) !important;
 }
 
 body.auth-gate-active .auth-tab-btn.active {
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.95) 0%, rgba(29, 78, 216, 0.95) 100%) !important;
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
   color: #ffffff !important;
-  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
-  border: 1px solid rgba(96, 165, 250, 0.45) !important;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+  border: 1px solid rgba(56, 189, 248, 0.4) !important;
 }
 
 /* Inputs & Labels */
 body.auth-gate-active .form-group label {
-  color: #e2e8f0 !important;
+  color: #0f172a !important;
   font-size: 13px;
   font-weight: 700;
   margin-bottom: 6px;
@@ -2482,27 +2489,32 @@ body.auth-gate-active .form-group label {
   gap: 6px;
 }
 
+body.auth-gate-active .form-group label i {
+  color: #0284c7 !important;
+}
+
 body.auth-gate-active .sacred-input,
 body.auth-gate-active .form-control {
-  background: rgba(15, 23, 42, 0.72) !important;
-  border: 1px solid rgba(226, 232, 240, 0.24) !important;
-  color: #ffffff !important;
+  background: #ffffff !important;
+  border: 1.5px solid #cbd5e1 !important;
+  color: #0f172a !important;
   border-radius: 11px !important;
   padding: 11px 14px !important;
   font-size: 13.5px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
   transition: all 0.25s ease !important;
 }
 
 body.auth-gate-active .sacred-input::placeholder,
 body.auth-gate-active .form-control::placeholder {
-  color: rgba(148, 163, 184, 0.65) !important;
+  color: #94a3b8 !important;
 }
 
 body.auth-gate-active .sacred-input:focus,
 body.auth-gate-active .form-control:focus {
-  background: rgba(15, 23, 42, 0.95) !important;
-  border-color: #f59e0b !important;
-  box-shadow: 0 0 20px rgba(245, 158, 11, 0.35), inset 0 0 8px rgba(245, 158, 11, 0.15) !important;
+  background: #ffffff !important;
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.18) !important;
   outline: none !important;
 }
 
@@ -2520,7 +2532,7 @@ body.auth-gate-active .form-control:focus {
 .input-right-icon {
   position: absolute;
   right: 14px;
-  color: rgba(148, 163, 184, 0.7);
+  color: #64748b !important;
   pointer-events: none;
   font-size: 14px;
 }
@@ -2535,38 +2547,38 @@ body.auth-gate-active .auth-remember-check {
 body.auth-gate-active .auth-remember-check input[type="checkbox"] {
   width: 17px;
   height: 17px;
-  accent-color: #f59e0b;
+  accent-color: #0284c7;
   cursor: pointer;
 }
 
 body.auth-gate-active .auth-remember-check label {
-  color: #cbd5e1 !important;
+  color: #334155 !important;
   font-size: 12.5px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   margin: 0;
 }
 
 body.auth-gate-active .toggle-pw-btn {
-  color: rgba(203, 213, 225, 0.75);
+  color: #64748b !important;
 }
 body.auth-gate-active .toggle-pw-btn:hover {
-  color: #f59e0b;
+  color: #0284c7 !important;
 }
 
 /* Action Buttons */
 .btn-sacred-login {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, #1e40af 0%, #2563eb 50%, #3b82f6 100%) !important;
-  border: 1px solid rgba(254, 240, 138, 0.38) !important;
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
+  border: 1px solid rgba(254, 240, 138, 0.5) !important;
   border-radius: 12px !important;
   padding: 12px 20px !important;
   font-size: 14.5px !important;
   font-weight: 800 !important;
   letter-spacing: 0.4px !important;
   color: #ffffff !important;
-  box-shadow: 0 6px 22px rgba(37, 99, 235, 0.5), 0 0 16px rgba(245, 158, 11, 0.3) !important;
+  box-shadow: 0 6px 20px rgba(2, 132, 199, 0.4), 0 0 14px rgba(245, 158, 11, 0.25) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -2577,21 +2589,21 @@ body.auth-gate-active .toggle-pw-btn:hover {
 
 .btn-sacred-login:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 30px rgba(37, 99, 235, 0.65), 0 0 25px rgba(245, 158, 11, 0.45) !important;
-  filter: brightness(1.08);
+  box-shadow: 0 10px 28px rgba(2, 132, 199, 0.55), 0 0 22px rgba(245, 158, 11, 0.35) !important;
+  filter: brightness(1.06);
 }
 
 .btn-sacred-register {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%) !important;
-  border: 1px solid rgba(254, 240, 138, 0.38) !important;
+  background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+  border: 1px solid rgba(254, 240, 138, 0.5) !important;
   border-radius: 12px !important;
   padding: 12px 20px !important;
   font-size: 14.5px !important;
   font-weight: 800 !important;
   color: #ffffff !important;
-  box-shadow: 0 6px 22px rgba(16, 185, 129, 0.45) !important;
+  box-shadow: 0 6px 20px rgba(5, 150, 105, 0.35) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -2602,8 +2614,8 @@ body.auth-gate-active .toggle-pw-btn:hover {
 
 .btn-sacred-register:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 30px rgba(16, 185, 129, 0.65) !important;
-  filter: brightness(1.08);
+  box-shadow: 0 10px 28px rgba(5, 150, 105, 0.5) !important;
+  filter: brightness(1.06);
 }
 
 .btn-shimmer-sweep {
@@ -2612,7 +2624,7 @@ body.auth-gate-active .toggle-pw-btn:hover {
   left: -100%;
   width: 60%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
   transform: skewX(-22deg);
   animation: shimmerSweep 3.2s infinite;
   pointer-events: none;
@@ -2624,9 +2636,9 @@ body.auth-gate-active .toggle-pw-btn:hover {
 }
 
 .auth-switch-link {
-  color: #93c5fd !important;
+  color: #0284c7 !important;
   font-size: 13px !important;
-  font-weight: 600 !important;
+  font-weight: 700 !important;
   text-decoration: none !important;
   display: inline-flex;
   align-items: center;
@@ -2635,8 +2647,8 @@ body.auth-gate-active .toggle-pw-btn:hover {
 }
 
 .auth-switch-link:hover {
-  color: #fef08a !important;
-  text-shadow: 0 0 10px rgba(245, 158, 11, 0.7);
+  color: #0369a1 !important;
+  text-decoration: underline !important;
   transform: translateY(-1px);
 }
 
