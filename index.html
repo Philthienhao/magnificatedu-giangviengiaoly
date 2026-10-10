@@ -2,7 +2,12 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#d97706">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="MagnificatEdu">
+  <meta name="mobile-web-app-capable" content="yes">
   <title>MagnificatEdu - Hệ Thống Quản Lý Giáo Lý Công Giáo</title>
   
   <!-- Montserrat Font -->
@@ -31,7 +36,7 @@
   </script>
   
   <!-- Custom Stylesheet -->
-  <link rel="stylesheet" href="styles.css?v=20261010_v3600">
+  <link rel="stylesheet" href="styles.css?v=20261010_v3800">
 </head>
 <body>
 
@@ -51,6 +56,9 @@
         </div>
         <button id="toggle-sidebar-btn" class="toggle-btn" title="Thu gọn/Mở rộng">
           <i class="fa-solid fa-bars-staggered"></i>
+        </button>
+        <button id="mobile-sidebar-close-btn" class="mobile-drawer-close-btn" title="Đóng Menu">
+          <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
 
@@ -166,12 +174,18 @@
       </div>
     </aside>
 
+    <!-- MOBILE SIDEBAR BACKDROP -->
+    <div id="sidebar-backdrop" class="sidebar-backdrop"></div>
+
     <!-- MAIN CONTENT AREA -->
     <div class="main-wrapper">
       
       <!-- TOP HEADER BAR -->
       <header class="topbar">
         <div class="topbar-left">
+          <button type="button" id="mobile-sidebar-toggle-btn" class="mobile-sidebar-toggle-btn" title="Mở danh mục menu">
+            <i class="fa-solid fa-bars-staggered"></i>
+          </button>
           <div class="parish-branding">
             <i class="fa-solid fa-church parish-icon"></i>
             <div>
@@ -265,6 +279,30 @@
         </div>
       </footer>
     </div>
+
+    <!-- MOBILE BOTTOM NAVIGATION BAR -->
+    <nav id="mobile-bottom-nav" class="mobile-bottom-nav" aria-label="Điều hướng di động">
+      <a href="#overview" class="mobile-bottom-nav-item active" data-page="overview" title="Tổng quan">
+        <div class="nav-icon-wrap"><i class="fa-solid fa-chart-pie"></i></div>
+        <span class="nav-label">Tổng quan</span>
+      </a>
+      <a href="#classes" class="mobile-bottom-nav-item" data-page="classes" title="Lớp học">
+        <div class="nav-icon-wrap"><i class="fa-solid fa-layer-group"></i></div>
+        <span class="nav-label">Lớp học</span>
+      </a>
+      <a href="#students" class="mobile-bottom-nav-item" data-page="students" title="Học viên">
+        <div class="nav-icon-wrap"><i class="fa-solid fa-user-graduate"></i></div>
+        <span class="nav-label">Học viên</span>
+      </a>
+      <a href="#attendance" class="mobile-bottom-nav-item" data-page="attendance" title="Điểm danh">
+        <div class="nav-icon-wrap"><i class="fa-solid fa-clipboard-user"></i></div>
+        <span class="nav-label">Điểm danh</span>
+      </a>
+      <button type="button" id="mobile-bottom-menu-btn" class="mobile-bottom-nav-item" title="Mở Menu">
+        <div class="nav-icon-wrap"><i class="fa-solid fa-bars"></i></div>
+        <span class="nav-label">Menu</span>
+      </button>
+    </nav>
   </div>
 
   <!-- MODALS CONTAINER -->
@@ -317,6 +355,15 @@
       </div>
 
       <div class="modal-content auth-modal-content">
+
+        <!-- Mobile App Chibi Hero Banner (Visible on mobile screens) -->
+        <div class="mobile-app-chibi-banner">
+          <img src="catholic_pastoral_bg_mobile.jpg?v=20261010_m1" alt="Chúa Giê-su và Thiếu Nhi Thánh Thể" class="mobile-chibi-banner-img">
+          <div class="mobile-chibi-banner-overlay"></div>
+          <div class="mobile-chibi-app-badge">
+            <i class="fa-solid fa-cross"></i> MagnificatEdu Mobile
+          </div>
+        </div>
 
         <div class="auth-header">
           <button type="button" id="auth-modal-close-btn" class="auth-modal-close-btn" onclick="window.closeAuthModal()" title="Đóng và quay lại" style="display: none;">
@@ -1471,6 +1518,6 @@
   <div id="toast-container" class="toast-container"></div>
 
   <!-- Application JS Code -->
-  <script src="app_v2.js?v=20261010_v2800"></script>
+  <script src="app_v2.js?v=20261010_v2900"></script>
 </body>
 </html>

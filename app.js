@@ -1081,13 +1081,70 @@
      3. EVENT BINDING & ROUTING
      -------------------------------------------------------------------------- */
   function bindGlobalEvents() {
-    // Sidebar toggle
+    // Sidebar toggle (desktop collapse & mobile drawer)
     const toggleBtn = document.getElementById('toggle-sidebar-btn');
+    const mobileToggleBtn = document.getElementById('mobile-sidebar-toggle-btn');
+    const mobileCloseBtn = document.getElementById('mobile-sidebar-close-btn');
+    const mobileBottomMenuBtn = document.getElementById('mobile-bottom-menu-btn');
+    const sidebarBackdrop = document.getElementById('sidebar-backdrop');
     const sidebar = document.getElementById('sidebar');
+
+    function openMobileDrawer() {
+      if (sidebar) sidebar.classList.add('mobile-open');
+      if (sidebarBackdrop) sidebarBackdrop.classList.add('active');
+      document.body.classList.add('mobile-drawer-open');
+    }
+
+    function closeMobileDrawer() {
+      if (sidebar) sidebar.classList.remove('mobile-open');
+      if (sidebarBackdrop) sidebarBackdrop.classList.remove('active');
+      document.body.classList.remove('mobile-drawer-open');
+    }
+
+    window.openMobileDrawer = openMobileDrawer;
+    window.closeMobileDrawer = closeMobileDrawer;
+
     if (toggleBtn) {
       toggleBtn.addEventListener('click', () => {
-        sidebar.classList.toggle('collapsed');
+        if (window.innerWidth <= 768) {
+          if (sidebar && sidebar.classList.contains('mobile-open')) {
+            closeMobileDrawer();
+          } else {
+            openMobileDrawer();
+          }
+        } else {
+          sidebar.classList.toggle('collapsed');
+        }
       });
+    }
+
+    if (mobileToggleBtn) {
+      mobileToggleBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        openMobileDrawer();
+      });
+    }
+
+    if (mobileBottomMenuBtn) {
+      mobileBottomMenuBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (sidebar && sidebar.classList.contains('mobile-open')) {
+          closeMobileDrawer();
+        } else {
+          openMobileDrawer();
+        }
+      });
+    }
+
+    if (mobileCloseBtn) {
+      mobileCloseBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        closeMobileDrawer();
+      });
+    }
+
+    if (sidebarBackdrop) {
+      sidebarBackdrop.addEventListener('click', closeMobileDrawer);
     }
 
     // Fullscreen Toggle
@@ -1615,6 +1672,20 @@
       const group = activeEl.closest('.nav-group');
       if (group) group.classList.add('open');
     }
+
+    // Close mobile drawer on navigation
+    if (typeof window.closeMobileDrawer === 'function') {
+      window.closeMobileDrawer();
+    }
+
+    // Sync mobile bottom navigation items
+    document.querySelectorAll('.mobile-bottom-nav-item').forEach(el => {
+      if (el.getAttribute('data-page') === pageId) {
+        el.classList.add('active');
+      } else {
+        el.classList.remove('active');
+      }
+    });
 
     // Refresh cloud data in background if admin
     if (currentUser && hasAdminAccess(currentUser)) {
