@@ -234,9 +234,36 @@
      -------------------------------------------------------------------------- */
   let pendingConfirmCallback = null;
 
+  function ensureModalsAttachedToBody() {
+    const modalIds = [
+      'universal-confirm-modal',
+      'custom-confirm-modal',
+      'catechist-modal',
+      'admin-user-modal',
+      'student-modal',
+      'class-modal',
+      'certificate-modal',
+      'camera-capture-modal',
+      'notification-modal',
+      'library-modal'
+    ];
+    modalIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el && el.parentElement && el.parentElement !== document.body) {
+        document.body.appendChild(el);
+      }
+    });
+  }
+
   function openModal(id) {
     const el = document.getElementById(id);
-    if (el) el.style.display = 'flex';
+    if (el) {
+      if (el.parentElement && el.parentElement !== document.body) {
+        document.body.appendChild(el);
+      }
+      el.style.zIndex = '99999';
+      el.style.display = 'flex';
+    }
   }
 
   function closeModal(id) {
@@ -249,6 +276,10 @@
     const msgEl = document.getElementById('uni-confirm-msg');
     const modalEl = document.getElementById('universal-confirm-modal');
     const uniBtn = document.getElementById('uni-confirm-btn');
+
+    if (modalEl && modalEl.parentElement && modalEl.parentElement !== document.body) {
+      document.body.appendChild(modalEl);
+    }
 
     if (titleEl) titleEl.textContent = title || 'Xác Nhận Xóa';
     if (msgEl) msgEl.textContent = message || 'Bạn có chắc chắn muốn xóa bản ghi này khỏi hệ thống?';
@@ -338,6 +369,7 @@
 
   // Initialize App
   function initApp() {
+    ensureModalsAttachedToBody();
     loadAccounts();
     const isAuthenticated = loadCurrentUser();
     bindGlobalEvents();
