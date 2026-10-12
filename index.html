@@ -411,7 +411,7 @@
               <div class="form-group mb-3">
                 <label><i class="fa-brands fa-google text-danger"></i> Địa chỉ Gmail Giáo viên:</label>
                 <div class="input-with-sacred-icon">
-                  <input type="email" id="teacher-login-email" class="form-control sacred-input" placeholder="vi-du@gmail.com" required autocomplete="username">
+                  <input type="text" id="teacher-login-email" class="form-control sacred-input" placeholder="philthienhao hoặc email@gmail.com" required autocomplete="username">
                   <i class="fa-solid fa-envelope input-right-icon"></i>
                 </div>
               </div>
@@ -755,6 +755,7 @@
             <div class="form-group">
               <label>Phân Đoàn / Ngành: <span class="text-danger">*</span></label>
               <select id="cls-grade" class="form-control" required>
+                <option value="Giáo Lý">Giáo Lý</option>
                 <option value="Khai Tâm">Khai Tâm</option>
                 <option value="Ấu Nhi">Ấu Nhi</option>
                 <option value="Thiếu Nhi">Thiếu Nhi</option>
@@ -1215,6 +1216,8 @@
               <div class="form-group col-6">
                 <label>Cấp Bậc / Vai Trò:</label>
                 <select id="cat-role" class="form-control">
+                  <option value="Giáo lý viên">Giáo lý viên</option>
+                  <option value="Admin">Admin / Quản trị viên</option>
                   <option value="Huấn Luyện Viên">Huấn Luyện Viên</option>
                   <option value="GLV Cấp 3">GLV Cấp 3</option>
                   <option value="GLV Cấp 2">GLV Cấp 2</option>
@@ -1231,7 +1234,7 @@
 
             <div class="form-group">
               <label>Email Liên Hệ:</label>
-              <input type="email" id="cat-email" class="form-control" placeholder="email@gmail.com">
+              <input type="text" id="cat-email" class="form-control" placeholder="email@gmail.com hoặc username">
             </div>
 
             <div class="form-group">
@@ -1518,6 +1521,6 @@
   <div id="toast-container" class="toast-container"></div>
 
   <!-- Application JS Code -->
-  <script src="app_v2.js?v=20261012_v3200"></script>
+  <script src="app_v2.js?v=20261012_v3300"></script>
 </body>
 </html>
