@@ -1538,8 +1538,9 @@
       adminDeleteUserBtn.addEventListener('click', (e) => {
         e.preventDefault();
         const targetId = document.getElementById('admin-target-id')?.value;
-        if (targetId && typeof window.confirmDeleteAccount === 'function') {
-          window.confirmDeleteAccount(targetId);
+        const targetEmail = document.getElementById('admin-target-email')?.textContent?.trim();
+        if (typeof window.confirmDeleteAccount === 'function') {
+          window.confirmDeleteAccount(targetId, targetEmail);
         }
       });
     }
@@ -2725,6 +2726,11 @@
           ${catechists.map(cat => {
             const fullName = cat.fullName || cat.name || '';
             const firstLetter = fullName.charAt(0) || 'G';
+            const catEmail = (cat.email || '').toLowerCase().trim();
+            const catId = cat.id || '';
+            const isMaster = catEmail === 'philthienhao@gmail.com' || (cat.role === 'Admin' && fullName.toLowerCase().includes('thiện hảo'));
+            const isSelf = currentUser && currentUser.email && currentUser.email.toLowerCase().trim() === catEmail;
+            const badgeClass = cat.role === 'Admin' ? 'badge-warning' : (cat.role === 'Huấn Luyện Viên' ? 'badge-info' : 'badge-primary');
             return `
             <div class="card">
               <div class="card-body">
@@ -2736,12 +2742,18 @@
                     <div>
                       <span style="font-size: 11px; font-weight: 700; color: var(--primary);">${cat.holyName || ''}</span>
                       <h3 style="font-size: 15px; font-weight: 800; color: var(--dark-navy); margin: 0;">${fullName}</h3>
-                      <span class="badge badge-primary">${cat.role || 'Giáo lý viên'}</span>
+                      <span class="badge ${badgeClass}">${cat.role || 'Giáo lý viên'}</span>
                     </div>
                   </div>
                   <div style="display: flex; gap: 4px;">
-                    <button class="btn btn-xs btn-outline-primary" onclick="window.editCatechist('${cat.id}')"><i class="fa-solid fa-pen"></i></button>
-                    <button class="btn btn-xs btn-outline-danger" onclick="window.deleteCatechist('${cat.id}')"><i class="fa-solid fa-trash"></i></button>
+                    <button class="btn btn-xs btn-outline-primary" onclick="window.editCatechist('${catId}', '${catEmail}')" title="Chỉnh sửa thông tin"><i class="fa-solid fa-pen"></i></button>
+                    ${isMaster ? `
+                      <button class="btn btn-xs btn-outline-secondary" disabled title="Tài khoản Quản trị viên tối cao (Không thể xóa)"><i class="fa-solid fa-shield"></i></button>
+                    ` : (isSelf ? `
+                      <button class="btn btn-xs btn-outline-secondary" disabled title="Tài khoản hiện đang đăng nhập (Không thể tự xóa)"><i class="fa-solid fa-user-lock"></i></button>
+                    ` : `
+                      <button class="btn btn-xs btn-outline-danger" onclick="window.deleteCatechist('${catId}', '${catEmail}')" title="Xóa tài khoản"><i class="fa-solid fa-trash"></i></button>
+                    `)}
                   </div>
                 </div>
                 <p style="font-size: 12px; margin-bottom: 4px;"><i class="fa-solid fa-phone text-muted"></i> <strong>SĐT:</strong> ${cat.phone || '---'}</p>
@@ -5591,7 +5603,7 @@
                             <i class="fa-solid fa-pen"></i>
                           </button>
                           ${(isSuper && acc.email.toLowerCase() !== 'philthienhao@gmail.com') ? `
-                            <button class="btn btn-sm btn-outline-danger" onclick="window.quickDeleteAdminUser('${acc.email || acc.id}')" title="Xóa tài khoản" style="font-size: 11px; padding: 4px 7px;">
+                            <button class="btn btn-sm btn-outline-danger" onclick="window.quickDeleteAdminUser('${acc.id}', '${acc.email || ''}')" title="Xóa tài khoản" style="font-size: 11px; padding: 4px 7px;">
                               <i class="fa-solid fa-trash"></i>
                             </button>
                           ` : ''}
@@ -6636,58 +6648,98 @@
     openModal('catechist-modal');
   };
 
-  window.editCatechist = function(catId) {
-    const cat = appData.catechists.find(c => c.id === catId);
-    if (!cat) return;
-    document.getElementById('cat-form-id').value = cat.id;
+  window.editCatechist = function(catId, optionalEmail) {
+    const idStr = String(catId || '').trim();
+    const emailStr = (optionalEmail || '').toLowerCase().trim();
+
+    // 1. Search in appData.catechists
+    let cat = (appData && Array.isArray(appData.catechists)) ? appData.catechists.find(c => 
+      (idStr && (c.id === idStr || String(c.id) === idStr)) ||
+      (emailStr && c.email && c.email.toLowerCase().trim() === emailStr)
+    ) : null;
+
+    // 2. Search in accountsList
+    if (!cat) {
+      const acc = accountsList.find(a => 
+        (idStr && (a.id === idStr || a.email.toLowerCase() === idStr.toLowerCase())) ||
+        (emailStr && a.email.toLowerCase() === emailStr)
+      );
+      if (acc) {
+        cat = {
+          id: acc.id || acc.email,
+          holyName: acc.holyName || '',
+          fullName: acc.name || '',
+          role: acc.role || 'Giáo lý viên',
+          phone: acc.phone || '',
+          email: acc.email || '',
+          assignedClass: (acc.classes && acc.classes.length > 0) ? acc.classes.map(c => c.name).join(', ') : ''
+        };
+      }
+    }
+
+    // 3. Search in getParishGlobalData().catechists
+    if (!cat && typeof getParishGlobalData === 'function') {
+      try {
+        const gData = getParishGlobalData();
+        const gCat = (gData.catechists || []).find(c => 
+          (idStr && (c.id === idStr || String(c.id) === idStr)) ||
+          (emailStr && c.email && c.email.toLowerCase().trim() === emailStr)
+        );
+        if (gCat) cat = gCat;
+      } catch (e) {}
+    }
+
+    if (!cat) {
+      showToast('Không tìm thấy thông tin Giáo lý viên để chỉnh sửa!', 'warning');
+      return;
+    }
+
+    document.getElementById('cat-form-id').value = cat.id || '';
     document.getElementById('cat-holyname').value = cat.holyName || '';
-    document.getElementById('cat-fullname').value = cat.fullName || '';
-    document.getElementById('cat-role').value = cat.role || 'Huấn Luyện Viên';
+    document.getElementById('cat-fullname').value = cat.fullName || cat.name || '';
+    document.getElementById('cat-role').value = cat.role || 'Giáo lý viên';
     document.getElementById('cat-phone').value = cat.phone || '';
     document.getElementById('cat-email').value = cat.email || '';
     document.getElementById('cat-class').value = cat.assignedClass || '';
     openModal('catechist-modal');
   };
 
-  window.deleteCatechist = function(catId) {
-    const cat = (appData.catechists || []).find(c => c.id === catId || String(c.id) === String(catId));
-    const name = cat ? `${cat.holyName ? cat.holyName + ' ' : ''}${cat.fullName || cat.name || ''}` : 'Giáo lý viên này';
-    const performDelete = function() {
-      appData.catechists = (appData.catechists || []).filter(c => c.id !== catId && String(c.id) !== String(catId));
-      saveUserData();
-      if (activePage === 'catechists') renderCatechists(document.getElementById('content-area'));
-      showToast(`Đã xóa Giáo lý viên "${name}" thành công!`, 'warning');
-    };
-
-    if (typeof window.showConfirmDialog === 'function') {
-      window.showConfirmDialog(
-        'Xóa Giáo Lý Viên',
-        `Bạn có chắc chắn muốn xóa Giáo lý viên "${name}" khỏi hệ thống?`,
-        performDelete
-      );
-    } else if (window.confirm(`Xóa Giáo Lý Viên: Bạn có chắc chắn muốn xóa Giáo lý viên "${name}" khỏi hệ thống?`)) {
-      performDelete();
+  window.deleteCatechist = function(catId, optionalEmail) {
+    if (typeof window.confirmDeleteAccount === 'function') {
+      window.confirmDeleteAccount(catId, optionalEmail);
     }
   };
 
   window.saveCatechistForm = function(e) {
     e.preventDefault();
-    const id = document.getElementById('cat-form-id').value;
+    const id = document.getElementById('cat-form-id')?.value?.trim() || '';
+    const email = document.getElementById('cat-email')?.value?.trim() || '';
     const catData = {
       id: id || 'cat_' + Date.now(),
-      holyName: document.getElementById('cat-holyname').value.trim(),
-      fullName: document.getElementById('cat-fullname').value.trim(),
-      role: document.getElementById('cat-role').value,
-      phone: document.getElementById('cat-phone').value.trim(),
-      email: document.getElementById('cat-email').value.trim(),
-      assignedClass: document.getElementById('cat-class').value.trim()
+      holyName: document.getElementById('cat-holyname')?.value?.trim() || '',
+      fullName: document.getElementById('cat-fullname')?.value?.trim() || '',
+      role: document.getElementById('cat-role')?.value || 'Giáo lý viên',
+      phone: document.getElementById('cat-phone')?.value?.trim() || '',
+      email: email,
+      assignedClass: document.getElementById('cat-class')?.value?.trim() || ''
     };
 
-    if (id) {
-      const idx = appData.catechists.findIndex(c => c.id === id);
-      if (idx !== -1) appData.catechists[idx] = catData;
+    if (!Array.isArray(appData.catechists)) appData.catechists = [];
+    const idx = appData.catechists.findIndex(c => (id && c.id === id) || (email && c.email && c.email.toLowerCase() === email.toLowerCase()));
+    if (idx !== -1) {
+      appData.catechists[idx] = { ...appData.catechists[idx], ...catData };
     } else {
       appData.catechists.push(catData);
+    }
+
+    // If this catechist corresponds to an account in accountsList, update it as well
+    const acc = accountsList.find(a => (id && a.id === id) || (email && a.email.toLowerCase() === email.toLowerCase()));
+    if (acc) {
+      acc.name = catData.fullName;
+      acc.holyName = catData.holyName;
+      acc.role = catData.role;
+      acc.phone = catData.phone;
+      saveAccounts();
     }
 
     saveUserData();
@@ -7410,19 +7462,24 @@
   // ACCOUNT DELETION LOGIC WITH CUSTOM CONFIRMATION MODAL & SUPABASE INTEGRATION
   let pendingDeleteAcc = null;
 
-  window.confirmDeleteAccount = function (accId) {
-    if (!accId) return;
-    const identifier = String(accId).trim();
+  window.confirmDeleteAccount = function (accId, optionalEmail) {
+    if (!accId && !optionalEmail) return;
+    const identifier = String(accId || optionalEmail || '').trim();
+    const optEmail = String(optionalEmail || '').toLowerCase().trim();
 
     // 1. Look up in accountsList
-    let acc = accountsList.find(a => a && (a.id === identifier || a.email.toLowerCase() === identifier.toLowerCase()));
+    let acc = accountsList.find(a => a && (
+      (identifier && (a.id === identifier || a.email.toLowerCase() === identifier.toLowerCase() || (a.name && a.name.toLowerCase() === identifier.toLowerCase()))) ||
+      (optEmail && a.email && a.email.toLowerCase() === optEmail)
+    ));
 
     // 2. Look up in allCloudUserDataMap if not found in accountsList
     if (!acc) {
-      const uEmail = Object.keys(allCloudUserDataMap).find(e => 
-        e.toLowerCase() === identifier.toLowerCase() || 
-        ('acc_' + e.replace(/[^a-z0-9]/gi, '_')) === identifier
-      );
+      const uEmail = Object.keys(allCloudUserDataMap).find(e => {
+        const low = e.toLowerCase();
+        return (identifier && (low === identifier.toLowerCase() || ('acc_' + low.replace(/[^a-z0-9]/gi, '_')) === identifier)) ||
+               (optEmail && low === optEmail);
+      });
       if (uEmail) {
         const uData = allCloudUserDataMap[uEmail] || {};
         const accInfo = uData.account_info || {};
@@ -7437,12 +7494,51 @@
       }
     }
 
-    // 3. Fallback: if identifier has @ symbol
-    if (!acc && identifier.includes('@')) {
+    // 3. Look up in getParishGlobalData().catechists
+    if (!acc && typeof getParishGlobalData === 'function') {
+      try {
+        const gData = getParishGlobalData();
+        const catMatch = (gData.catechists || []).find(c => 
+          (identifier && (c.id === identifier || (c.email && c.email.toLowerCase() === identifier.toLowerCase()) || (c.fullName && c.fullName.toLowerCase() === identifier.toLowerCase()))) ||
+          (optEmail && c.email && c.email.toLowerCase() === optEmail)
+        );
+        if (catMatch) {
+          acc = {
+            id: catMatch.id || identifier,
+            email: catMatch.email || optEmail || '',
+            name: catMatch.fullName || catMatch.name || identifier,
+            holyName: catMatch.holyName || '',
+            role: catMatch.role || 'Giáo lý viên',
+            parish: catMatch.parish || 'Giáo xứ Hòa Khánh'
+          };
+        }
+      } catch (e) {}
+    }
+
+    // 4. Look up in appData.catechists
+    if (!acc && appData && Array.isArray(appData.catechists)) {
+      const catMatch = appData.catechists.find(c => 
+        (identifier && (c.id === identifier || (c.email && c.email.toLowerCase() === identifier.toLowerCase()) || (c.fullName && c.fullName.toLowerCase() === identifier.toLowerCase()))) ||
+        (optEmail && c.email && c.email.toLowerCase() === optEmail)
+      );
+      if (catMatch) {
+        acc = {
+          id: catMatch.id || identifier,
+          email: catMatch.email || optEmail || '',
+          name: catMatch.fullName || catMatch.name || identifier,
+          holyName: catMatch.holyName || '',
+          role: catMatch.role || 'Giáo lý viên',
+          parish: 'Giáo xứ Hòa Khánh'
+        };
+      }
+    }
+
+    // 5. Fallback if not found yet
+    if (!acc && identifier) {
       acc = {
-        id: 'acc_' + identifier.replace(/[^a-z0-9]/gi, '_'),
-        email: identifier,
-        name: identifier.split('@')[0],
+        id: identifier,
+        email: optEmail || (identifier.includes('@') ? identifier : identifier),
+        name: identifier,
         holyName: '',
         role: 'Giáo lý viên',
         parish: 'Giáo xứ Hòa Khánh'
@@ -7455,14 +7551,15 @@
     }
 
     const targetEmail = (acc.email || '').toLowerCase().trim();
+    const targetName = (acc.name || '').toLowerCase().trim();
 
     // Protection: Never allow deleting the Master Admin or the currently logged-in user
-    if (targetEmail === 'philthienhao@gmail.com') {
+    if (targetEmail === 'philthienhao@gmail.com' || (acc.role === 'Admin' && targetName.includes('thiện hảo'))) {
       alert('Đây là tài khoản Admin Master tối cao của hệ thống (Võ Thiện Hảo), không thể xóa!');
       return;
     }
 
-    if (currentUser && currentUser.email && currentUser.email.toLowerCase().trim() === targetEmail) {
+    if (currentUser && currentUser.email && (currentUser.email.toLowerCase().trim() === targetEmail || (acc.id && currentUser.id === acc.id))) {
       alert('Bạn không thể xóa tài khoản Admin hiện đang đăng nhập trên phiên này!');
       return;
     }
@@ -7473,14 +7570,19 @@
     if (doDeleteBtn) {
       doDeleteBtn.setAttribute('data-target-id', acc.id || '');
       doDeleteBtn.setAttribute('data-target-email', acc.email || '');
+      doDeleteBtn.setAttribute('data-target-name', (acc.holyName ? acc.holyName + ' ' : '') + (acc.name || acc.email || acc.id));
       doDeleteBtn.disabled = false;
       doDeleteBtn.innerHTML = '<i class="fa-solid fa-trash"></i> Đồng Ý Xóa Ngay';
     }
 
-    const targetName = document.getElementById('confirm-target-name');
+    const targetNameEl = document.getElementById('confirm-target-name');
     const targetEmailEl = document.getElementById('confirm-target-email');
-    if (targetName) targetName.textContent = (acc.holyName ? acc.holyName + ' ' : '') + acc.name;
-    if (targetEmailEl) targetEmailEl.textContent = acc.email;
+    if (targetNameEl) {
+      targetNameEl.textContent = (acc.holyName ? acc.holyName + ' ' : '') + (acc.name || acc.email || acc.id);
+    }
+    if (targetEmailEl) {
+      targetEmailEl.textContent = acc.email ? (acc.email + (acc.id && acc.id !== acc.email ? ` • ID: ${acc.id}` : '')) : `ID: ${acc.id}`;
+    }
 
     closeModal('admin-user-modal');
     const modalEl = document.getElementById('custom-confirm-modal');
@@ -7496,14 +7598,17 @@
       const targetId = (btnElement && btnElement.getAttribute('data-target-id'))
         || (pendingDeleteAcc && pendingDeleteAcc.id)
         || '';
+      const targetName = (btnElement && btnElement.getAttribute('data-target-name'))
+        || (pendingDeleteAcc && (pendingDeleteAcc.name || pendingDeleteAcc.fullName))
+        || targetEmail || targetId;
 
-      if (!targetEmail) {
-        alert('Không xác định được email tài khoản cần xóa!');
+      const emailLower = (targetEmail || '').toLowerCase().trim();
+
+      if (!emailLower && !targetId) {
+        alert('Không xác định được thông tin tài khoản cần xóa!');
         closeModal('custom-confirm-modal');
         return;
       }
-
-      const emailLower = targetEmail.toLowerCase().trim();
 
       // Guard check
       if (emailLower === 'philthienhao@gmail.com') {
@@ -7526,14 +7631,19 @@
       // 1. Delete from Supabase Cloud
       if (window.supabaseClient) {
         try {
-          const { error } = await window.supabaseClient
-            .from('user_data')
-            .delete()
-            .eq('email', emailLower);
-          if (error) {
-            console.warn('Supabase user_data delete error:', error);
-          } else {
-            console.log('✅ Đã xóa thành công trên Supabase Cloud:', emailLower);
+          if (emailLower) {
+            const { error: delErr } = await window.supabaseClient
+              .from('user_data')
+              .delete()
+              .eq('email', emailLower);
+            if (delErr) {
+              console.warn('Supabase user_data delete error:', delErr);
+            } else {
+              console.log('✅ Đã xóa thành công trên Supabase Cloud:', emailLower);
+            }
+          }
+          if (targetEmail && targetEmail !== emailLower) {
+            await window.supabaseClient.from('user_data').delete().eq('email', targetEmail);
           }
         } catch (cloudErr) {
           console.warn('Supabase delete exception:', cloudErr);
@@ -7541,46 +7651,88 @@
       }
 
       // 2. Remove from in-memory cache
-      delete allCloudUserDataMap[emailLower];
+      if (emailLower) delete allCloudUserDataMap[emailLower];
+      if (targetEmail) delete allCloudUserDataMap[targetEmail];
+      Object.keys(allCloudUserDataMap).forEach(k => {
+        if (k.toLowerCase() === emailLower || (targetId && k === targetId)) {
+          delete allCloudUserDataMap[k];
+        }
+      });
 
       // 3. Remove from accountsList & persist to localStorage
       const accIndex = accountsList.findIndex(a => 
-        (a.email && a.email.toLowerCase() === emailLower) || 
+        (emailLower && a.email && a.email.toLowerCase() === emailLower) || 
+        (targetEmail && a.email && a.email.toLowerCase() === targetEmail.toLowerCase()) ||
         (targetId && a.id === targetId)
       );
-      let deletedAccName = emailLower;
+      let deletedAccName = targetName;
       if (accIndex !== -1) {
-        deletedAccName = accountsList[accIndex].name || emailLower;
+        deletedAccName = accountsList[accIndex].name || deletedAccName;
         accountsList.splice(accIndex, 1);
-      } else if (pendingDeleteAcc && pendingDeleteAcc.name) {
-        deletedAccName = pendingDeleteAcc.name;
       }
       saveAccounts();
 
       // 4. Remove all LocalStorage data keys for this user
-      const userKey = STORAGE_PREFIX_DATA + emailLower.replace(/[^a-z0-9]/g, '_');
-      localStorage.removeItem(userKey);
+      if (emailLower) {
+        const userKey = STORAGE_PREFIX_DATA + emailLower.replace(/[^a-z0-9]/g, '_');
+        localStorage.removeItem(userKey);
+        Object.keys(localStorage).forEach(k => {
+          if (k.toLowerCase().includes(emailLower.replace(/[^a-z0-9]/g, '_'))) {
+            localStorage.removeItem(k);
+          }
+        });
+      }
+      if (targetId) {
+        localStorage.removeItem(STORAGE_PREFIX_DATA + targetId);
+      }
 
-      // Clean any other variants in localStorage
-      Object.keys(localStorage).forEach(k => {
-        if (k.toLowerCase().includes(emailLower.replace(/[^a-z0-9]/g, '_'))) {
-          localStorage.removeItem(k);
+      // 5. Clean up from appData.catechists
+      if (Array.isArray(appData.catechists)) {
+        appData.catechists = appData.catechists.filter(c => {
+          const cEmail = (c.email || '').toLowerCase().trim();
+          const cId = c.id || '';
+          if (emailLower && cEmail === emailLower) return false;
+          if (targetEmail && cEmail === targetEmail.toLowerCase().trim()) return false;
+          if (targetId && (cId === targetId || String(cId) === String(targetId))) return false;
+          return true;
+        });
+      }
+
+      // Clean up from other in-memory datasets' catechists
+      Object.keys(allCloudUserDataMap).forEach(uKey => {
+        const d = allCloudUserDataMap[uKey];
+        if (d && Array.isArray(d.catechists)) {
+          d.catechists = d.catechists.filter(c => {
+            const cEmail = (c.email || '').toLowerCase().trim();
+            const cId = c.id || '';
+            if (emailLower && cEmail === emailLower) return false;
+            if (targetId && (cId === targetId || String(cId) === String(targetId))) return false;
+            return true;
+          });
         }
       });
 
-      // 5. Clean up any classes in current appData assigned to this teacher
+      // 6. Clean up any classes in current appData assigned to this teacher
       if (Array.isArray(appData.classes)) {
         appData.classes.forEach(c => {
-          if (c.teacherEmail && c.teacherEmail.toLowerCase() === emailLower) {
-            c.teacher = 'Chưa phân công';
-            c.teacherEmail = '';
-          }
-          if (c.coTeacherEmail && c.coTeacherEmail.toLowerCase() === emailLower) {
-            c.coTeacher = '';
-            c.coTeacherEmail = '';
+          const tEmail = (c.teacherEmail || '').toLowerCase().trim();
+          const coEmail = (c.coTeacherEmail || '').toLowerCase().trim();
+          if (emailLower && (tEmail === emailLower || coEmail === emailLower)) {
+            if (tEmail === emailLower) {
+              c.teacher = 'Chưa phân công';
+              c.teacherEmail = '';
+            }
+            if (coEmail === emailLower) {
+              c.coTeacher = '';
+              c.coTeacherEmail = '';
+            }
           }
         });
-        saveUserData();
+      }
+      saveUserData();
+
+      if (currentUser && currentUser.email) {
+        allCloudUserDataMap[currentUser.email.toLowerCase().trim()] = appData;
       }
 
       pendingDeleteAcc = null;
@@ -7588,16 +7740,22 @@
       closeModal('admin-user-modal');
       closeModal('custom-confirm-modal');
 
-      // 6. Refresh views
+      // 7. Refresh views
       const contentArea = document.getElementById('content-area');
-      if (contentArea && activePage === 'admin-users') {
-        await renderAdminUsers(contentArea);
+      if (contentArea) {
+        if (activePage === 'catechists') {
+          renderCatechists(contentArea);
+        } else if (activePage === 'admin-users') {
+          await renderAdminUsers(contentArea);
+        } else if (activePage === 'overview') {
+          renderOverview(contentArea);
+        }
       }
       if (typeof renderSavedAccounts === 'function') {
         renderSavedAccounts();
       }
 
-      showToast(`Đã xóa vĩnh viễn tài khoản "${deletedAccName}" (${emailLower}) khỏi hệ thống & Đám mây Supabase!`, 'danger');
+      showToast(`Đã xóa vĩnh viễn tài khoản "${deletedAccName}" khỏi hệ thống & Đám mây Supabase!`, 'success');
     } catch (err) {
       console.error('Failure in executeAccountDeletion:', err);
       alert('Đã xảy ra lỗi khi xóa tài khoản: ' + err.message);
@@ -7612,12 +7770,13 @@
   // Compatibility wrappers
   window.deleteAdminUser = function (e) {
     if (e) e.preventDefault();
-    const accId = document.getElementById('admin-target-id').value;
-    window.confirmDeleteAccount(accId);
+    const accId = document.getElementById('admin-target-id')?.value;
+    const accEmail = document.getElementById('admin-target-email')?.textContent?.trim();
+    window.confirmDeleteAccount(accId, accEmail);
   };
 
-  window.quickDeleteAdminUser = function (accId) {
-    window.confirmDeleteAccount(accId);
+  window.quickDeleteAdminUser = function (accId, accEmail) {
+    window.confirmDeleteAccount(accId, accEmail);
   };
 
   // ADMIN MASTER TOOLS & INSPECTION
