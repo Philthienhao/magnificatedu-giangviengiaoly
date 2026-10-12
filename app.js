@@ -980,6 +980,9 @@
     } catch (e) {
       console.warn('LocalStorage saveUserData notice:', e);
     }
+    if (currentUser.email) {
+      allCloudUserDataMap[currentUser.email.toLowerCase().trim()] = appData;
+    }
 
     // Supabase Cloud Data Persistence Sync
     if (window.supabaseClient && currentUser.email) {
@@ -2272,6 +2275,16 @@
       options.push(`<option value="${c.email}">${name ? name + ' — ' + c.email : c.email}</option>`);
     });
 
+    Object.keys(allCloudUserDataMap || {}).forEach(emKey => {
+      const em = emKey.toLowerCase().trim();
+      if (!em || seen.has(em)) return;
+      seen.add(em);
+      const uData = allCloudUserDataMap[emKey] || {};
+      const accInfo = uData.account_info || {};
+      const name = `${accInfo.holyName ? accInfo.holyName + ' ' : ''}${accInfo.name || em.split('@')[0]}`.trim();
+      options.push(`<option value="${em}">${name ? name + ' — ' + em : em}</option>`);
+    });
+
     datalist.innerHTML = options.join('');
   }
 
@@ -2505,7 +2518,7 @@
             const classStudentCount = c.studentCount || students.filter(s => s.classId === c.id || s.className === c.name).length;
             const teacherDisplay = c.teacher || (currentUser.holyName ? currentUser.holyName + ' ' : '') + currentUser.name;
             const teacher1 = c.teacher || teacherDisplay;
-            const teacher1Email = c.teacherEmail || '';
+            const teacher1Email = c.teacherEmail || (currentUser ? currentUser.email : '');
             const teacher2 = c.coTeacher || '';
             const teacher2Email = c.coTeacherEmail || '';
             const hasCoTeacher = Boolean(teacher2 || teacher2Email);
@@ -6332,36 +6345,56 @@
 
     const targetClassId = String((cls && cls.id) || cleanRawId || cleanDecodedId).trim();
     const displayName = (cls && cls.name) || targetName || targetClassId || 'Lớp học';
-    const ownerEmail = (cls && (cls.teacherEmail || cls.ownerEmail)) || cleanEmail || '';
+    let ownerEmail = (cls && (cls.teacherEmail || cls.ownerEmail)) || cleanEmail || '';
     const coTeacherEmail = cls && cls.coTeacherEmail ? cls.coTeacherEmail.toLowerCase().trim() : '';
+
+    if (!ownerEmail && currentUser && currentUser.email) {
+      const curName = (currentUser.name || '').toLowerCase();
+      const teacherName = (cls && cls.teacher ? cls.teacher.toLowerCase() : '');
+      if (teacherName.includes(curName) || (appData && Array.isArray(appData.classes) && appData.classes.some(c => String(c.id).trim() === targetClassId || String(c.name).trim().toLowerCase() === cleanName))) {
+        ownerEmail = currentUser.email.toLowerCase().trim();
+      }
+    }
 
     const performDelete = async function () {
       try {
         const isTargetClass = (c) => {
           if (!c) return false;
           const cId = String(c.id || '').trim();
-          if (targetClassId && cId) {
-            return cId === targetClassId;
-          }
           const cName = String(c.name || '').trim().toLowerCase();
-          return Boolean(cleanName && cName === cleanName);
+          if (targetClassId && cId && (cId === targetClassId || cId === cleanRawId || cId === cleanDecodedId)) {
+            return true;
+          }
+          if (cleanName && cName === cleanName) {
+            return true;
+          }
+          if (displayName && cName === displayName.trim().toLowerCase()) {
+            return true;
+          }
+          return false;
         };
 
         const isStudentInClass = (s) => {
           if (!s) return false;
           const sCId = String(s.classId || '').trim();
-          if (targetClassId && sCId) {
-            return sCId === targetClassId;
-          }
           const sCName = String(s.className || '').trim().toLowerCase();
-          return Boolean(cleanName && sCName === cleanName);
+          if (targetClassId && sCId && (sCId === targetClassId || sCId === cleanRawId || sCId === cleanDecodedId)) {
+            return true;
+          }
+          if (cleanName && sCName === cleanName) {
+            return true;
+          }
+          if (displayName && sCName === displayName.trim().toLowerCase()) {
+            return true;
+          }
+          return false;
         };
 
         const affectedEmails = new Set();
         if (ownerEmail) affectedEmails.add(ownerEmail.toLowerCase().trim());
         if (coTeacherEmail) affectedEmails.add(coTeacherEmail.toLowerCase().trim());
+        if (currentUser && currentUser.email) affectedEmails.add(currentUser.email.toLowerCase().trim());
 
-        // Helper to get all localStorage keys safely across environments
         const getStorageKeys = () => {
           const keys = new Set();
           try {
@@ -6378,10 +6411,13 @@
           return Array.from(keys);
         };
 
-        // 1. If deleting class belongs to current user or matches current appData
-        if (appData && Array.isArray(appData.classes) && appData.classes.some(isTargetClass)) {
-          if (currentUser && currentUser.email) affectedEmails.add(currentUser.email.toLowerCase().trim());
+        // 1. Remove from current working appData
+        if (appData && Array.isArray(appData.classes)) {
+          const beforeLen = appData.classes.length;
           appData.classes = appData.classes.filter(c => !isTargetClass(c));
+          if (appData.classes.length !== beforeLen && currentUser && currentUser.email) {
+            affectedEmails.add(currentUser.email.toLowerCase().trim());
+          }
           if (Array.isArray(appData.students)) {
             appData.students.forEach(s => {
               if (isStudentInClass(s)) {
@@ -6394,9 +6430,12 @@
             delete appData.seatingCharts[targetClassId];
           }
           saveUserData();
+          if (currentUser && currentUser.email) {
+            allCloudUserDataMap[currentUser.email.toLowerCase().trim()] = appData;
+          }
         }
 
-        // 2. If target class belongs to another teacher, fetch fresh data from Supabase if not in memory
+        // 2. Fetch fresh owner data from Supabase if needed
         if (window.supabaseClient && ownerEmail && (!allCloudUserDataMap[ownerEmail] || !Array.isArray(allCloudUserDataMap[ownerEmail].classes))) {
           try {
             const { data: cloudRow } = await window.supabaseClient.from('user_data').select('data').eq('email', ownerEmail).maybeSingle();
@@ -6408,12 +6447,12 @@
           }
         }
 
-        // 3. Update allCloudUserDataMap
+        // 3. Remove from all entries in allCloudUserDataMap
         Object.keys(allCloudUserDataMap).forEach(uEmail => {
           const uData = allCloudUserDataMap[uEmail];
           if (uData && Array.isArray(uData.classes)) {
-            const hasCls = uData.classes.some(isTargetClass);
-            if (hasCls || (ownerEmail && uEmail.toLowerCase().trim() === ownerEmail.toLowerCase().trim())) {
+            const hadCls = uData.classes.some(isTargetClass);
+            if (hadCls || (ownerEmail && uEmail.toLowerCase().trim() === ownerEmail.toLowerCase().trim())) {
               affectedEmails.add(uEmail.toLowerCase().trim());
               uData.classes = uData.classes.filter(c => !isTargetClass(c));
               if (Array.isArray(uData.students)) {
@@ -6427,37 +6466,23 @@
               if (uData.seatingCharts && targetClassId && uData.seatingCharts[targetClassId]) {
                 delete uData.seatingCharts[targetClassId];
               }
+              const k = STORAGE_PREFIX_DATA + uEmail.toLowerCase().trim().replace(/[^a-z0-9]/g, '_');
+              try { localStorage.setItem(k, JSON.stringify(uData)); } catch(e) {}
             }
           }
         });
 
-        // 4. Update owner's direct localStorage entry
-        if (ownerEmail) {
-          const directKey = STORAGE_PREFIX_DATA + ownerEmail.toLowerCase().trim().replace(/[^a-z0-9]/g, '_');
-          try {
-            let uData = allCloudUserDataMap[ownerEmail];
-            if (!uData) {
-              const raw = localStorage.getItem(directKey);
-              if (raw) uData = JSON.parse(raw);
+        // 4. Clean from accountsList
+        accountsList.forEach(a => {
+          if (Array.isArray(a.classes)) {
+            const had = a.classes.some(isTargetClass);
+            if (had || (ownerEmail && a.email && a.email.toLowerCase().trim() === ownerEmail.toLowerCase().trim())) {
+              a.classes = a.classes.filter(c => !isTargetClass(c));
+              if (a.email) affectedEmails.add(a.email.toLowerCase().trim());
             }
-            if (uData && Array.isArray(uData.classes)) {
-              uData.classes = uData.classes.filter(c => !isTargetClass(c));
-              if (Array.isArray(uData.students)) {
-                uData.students.forEach(s => {
-                  if (isStudentInClass(s)) {
-                    s.classId = '';
-                    s.className = 'Chưa xếp lớp';
-                  }
-                });
-              }
-              if (uData.seatingCharts && targetClassId && uData.seatingCharts[targetClassId]) {
-                delete uData.seatingCharts[targetClassId];
-              }
-              localStorage.setItem(directKey, JSON.stringify(uData));
-              allCloudUserDataMap[ownerEmail] = uData;
-            }
-          } catch(e) {}
-        }
+          }
+        });
+        saveAccounts();
 
         // 5. Scan all keys in localStorage starting with STORAGE_PREFIX_DATA
         const allDataKeys = getStorageKeys().filter(k => k.startsWith(STORAGE_PREFIX_DATA));
@@ -6470,7 +6495,7 @@
               const hasCls = uData.classes.some(isTargetClass);
               const uEmail = resolveEmailFromStorageKey(k, uData);
               if (hasCls || (ownerEmail && uEmail && uEmail.toLowerCase().trim() === ownerEmail.toLowerCase().trim())) {
-                if (uEmail) affectedEmails.add(uEmail);
+                if (uEmail) affectedEmails.add(uEmail.toLowerCase().trim());
                 uData.classes = uData.classes.filter(c => !isTargetClass(c));
                 if (Array.isArray(uData.students)) {
                   uData.students.forEach(s => {
@@ -6484,17 +6509,24 @@
                   delete uData.seatingCharts[targetClassId];
                 }
                 localStorage.setItem(k, JSON.stringify(uData));
-                if (uEmail) allCloudUserDataMap[uEmail] = uData;
+                if (uEmail) allCloudUserDataMap[uEmail.toLowerCase().trim()] = uData;
               }
             }
           } catch (e) {}
         });
 
-        // 5. Persist updated datasets to Supabase Cloud for ALL affected teachers
+        // 6. Keep currentUser in-memory sync
+        if (currentUser && currentUser.email) {
+          allCloudUserDataMap[currentUser.email.toLowerCase().trim()] = appData;
+        }
+
+        // 7. Persist updated datasets to Supabase Cloud for ALL affected teachers
         if (window.supabaseClient && affectedEmails.size > 0) {
           for (const uEmail of affectedEmails) {
             try {
-              let uData = allCloudUserDataMap[uEmail];
+              let uData = (currentUser && currentUser.email && uEmail === currentUser.email.toLowerCase().trim())
+                ? appData
+                : allCloudUserDataMap[uEmail];
               if (!uData) {
                 const storageKey = STORAGE_PREFIX_DATA + uEmail.replace(/[^a-z0-9]/g, '_');
                 const localStr = localStorage.getItem(storageKey);
@@ -6504,7 +6536,8 @@
                 if (!uData.account_info) uData.account_info = {};
                 uData.account_info.email = uEmail;
                 const storageKey = STORAGE_PREFIX_DATA + uEmail.replace(/[^a-z0-9]/g, '_');
-                localStorage.setItem(storageKey, JSON.stringify(uData));
+                try { localStorage.setItem(storageKey, JSON.stringify(uData)); } catch(e) {}
+                allCloudUserDataMap[uEmail] = uData;
 
                 const { error: syncErr } = await window.supabaseClient.from('user_data').upsert({
                   email: uEmail,
@@ -6523,7 +6556,7 @@
           }
         }
 
-        // 6. Update UI views
+        // 8. Update UI views
         const container = document.getElementById('content-area');
         if (activePage === 'classes' && container) renderClasses(container);
         if (activePage === 'admin-users' && container) await renderAdminUsers(container);
@@ -6548,21 +6581,25 @@
     }
   };
 
-  function handleSaveClass(e) {
-    e.preventDefault();
-    const id = document.getElementById('class-form-id').value;
+  async function handleSaveClass(e) {
+    if (e) e.preventDefault();
+    const id = (document.getElementById('class-form-id')?.value || '').trim();
 
-    const teacherName = document.getElementById('cls-teacher').value.trim() || currentUser.name;
-    const teacherEmail = (document.getElementById('cls-teacher-email') ? document.getElementById('cls-teacher-email').value.trim() : '') || (currentUser ? currentUser.email : '');
-    const coTeacherName = document.getElementById('cls-co-teacher') ? document.getElementById('cls-co-teacher').value.trim() : '';
-    const coTeacherEmail = document.getElementById('cls-co-teacher-email') ? document.getElementById('cls-co-teacher-email').value.trim() : '';
+    const teacherName = (document.getElementById('cls-teacher')?.value || '').trim() || currentUser.name;
+    const teacherEmail = ((document.getElementById('cls-teacher-email')?.value || '').trim()) || (currentUser ? currentUser.email : '');
+    const coTeacherName = (document.getElementById('cls-co-teacher')?.value || '').trim();
+    const coTeacherEmail = (document.getElementById('cls-co-teacher-email')?.value || '').trim();
+
+    const tEmailLower = teacherEmail.toLowerCase().trim();
+    const coEmailLower = coTeacherEmail.toLowerCase().trim();
+    const curEmailLower = (currentUser && currentUser.email ? currentUser.email.toLowerCase().trim() : '');
 
     const clsData = {
-      id: id || 'cls_' + Date.now(),
-      name: document.getElementById('cls-name').value.trim(),
-      grade: document.getElementById('cls-grade').value,
-      room: document.getElementById('cls-room').value.trim() || 'Phòng 101',
-      schedule: document.getElementById('cls-schedule').value.trim() || 'Chúa Nhật (08:00 - 09:30)',
+      id: id || ('cls_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6)),
+      name: (document.getElementById('cls-name')?.value || '').trim(),
+      grade: document.getElementById('cls-grade')?.value || 'Khai Tâm',
+      room: (document.getElementById('cls-room')?.value || '').trim() || 'Phòng 101',
+      schedule: (document.getElementById('cls-schedule')?.value || '').trim() || 'Chúa Nhật (08:00 - 09:30)',
       teacher: teacherName,
       teacherEmail: teacherEmail,
       coTeacher: coTeacherName,
@@ -6570,74 +6607,167 @@
       studentCount: 0
     };
 
-    if (id) {
-      const idx = appData.classes.findIndex(c => c.id === id);
-      if (idx !== -1) {
-        clsData.studentCount = appData.classes[idx].studentCount || 0;
-        appData.classes[idx] = clsData;
-      } else {
-        let foundInCloud = false;
-        Object.keys(allCloudUserDataMap).forEach(uEmail => {
-          const uData = allCloudUserDataMap[uEmail];
-          if (uData && Array.isArray(uData.classes)) {
-            const cIdx = uData.classes.findIndex(c => c.id === id);
-            if (cIdx !== -1) {
-              clsData.studentCount = uData.classes[cIdx].studentCount || 0;
-              uData.classes[cIdx] = clsData;
-              foundInCloud = true;
-              try {
-                const k = STORAGE_PREFIX_DATA + uEmail.replace(/[^a-z0-9]/g, '_');
-                localStorage.setItem(k, JSON.stringify(uData));
-                if (window.supabaseClient) {
-                  window.supabaseClient.from('user_data').upsert({ email: uEmail, data: uData, updated_at: new Date().toISOString() });
-                }
-              } catch(e) {}
-            }
+    const targetClassId = clsData.id;
+    const isTargetClass = (c) => {
+      if (!c) return false;
+      const cId = String(c.id || '').trim();
+      if (id && cId === id) return true;
+      if (targetClassId && cId === targetClassId) return true;
+      const cName = String(c.name || '').trim().toLowerCase();
+      if (clsData.name && cName === clsData.name.toLowerCase()) return true;
+      return false;
+    };
+
+    // Find if class already exists in appData or in cloud datasets to preserve studentCount
+    let existingClass = null;
+    if (appData && Array.isArray(appData.classes)) {
+      existingClass = appData.classes.find(isTargetClass);
+    }
+    if (!existingClass) {
+      for (const uEmail of Object.keys(allCloudUserDataMap)) {
+        const uData = allCloudUserDataMap[uEmail];
+        if (uData && Array.isArray(uData.classes)) {
+          const match = uData.classes.find(isTargetClass);
+          if (match) {
+            existingClass = match;
+            break;
           }
-        });
-        if (!foundInCloud) appData.classes.push(clsData);
+        }
       }
-    } else {
-      appData.classes.push(clsData);
+    }
+    if (existingClass && existingClass.studentCount) {
+      clsData.studentCount = existingClass.studentCount;
     }
 
-    // Synchronize this class across both teachers' cloud datasets
-    const syncTargetEmails = new Set();
-    if (teacherEmail) syncTargetEmails.add(teacherEmail.toLowerCase());
-    if (coTeacherEmail) syncTargetEmails.add(coTeacherEmail.toLowerCase());
+    const affectedEmails = new Set();
+    if (tEmailLower) affectedEmails.add(tEmailLower);
+    if (coEmailLower) affectedEmails.add(coEmailLower);
+    if (curEmailLower) affectedEmails.add(curEmailLower);
 
-    syncTargetEmails.forEach(tEmail => {
-      if (tEmail === (currentUser && currentUser.email ? currentUser.email.toLowerCase() : '')) return;
-      let uData = allCloudUserDataMap[tEmail];
-      if (!uData) {
-        try {
-          const raw = localStorage.getItem(STORAGE_PREFIX_DATA + tEmail.replace(/[^a-z0-9]/g, '_'));
-          if (raw) uData = JSON.parse(raw);
-        } catch(e) {}
+    // 1. If assigned primary teacher is CURRENT USER:
+    if (!tEmailLower || tEmailLower === curEmailLower) {
+      if (!Array.isArray(appData.classes)) appData.classes = [];
+      const idx = appData.classes.findIndex(isTargetClass);
+      if (idx !== -1) {
+        appData.classes[idx] = clsData;
+      } else {
+        appData.classes.push(clsData);
       }
-      if (uData) {
-        if (!Array.isArray(uData.classes)) uData.classes = [];
-        const cIdx = uData.classes.findIndex(c => c.id === clsData.id);
-        if (cIdx !== -1) {
-          uData.classes[cIdx] = clsData;
-        } else {
-          uData.classes.push(clsData);
-        }
-        allCloudUserDataMap[tEmail] = uData;
-        try {
-          localStorage.setItem(STORAGE_PREFIX_DATA + tEmail.replace(/[^a-z0-9]/g, '_'), JSON.stringify(uData));
-          if (window.supabaseClient) {
-            window.supabaseClient.from('user_data').upsert({ email: tEmail, data: uData, updated_at: new Date().toISOString() });
+      saveUserData();
+      allCloudUserDataMap[curEmailLower] = appData;
+    } else {
+      // Primary teacher is ANOTHER user:
+      // Remove from appData if it was previously there
+      if (appData && Array.isArray(appData.classes)) {
+        appData.classes = appData.classes.filter(c => !isTargetClass(c));
+        saveUserData();
+        allCloudUserDataMap[curEmailLower] = appData;
+      }
+
+      // Add/update in primary teacher's dataset
+      if (!allCloudUserDataMap[tEmailLower]) allCloudUserDataMap[tEmailLower] = { classes: [], students: [] };
+      const uData = allCloudUserDataMap[tEmailLower];
+      if (!Array.isArray(uData.classes)) uData.classes = [];
+      const idx = uData.classes.findIndex(isTargetClass);
+      if (idx !== -1) {
+        uData.classes[idx] = clsData;
+      } else {
+        uData.classes.push(clsData);
+      }
+      const k = STORAGE_PREFIX_DATA + tEmailLower.replace(/[^a-z0-9]/g, '_');
+      try { localStorage.setItem(k, JSON.stringify(uData)); } catch(e) {}
+    }
+
+    // 2. Co-teacher dataset sync
+    if (coEmailLower && coEmailLower !== curEmailLower && coEmailLower !== tEmailLower) {
+      if (!allCloudUserDataMap[coEmailLower]) allCloudUserDataMap[coEmailLower] = { classes: [], students: [] };
+      const coData = allCloudUserDataMap[coEmailLower];
+      if (!Array.isArray(coData.classes)) coData.classes = [];
+      const cIdx = coData.classes.findIndex(isTargetClass);
+      if (cIdx !== -1) {
+        coData.classes[cIdx] = clsData;
+      } else {
+        coData.classes.push(clsData);
+      }
+      const k = STORAGE_PREFIX_DATA + coEmailLower.replace(/[^a-z0-9]/g, '_');
+      try { localStorage.setItem(k, JSON.stringify(coData)); } catch(e) {}
+    }
+
+    // 3. Clean up this class from any other users' datasets that shouldn't have it
+    Object.keys(allCloudUserDataMap).forEach(uEmail => {
+      const uEmailLow = uEmail.toLowerCase().trim();
+      if (uEmailLow !== tEmailLower && uEmailLow !== coEmailLower && uEmailLow !== curEmailLower) {
+        const uData = allCloudUserDataMap[uEmail];
+        if (uData && Array.isArray(uData.classes)) {
+          const had = uData.classes.some(isTargetClass);
+          if (had) {
+            uData.classes = uData.classes.filter(c => !isTargetClass(c));
+            affectedEmails.add(uEmailLow);
+            const k = STORAGE_PREFIX_DATA + uEmailLow.replace(/[^a-z0-9]/g, '_');
+            try { localStorage.setItem(k, JSON.stringify(uData)); } catch(e) {}
           }
-        } catch(e) {}
+        }
       }
     });
 
-    saveUserData();
+    // 4. Update accountsList
+    accountsList.forEach(a => {
+      if (!a.email) return;
+      const aEmail = a.email.toLowerCase().trim();
+      if (aEmail === tEmailLower || aEmail === curEmailLower) {
+        if (!Array.isArray(a.classes)) a.classes = [];
+        const idx = a.classes.findIndex(isTargetClass);
+        if (idx !== -1) a.classes[idx] = clsData;
+        else a.classes.push(clsData);
+      } else if (aEmail === coEmailLower) {
+        if (!Array.isArray(a.classes)) a.classes = [];
+        const idx = a.classes.findIndex(isTargetClass);
+        if (idx !== -1) a.classes[idx] = clsData;
+        else a.classes.push(clsData);
+      } else if (Array.isArray(a.classes)) {
+        a.classes = a.classes.filter(c => !isTargetClass(c));
+      }
+    });
+    saveAccounts();
+
+    // 5. Persist to Supabase Cloud for ALL affected emails
+    if (window.supabaseClient && affectedEmails.size > 0) {
+      for (const uEmail of affectedEmails) {
+        try {
+          let uData = (curEmailLower && uEmail === curEmailLower)
+            ? appData
+            : allCloudUserDataMap[uEmail];
+          if (!uData) {
+            const storageKey = STORAGE_PREFIX_DATA + uEmail.replace(/[^a-z0-9]/g, '_');
+            const localStr = localStorage.getItem(storageKey);
+            if (localStr) uData = JSON.parse(localStr);
+          }
+          if (uData) {
+            if (!uData.account_info) uData.account_info = {};
+            uData.account_info.email = uEmail;
+            const storageKey = STORAGE_PREFIX_DATA + uEmail.replace(/[^a-z0-9]/g, '_');
+            try { localStorage.setItem(storageKey, JSON.stringify(uData)); } catch(e) {}
+            allCloudUserDataMap[uEmail] = uData;
+
+            await window.supabaseClient.from('user_data').upsert({
+              email: uEmail,
+              data: uData,
+              updated_at: new Date().toISOString()
+            });
+            console.log('✅ Synchronized class save to Supabase Cloud for:', uEmail);
+          }
+        } catch (cloudErr) {
+          console.warn('Supabase sync class save notice:', cloudErr);
+        }
+      }
+    }
+
     closeModal('class-modal');
-    if (activePage === 'classes') renderClasses(document.getElementById('content-area'));
-    if (activePage === 'overview') renderOverview(document.getElementById('content-area'));
-    showToast('Đã lưu thông tin lớp học & liên kết đồng chủ nhiệm thành công!', 'success');
+    const container = document.getElementById('content-area');
+    if (activePage === 'classes' && container) renderClasses(container);
+    if (activePage === 'overview' && container && typeof renderOverview === 'function') renderOverview(container);
+    if (activePage === 'admin-users' && container) await renderAdminUsers(container);
+    showToast(`Đã lưu thông tin lớp học "${clsData.name}" thành công!`, 'success');
   }
 
   // CATECHIST CRUD HANDLERS
@@ -6710,10 +6840,11 @@
     }
   };
 
-  window.saveCatechistForm = function(e) {
-    e.preventDefault();
+  window.saveCatechistForm = async function(e) {
+    if (e) e.preventDefault();
     const id = document.getElementById('cat-form-id')?.value?.trim() || '';
     const email = document.getElementById('cat-email')?.value?.trim() || '';
+    const emailLower = email.toLowerCase().trim();
     const catData = {
       id: id || 'cat_' + Date.now(),
       holyName: document.getElementById('cat-holyname')?.value?.trim() || '',
@@ -6725,7 +6856,7 @@
     };
 
     if (!Array.isArray(appData.catechists)) appData.catechists = [];
-    const idx = appData.catechists.findIndex(c => (id && c.id === id) || (email && c.email && c.email.toLowerCase() === email.toLowerCase()));
+    const idx = appData.catechists.findIndex(c => (id && c.id === id) || (emailLower && c.email && c.email.toLowerCase() === emailLower));
     if (idx !== -1) {
       appData.catechists[idx] = { ...appData.catechists[idx], ...catData };
     } else {
@@ -6733,7 +6864,7 @@
     }
 
     // If this catechist corresponds to an account in accountsList, update it as well
-    const acc = accountsList.find(a => (id && a.id === id) || (email && a.email.toLowerCase() === email.toLowerCase()));
+    const acc = accountsList.find(a => (id && a.id === id) || (emailLower && a.email && a.email.toLowerCase() === emailLower));
     if (acc) {
       acc.name = catData.fullName;
       acc.holyName = catData.holyName;
@@ -6742,9 +6873,41 @@
       saveAccounts();
     }
 
+    // Update in-memory allCloudUserDataMap and Supabase for this catechist
+    if (emailLower) {
+      if (!allCloudUserDataMap[emailLower]) allCloudUserDataMap[emailLower] = {};
+      const uData = allCloudUserDataMap[emailLower];
+      if (!uData.account_info) uData.account_info = {};
+      uData.account_info.name = catData.fullName;
+      uData.account_info.holyName = catData.holyName;
+      uData.account_info.role = catData.role;
+      uData.account_info.phone = catData.phone;
+      uData.account_info.email = emailLower;
+      const k = STORAGE_PREFIX_DATA + emailLower.replace(/[^a-z0-9]/g, '_');
+      try { localStorage.setItem(k, JSON.stringify(uData)); } catch(err) {}
+
+      if (window.supabaseClient) {
+        try {
+          await window.supabaseClient.from('user_data').upsert({
+            email: emailLower,
+            data: uData,
+            updated_at: new Date().toISOString()
+          });
+        } catch (cloudErr) {
+          console.warn('Supabase sync catechist error:', cloudErr);
+        }
+      }
+    }
+
     saveUserData();
+    if (currentUser && currentUser.email) {
+      allCloudUserDataMap[currentUser.email.toLowerCase().trim()] = appData;
+    }
+
     closeModal('catechist-modal');
-    if (activePage === 'catechists') renderCatechists(document.getElementById('content-area'));
+    const container = document.getElementById('content-area');
+    if (activePage === 'catechists' && container) renderCatechists(container);
+    if (activePage === 'admin-users' && container) await renderAdminUsers(container);
     showToast('Đã lưu thông tin Giáo lý viên!', 'success');
   };
 
@@ -7299,6 +7462,17 @@
           uData.parishInfo.name = acc.parish;
         }
 
+        if (allCloudUserDataMap[acc.email.toLowerCase()]) {
+          const memData = allCloudUserDataMap[acc.email.toLowerCase()];
+          if (!memData.account_info) memData.account_info = {};
+          memData.account_info.role = acc.role;
+          memData.account_info.parish = acc.parish;
+          if (acc.managedParish) memData.account_info.managedParish = acc.managedParish;
+          if (memData.parishInfo && selectedRole === 'ParishAdmin') {
+            memData.parishInfo.name = acc.parish;
+          }
+        }
+
         await window.supabaseClient.from('user_data').upsert({
           email: acc.email.toLowerCase(),
           data: uData,
@@ -7311,7 +7485,7 @@
 
     closeModal('role-delegation-modal');
     if (activePage === 'admin-users') {
-      renderAdminUsers(document.getElementById('content-area'));
+      await renderAdminUsers(document.getElementById('content-area'));
     }
     
     let roleText = 'Giáo lý viên';
@@ -7400,19 +7574,85 @@
     openModal('admin-user-modal');
   };
 
-  function handleSaveAdminUser(e) {
-    e.preventDefault();
-    const accId = document.getElementById('admin-target-id').value;
-    const acc = accountsList.find(a => a.id === accId || a.email.toLowerCase() === accId.toLowerCase());
+  async function handleSaveAdminUser(e) {
+    if (e) e.preventDefault();
+    const accId = document.getElementById('admin-target-id')?.value;
+    const rawFullName = (document.getElementById('admin-target-fullname')?.value || '').trim();
+
+    // 1. Locate account in accountsList or allCloudUserDataMap
+    let acc = accountsList.find(a => a && (a.id === accId || a.email.toLowerCase() === accId.toLowerCase()));
+    if (!acc) {
+      const uEmail = Object.keys(allCloudUserDataMap).find(e => 
+        e.toLowerCase() === accId.toLowerCase() || 
+        ('acc_' + e.replace(/[^a-z0-9]/gi, '_')) === accId
+      );
+      if (uEmail) {
+        const uData = allCloudUserDataMap[uEmail] || {};
+        const accInfo = uData.account_info || {};
+        acc = {
+          id: accInfo.id || ('acc_' + uEmail.replace(/[^a-z0-9]/gi, '_')),
+          email: uEmail,
+          name: accInfo.name || uEmail.split('@')[0],
+          holyName: accInfo.holyName || '',
+          phone: accInfo.phone || '',
+          parish: (uData.parishInfo && uData.parishInfo.name) || accInfo.parish || 'Giáo xứ Hòa Khánh',
+          role: accInfo.role || 'Giáo lý viên',
+          status: accInfo.status || 'active',
+          password: accInfo.password || '123456',
+          avatar: accInfo.avatar || ''
+        };
+        accountsList.push(acc);
+      }
+    }
     if (!acc) return;
 
     const isSuper = isSuperAdmin(currentUser);
+
+    // 2. Parse Full Name into Holy Name and Regular Name
+    if (rawFullName) {
+      let cleanHoly = '';
+      let cleanName = rawFullName;
+      const commonHolyNames = [
+        'Đaminh', 'Maria', 'Giuse', 'Phêrô', 'Phaolô', 'Gioan', 'Têrêsa', 'Anna', 
+        'Anrê', 'Mácta', 'Matthêu', 'Giacôbê', 'Tôma', 'Phanxicô', 'Inhaxiô', 
+        'Augustinô', 'Cecilia', 'Luxia', 'Agata', 'Báctôlômêô', 'Têrêxa', 'Antôn',
+        'Lucia', 'Monica', 'Vinh Sơn', 'Biển Đức', 'Clara', 'Stêphanô', 'Philiphê',
+        'T.', 'Thánh'
+      ];
+      for (const hn of commonHolyNames) {
+        if (cleanName.toLowerCase().startsWith(hn.toLowerCase() + ' ')) {
+          cleanHoly = cleanName.substring(0, hn.length);
+          cleanName = cleanName.substring(hn.length).trim();
+          if (cleanHoly === 'T.' || cleanHoly === 'Thánh') {
+            for (const subHn of commonHolyNames) {
+              if (subHn !== 'T.' && subHn !== 'Thánh' && cleanName.toLowerCase().startsWith(subHn.toLowerCase() + ' ')) {
+                cleanHoly = cleanHoly + ' ' + cleanName.substring(0, subHn.length);
+                cleanName = cleanName.substring(subHn.length).trim();
+                break;
+              }
+            }
+          }
+          break;
+        }
+      }
+      if (cleanHoly) {
+        acc.holyName = cleanHoly;
+        acc.name = cleanName || acc.name;
+      } else {
+        if (acc.holyName && cleanName.toLowerCase().startsWith(acc.holyName.toLowerCase() + ' ')) {
+          acc.name = cleanName.substring(acc.holyName.length).trim();
+        } else {
+          acc.name = cleanName;
+        }
+      }
+    }
 
     if (isSuper) {
       const targetRoleInput = document.getElementById('admin-target-role');
       if (targetRoleInput) acc.role = targetRoleInput.value;
     }
-    acc.status = document.getElementById('admin-target-status').value;
+    const statusInput = document.getElementById('admin-target-status');
+    if (statusInput) acc.status = statusInput.value;
 
     const parishInput = document.getElementById('admin-target-parish');
     if (parishInput && isSuper) {
@@ -7430,32 +7670,72 @@
 
     saveAccounts();
 
-    // Sync to Supabase
-    if (window.supabaseClient && acc.email) {
-      window.supabaseClient
-        .from('user_data')
-        .select('data')
-        .eq('email', acc.email.toLowerCase())
-        .maybeSingle()
-        .then(({ data }) => {
-          let uData = (data && data.data) ? data.data : {};
-          if (!uData.account_info) uData.account_info = {};
-          uData.account_info.role = acc.role;
-          uData.account_info.status = acc.status;
-          uData.account_info.parish = acc.parish;
-          uData.account_info.password = acc.password;
-          if (acc.managedParish) uData.account_info.managedParish = acc.managedParish;
-          if (uData.parishInfo && acc.role === 'ParishAdmin') uData.parishInfo.name = acc.parish;
-          window.supabaseClient.from('user_data').upsert({
-            email: acc.email.toLowerCase(),
-            data: uData,
-            updated_at: new Date().toISOString()
-          });
+    // 3. Synchronize in-memory allCloudUserDataMap and local storage
+    const emailLower = (acc.email || '').toLowerCase().trim();
+    if (emailLower) {
+      if (!allCloudUserDataMap[emailLower]) allCloudUserDataMap[emailLower] = {};
+      const uData = allCloudUserDataMap[emailLower];
+      if (!uData.account_info) uData.account_info = {};
+      uData.account_info.id = acc.id;
+      uData.account_info.email = emailLower;
+      uData.account_info.name = acc.name;
+      uData.account_info.holyName = acc.holyName;
+      uData.account_info.role = acc.role;
+      uData.account_info.status = acc.status;
+      uData.account_info.parish = acc.parish;
+      uData.account_info.password = acc.password;
+      if (acc.managedParish) uData.account_info.managedParish = acc.managedParish;
+      if (!uData.parishInfo) uData.parishInfo = {};
+      uData.parishInfo.name = acc.parish;
+
+      const k = STORAGE_PREFIX_DATA + emailLower.replace(/[^a-z0-9]/g, '_');
+      try { localStorage.setItem(k, JSON.stringify(uData)); } catch(e) {}
+    }
+
+    // 4. If current logged-in user is this account, update currentUser
+    if (currentUser && currentUser.email && currentUser.email.toLowerCase().trim() === emailLower) {
+      currentUser.name = acc.name;
+      currentUser.holyName = acc.holyName;
+      currentUser.role = acc.role;
+      currentUser.parish = acc.parish;
+      currentUser.status = acc.status;
+      currentUser.password = acc.password;
+      appData.account_info = { ...(appData.account_info || {}), ...acc };
+      saveUserData();
+      allCloudUserDataMap[emailLower] = appData;
+      renderAppHeaderAndSidebar();
+    }
+
+    // 5. Update in appData.catechists if present
+    if (Array.isArray(appData.catechists)) {
+      appData.catechists.forEach(cat => {
+        if ((cat.email && cat.email.toLowerCase() === emailLower) || cat.id === acc.id) {
+          cat.fullName = acc.name;
+          cat.holyName = acc.holyName;
+          cat.role = acc.role;
+        }
+      });
+      saveUserData();
+    }
+
+    // 6. Await Supabase Sync
+    if (window.supabaseClient && emailLower) {
+      try {
+        let uData = allCloudUserDataMap[emailLower] || {};
+        await window.supabaseClient.from('user_data').upsert({
+          email: emailLower,
+          data: uData,
+          updated_at: new Date().toISOString()
         });
+      } catch (cloudErr) {
+        console.warn('Supabase save admin user notice:', cloudErr);
+      }
     }
 
     closeModal('admin-user-modal');
-    if (activePage === 'admin-users') renderAdminUsers(document.getElementById('content-area'));
+    const container = document.getElementById('content-area');
+    if (activePage === 'admin-users' && container) await renderAdminUsers(container);
+    if (activePage === 'catechists' && container) renderCatechists(container);
     showToast(`Đã cập nhật thông tin & mật khẩu tài khoản ${acc.name}!`, 'success');
   }
 
@@ -7645,6 +7925,9 @@
           if (targetEmail && targetEmail !== emailLower) {
             await window.supabaseClient.from('user_data').delete().eq('email', targetEmail);
           }
+          if (targetId && !targetId.includes('@')) {
+            await window.supabaseClient.from('user_data').delete().eq('email', targetId);
+          }
         } catch (cloudErr) {
           console.warn('Supabase delete exception:', cloudErr);
         }
@@ -7691,9 +7974,11 @@
         appData.catechists = appData.catechists.filter(c => {
           const cEmail = (c.email || '').toLowerCase().trim();
           const cId = c.id || '';
+          const cName = (c.fullName || c.name || '').toLowerCase().trim();
           if (emailLower && cEmail === emailLower) return false;
           if (targetEmail && cEmail === targetEmail.toLowerCase().trim()) return false;
           if (targetId && (cId === targetId || String(cId) === String(targetId))) return false;
+          if (targetName && cName && cName === targetName.toLowerCase().trim()) return false;
           return true;
         });
       }
@@ -7705,8 +7990,10 @@
           d.catechists = d.catechists.filter(c => {
             const cEmail = (c.email || '').toLowerCase().trim();
             const cId = c.id || '';
+            const cName = (c.fullName || c.name || '').toLowerCase().trim();
             if (emailLower && cEmail === emailLower) return false;
             if (targetId && (cId === targetId || String(cId) === String(targetId))) return false;
+            if (targetName && cName && cName === targetName.toLowerCase().trim()) return false;
             return true;
           });
         }
@@ -7717,15 +8004,16 @@
         appData.classes.forEach(c => {
           const tEmail = (c.teacherEmail || '').toLowerCase().trim();
           const coEmail = (c.coTeacherEmail || '').toLowerCase().trim();
-          if (emailLower && (tEmail === emailLower || coEmail === emailLower)) {
-            if (tEmail === emailLower) {
-              c.teacher = 'Chưa phân công';
-              c.teacherEmail = '';
-            }
-            if (coEmail === emailLower) {
-              c.coTeacher = '';
-              c.coTeacherEmail = '';
-            }
+          const tName = (c.teacher || '').toLowerCase().trim();
+          const isMatchTeacher = (emailLower && tEmail === emailLower) || (targetName && tName.includes(targetName.toLowerCase().trim()));
+          const isMatchCo = (emailLower && coEmail === emailLower) || (targetName && (c.coTeacher || '').toLowerCase().includes(targetName.toLowerCase().trim()));
+          if (isMatchTeacher) {
+            c.teacher = 'Chưa phân công';
+            c.teacherEmail = '';
+          }
+          if (isMatchCo) {
+            c.coTeacher = '';
+            c.coTeacherEmail = '';
           }
         });
       }
@@ -7747,6 +8035,8 @@
           renderCatechists(contentArea);
         } else if (activePage === 'admin-users') {
           await renderAdminUsers(contentArea);
+        } else if (activePage === 'classes') {
+          renderClasses(contentArea);
         } else if (activePage === 'overview') {
           renderOverview(contentArea);
         }
@@ -8260,6 +8550,8 @@
   window.closeAuthModal = window.closeAuthModal;
   window.quickLoginAdminMaster = window.quickLoginAdminMaster;
   window.handleAppLogout = window.handleAppLogout;
+  window.handleSaveAdminUser = handleSaveAdminUser;
+  window.handleSaveClass = handleSaveClass;
 
   // Initialize application on DOM content loaded or immediate if ready
   if (document.readyState === 'loading') {
