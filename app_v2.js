@@ -536,14 +536,31 @@
         return false;
       }
 
+      const isMasterUser = (u.email && (u.email.toLowerCase() === 'philthienhao' || u.email.toLowerCase() === 'philthienhao@gmail.com')) ||
+                           (u.name && u.name.toLowerCase().includes('thiện hảo'));
+      if (isMasterUser) {
+        u.email = 'philthienhao@gmail.com';
+        u.role = 'Admin';
+        u.name = 'Võ Thiện Hảo';
+        u.holyName = 'Philiphê';
+        u.parish = 'Giáo Xứ Hoà Khánh';
+        try { localStorage.setItem(STORAGE_KEY_CURRENT_USER, JSON.stringify(u)); } catch (e) {}
+      }
+
       if (u.avatar && !isDefaultAvatar(u.avatar)) {
         storedAvatar = u.avatar;
       }
 
-      let match = accountsList.find(a => a.email.toLowerCase() === u.email.toLowerCase());
+      let match = accountsList.find(a => a.email && (a.email.toLowerCase() === u.email.toLowerCase() || (isMasterUser && a.email.toLowerCase() === 'philthienhao@gmail.com')));
       if (!match) {
         match = u;
         accountsList.push(match);
+        saveAccounts();
+      } else if (isMasterUser) {
+        match.role = 'Admin';
+        match.name = 'Võ Thiện Hảo';
+        match.holyName = 'Philiphê';
+        match.email = 'philthienhao@gmail.com';
         saveAccounts();
       }
 
@@ -8759,6 +8776,26 @@
   window.handleSaveClass = handleSaveClass;
   window.loadUserData = loadUserData;
   window.saveUserData = saveUserData;
+  window.navigateTo = navigateTo;
+  window.renderClasses = renderClasses;
+  window.renderCatechists = renderCatechists;
+  window.renderStudents = renderStudents;
+  window.renderAdminUsers = renderAdminUsers;
+  window.renderOverview = renderOverview;
+  window.getCurrentUser = () => currentUser;
+  window.getAppData = () => appData;
+  try {
+    Object.defineProperty(window, 'currentUser', {
+      get: () => currentUser,
+      set: (u) => { currentUser = u; },
+      configurable: true
+    });
+    Object.defineProperty(window, 'appData', {
+      get: () => appData,
+      set: (d) => { appData = d; },
+      configurable: true
+    });
+  } catch(e) {}
 
   // Initialize application on DOM content loaded or immediate if ready
   if (document.readyState === 'loading') {
