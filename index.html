@@ -335,6 +335,7 @@
             <filter id="holyGlow" x="-30%" y="-30%" width="160%" height="160%">
               <feGaussianBlur stdDeviation="5" result="blur"/>
               <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+            </filter>
           </defs>
           <!-- Holy Cross -->
           <path d="M52 16 L68 16 L68 138 L52 138 Z" fill="url(#goldGrad)" filter="url(#holyGlow)"/>
@@ -804,6 +805,7 @@
                 <i class="fa-solid fa-circle-info text-primary"></i> <strong>Cơ chế đồng bộ 2 Chủ nhiệm:</strong> Điền chính xác Gmail cá nhân của 2 GLV. Cả 2 sẽ cùng truy cập, quản lý danh sách học sinh, điểm danh và chấm điểm của lớp này bằng mật khẩu và tài khoản riêng của mỗi người mà không cần dùng chung mật khẩu.
               </p>
             </div>
+          </div>
           <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
             <button type="button" id="class-modal-delete-btn" class="btn btn-outline-danger" style="display: none;" onclick="window.handleDeleteClassFromModal()">
               <i class="fa-solid fa-trash"></i> Xóa Lớp Học Này
@@ -1521,6 +1523,6 @@
   <div id="toast-container" class="toast-container"></div>
 
   <!-- Application JS Code -->
-  <script src="app_v2.js?v=20261012_v3400"></script>
+  <script src="app_v2.js?v=20261012_v3500"></script>
 </body>
 </html>
