@@ -12,8 +12,11 @@
 * **Kho lưu trữ GitHub**: `https://github.com/Philthienhao/magnificatedu-giangviengiaoly.git`
 
 > [!IMPORTANT]
-> **Lưu ý về tên miền:**
-> KHÔNG sử dụng tên miền `magnificat.vercel.app` (tên miền này không thuộc dự án và bị Vercel chặn chính sách 403). Mọi truy cập chính thức phải sử dụng `https://magnificatedu.vercel.app`.
+> **QUY CHUẨN TÊN MIỀN & PHÂN ĐỊNH DỰ ÁN TUYỆT ĐỐI (PROJECT ISOLATION):**
+> 1. **Dự án này (`giangviengiaoly`)**: MagnificatEdu - Quản Lý Giáo Lý Công Giáo ➔ Tên miền CHÍNH THỨC & DUY NHẤT: **`https://magnificatedu.vercel.app`**.
+> 2. **Dự án riêng biệt (`Gamegiaoduc`)**: Đồ Nghề Dạy Học / 30+ Game Đỉnh Cao ➔ Tên miền CHÍNH THỨC: **`https://donghedayhoc.vercel.app`**.
+> 3. **CẢNH BÁO**: Tuyệt đối không trỏ nhầm hoặc gán alias của `magnificatedu.vercel.app` sang dự án `Gamegiaoduc` hay bất kỳ dự án nào khác.
+> 4. **Tên miền không sử dụng**: KHÔNG sử dụng `magnificat.vercel.app` (bị Vercel chặn 403 policy). Mọi truy cập phải dùng `https://magnificatedu.vercel.app`.
 
 ---
 
@@ -203,7 +206,7 @@ Hệ thống tính điểm được thiết kế minh bạch với các chế đ
 
 ---
 
-### ⚡ Sự cố 7: Nhầm lẫn tên miền `magnificat.vercel.app` & Thiếu Cổng Giao diện Đăng Nhập (Auth Gate)
+### ⚡ Sự cố 10: Nhầm lẫn tên miền `magnificat.vercel.app` & Thiếu Cổng Giao diện Đăng Nhập (Auth Gate)
 * **Hiện tượng**:
   - Truy cập `magnificat.vercel.app` bị lỗi 403 Forbidden (`Request to GET / on magnificat.vercel.app not allowed by policy`).
   - Mở website không thấy giao diện đăng nhập, tự động nhảy thẳng vào Dashboard Quản trị viên của Thầy Hảo mà không hỏi tài khoản của giáo viên.
@@ -218,6 +221,44 @@ Hệ thống tính điểm được thiết kế minh bạch với các chế đ
   3. Bổ sung nút **Đăng Xuất Trực Tiếp** ở cả Topbar Header và Sidebar Footer để giáo viên thoát tài khoản an toàn bất cứ lúc nào.
   4. Đồng bộ tài khoản đám mây (**Supabase Cloud User Sync**): Tự động đồng bộ tài khoản đăng ký từ Supabase để giáo viên đăng ký ở thiết bị/điện thoại nào cũng có thể đăng nhập trên máy tính khác.
   5. Đồng bộ mã nguồn giữa `app_v2.js` và `app.js`, nâng cache buster lên `v=20261009_v1300`.
+
+---
+
+### ⚡ Sự cố 11: XỬ LÝ TRIỆT ĐỂ LỖI TÁI PHẠM NHẦM LẪN TÊN MIỀN & GIAO DIỆN GIỮA MAGNIFICATEDU VÀ GAMEGIAODUC (DIỆT TẬN GỐC NGUYÊN NHÂN TRONG DEPLOY SCRIPT)
+* **Hiện tượng & Bức xúc của người dùng**:
+  - Người dùng truy cập `https://magnificatedu.vercel.app` nhưng màn hình lại hiện giao diện của dự án Game Giáo Dục (`Gamegiaoduc` / *Đồ Nghề Dạy Học - 30+ Game Đỉnh Cao*).
+  - Lỗi này đã xảy ra nhiều lần và bị tái phạm liên tục sau mỗi lần người dùng hoặc AI deploy dự án Game Giáo Dục.
+* **ĐIỀU TRA VẾT DẦU LOANG & TÌM RA NGUYÊN NHÂN GỐC RỄ (SMOKING GUN ROOT CAUSE)**:
+  - Khi kiểm tra toàn bộ mã nguồn của cả 2 dự án, đã phát hiện tại file **`/Users/mac/Downloads/Antigravity/Gamegiaoduc/scripts/deploy_vercel.cjs`**, dòng số 20 có chứa lệnh:
+    ```javascript
+    execSync(`npx vercel alias set ${deploymentId} magnificatedu.vercel.app`, { stdio: 'inherit' });
+    ```
+  - **Hậu quả**: Dự án `Gamegiaoduc` và dự án `giangviengiaoly` cùng nằm trong 1 tài khoản Vercel (`philthienhaos-projects`). Cứ mỗi khi dự án `Gamegiaoduc` chạy lệnh `npm run deploy`, script triển khai của nó lại tự động lấy domain `magnificatedu.vercel.app` và ép trỏ sang deployment mới của Game Giáo Dục!
+  - Do đó, dù ở MagnificatEdu có sửa alias bao nhiêu lần thì hễ bên Game Giáo Dục deploy là domain lại bị cướp mất, gây ra hiện tượng tái phạm lỗi liên tục!
+* **CÁC BIỆN PHÁP XỬ LÝ TRIỆT ĐỂ ĐÃ HOÀN TẤT 100%**:
+  1. **Diệt tận gốc mã tự ý chiếm domain**:
+     - Đã xóa vĩnh viễn dòng lệnh gán alias `magnificatedu.vercel.app` trong file `Gamegiaoduc/scripts/deploy_vercel.cjs`.
+     - Đã commit và push bản sửa đổi lên kho GitHub của dự án Game Giáo Dục (`https://github.com/Philthienhao/Educational-Games-Sky-Line-.git`).
+  2. **Khôi phục và khóa cứng Domain cho MagnificatEdu**:
+     - Chạy lệnh gán lại alias chính thức:
+       ```bash
+       npx vercel alias set magnificatedu-giangviengiaoly-1s0so0cs7-philthienhaos-projects.vercel.app magnificatedu.vercel.app
+       ```
+     - Domain `magnificatedu.vercel.app` hiện đã gắn trực tiếp vào project `magnificatedu-giangviengiaoly` (`prj_oqP8KmZbEir8DXEv05LuiMUlJUqm`).
+  3. **Thiết lập Quy Tắc Bảo Vệ Dự Án Toàn Cục (Global & Workspace AI Invariants)**:
+     - Đã tạo file Quy Tắc Toàn Cục tại `/Users/mac/.gemini/config/rules/project-identity-isolation.md` (áp dụng tự động cho mọi phiên AI, mọi tác vụ trên máy tính).
+     - Đã tạo file Quy Tắc Dự Án tại `.agents/rules/project-identity-isolation.md` và cập nhật `.agents/rules/deployment-and-domain-rules.md`.
+  4. **Kiểm tra xác thực trực tiếp (Sanity Verification)**:
+     ```bash
+     curl -sL https://magnificatedu.vercel.app | grep -E "(<title>|app_v2)"
+     # Kết quả chuẩn xác 100%:
+     # <title>MagnificatEdu - Hệ Thống Quản Lý Giáo Lý Công Giáo</title>
+     # <script src="app_v2.js?v=20261012_v3200"></script>
+     ```
+* **Bản Đồ Phân Quyền Tên Miền Vĩnh Viễn**:
+  - `https://magnificatedu.vercel.app` ➔ **CHỈ DÀNH RIÊNG CHO MagnificatEdu - Quản Lý Giáo Lý Công Giáo**.
+  - `https://donghedayhoc.vercel.app` ➔ **DÀNH CHO Đồ Nghề Dạy Học / Kho Game Giáo Dục**.
+  - Nghiêm cấm mọi hành vi trỏ chéo tên miền giữa hai dự án này dưới bất kỳ hình thức nào.
 
 ---
 

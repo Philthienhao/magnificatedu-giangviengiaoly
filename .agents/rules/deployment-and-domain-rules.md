@@ -4,6 +4,7 @@
 * The official production domain for this repository (`giangviengiaoly`) is ONLY:
   `https://magnificatedu.vercel.app`
 * **STRICT ISOLATION**: DO NOT confuse or map with other educational projects on the same Vercel account (`eduvth` / `Gamegiaoduc`, `Class95`, `dayhocphanhoa`...).
+* **NEVER ALIAS CROSS-PROJECT**: Never alias `magnificatedu.vercel.app` inside `Gamegiaoduc/scripts/deploy_vercel.cjs` or any other external project.
 * DO NOT attempt to bind or use `magnificat.vercel.app`.
 * **Mandatory 4-Step Deployment & Alias Verification**:
   1. Build & Deploy: `npx vercel --prod --yes` (capture the latest `<DEPLOYMENT_URL>`).
