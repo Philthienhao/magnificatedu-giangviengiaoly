@@ -729,9 +729,14 @@
             </div>
 
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary close-modal-btn" data-modal="student-modal">Hủy bỏ</button>
-            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Lưu Học Viên</button>
+          <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+            <button type="button" id="student-modal-delete-btn" class="btn btn-outline-danger" style="display: none;" onclick="window.handleDeleteStudentFromModal()">
+              <i class="fa-solid fa-trash"></i> Xóa Học Viên Này
+            </button>
+            <div style="display: flex; gap: 8px; margin-left: auto;">
+              <button type="button" class="btn btn-secondary close-modal-btn" data-modal="student-modal">Hủy bỏ</button>
+              <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Lưu Học Viên</button>
+            </div>
           </div>
         </form>
       </div>
@@ -935,7 +940,7 @@
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" id="admin-delete-user-btn" onclick="window.confirmDeleteAccount(document.getElementById('admin-target-id').value)" class="btn btn-outline-danger"><i class="fa-solid fa-trash"></i> Xóa Tài Khoản</button>
+            <button type="button" id="admin-delete-user-btn" onclick="window.deleteAdminUser(event)" class="btn btn-outline-danger"><i class="fa-solid fa-trash"></i> Xóa Tài Khoản</button>
             <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Lưu Thay Đổi</button>
           </div>
         </form>
@@ -1244,9 +1249,14 @@
               <input type="text" id="cat-class" class="form-control" placeholder="Ví dụ: Ấu Nhi 2A & Thiếu Nhi 2B">
             </div>
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary close-modal-btn" data-modal="catechist-modal">Hủy bỏ</button>
-            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Lưu Giáo Lý Viên</button>
+          <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+            <button type="button" id="cat-modal-delete-btn" class="btn btn-outline-danger" style="display: none;" onclick="window.handleDeleteCatechistFromModal()">
+              <i class="fa-solid fa-trash"></i> Xóa Giáo Lý Viên Này
+            </button>
+            <div style="display: flex; gap: 8px; margin-left: auto;">
+              <button type="button" class="btn btn-secondary close-modal-btn" data-modal="catechist-modal">Hủy bỏ</button>
+              <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Lưu Giáo Lý Viên</button>
+            </div>
           </div>
         </form>
       </div>
@@ -1429,7 +1439,7 @@
         </div>
         <div class="modal-footer" style="justify-content: center; gap: 12px; background: #fafafa;">
           <button type="button" class="btn btn-secondary close-modal-btn" data-modal="universal-confirm-modal">Hủy bỏ</button>
-          <button type="button" id="uni-confirm-btn" class="btn btn-danger"><i class="fa-solid fa-trash"></i> Đồng Ý Xóa</button>
+          <button type="button" id="uni-confirm-btn" onclick="window.executeUniversalConfirm(event)" class="btn btn-danger"><i class="fa-solid fa-trash"></i> Đồng Ý Xóa</button>
         </div>
       </div>
     </div>
@@ -1523,6 +1533,6 @@
   <div id="toast-container" class="toast-container"></div>
 
   <!-- Application JS Code -->
-  <script src="app_v2.js?v=20261012_v3500"></script>
+  <script src="app_v2.js?v=20261012_v3600"></script>
 </body>
 </html>

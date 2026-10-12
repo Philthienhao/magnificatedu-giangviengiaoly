@@ -240,12 +240,16 @@
       'custom-confirm-modal',
       'catechist-modal',
       'admin-user-modal',
+      'admin-inspect-modal',
+      'role-delegation-modal',
       'student-modal',
       'class-modal',
       'certificate-modal',
       'camera-capture-modal',
       'notification-modal',
-      'library-modal'
+      'library-modal',
+      'quiz-modal',
+      'conduct-modal'
     ];
     modalIds.forEach(id => {
       const el = document.getElementById(id);
@@ -253,6 +257,13 @@
         document.body.appendChild(el);
       }
     });
+    try {
+      document.querySelectorAll('.modal-backdrop').forEach(el => {
+        if (el && el.parentElement && el.parentElement !== document.body) {
+          document.body.appendChild(el);
+        }
+      });
+    } catch(e) {}
   }
 
   function openModal(id) {
@@ -263,6 +274,8 @@
       }
       el.style.zIndex = '99999';
       el.style.display = 'flex';
+      const dialog = el.querySelector('.modal-dialog');
+      if (dialog) dialog.scrollTop = 0;
     }
   }
 
@@ -271,7 +284,22 @@
     if (el) el.style.display = 'none';
   }
 
+  window.executeUniversalConfirm = function (e) {
+    if (e && e.preventDefault) e.preventDefault();
+    closeModal('universal-confirm-modal');
+    if (typeof pendingConfirmCallback === 'function') {
+      const cb = pendingConfirmCallback;
+      pendingConfirmCallback = null;
+      try {
+        cb();
+      } catch (err) {
+        console.error('Error in confirm dialog callback:', err);
+      }
+    }
+  };
+
   window.showConfirmDialog = function(title, message, callback) {
+    ensureModalsAttachedToBody();
     const titleEl = document.getElementById('uni-confirm-title');
     const msgEl = document.getElementById('uni-confirm-msg');
     const modalEl = document.getElementById('universal-confirm-modal');
@@ -287,14 +315,9 @@
     pendingConfirmCallback = callback;
 
     if (uniBtn) {
+      uniBtn.disabled = false;
       uniBtn.onclick = function (e) {
-        if (e) e.preventDefault();
-        closeModal('universal-confirm-modal');
-        if (typeof pendingConfirmCallback === 'function') {
-          const cb = pendingConfirmCallback;
-          pendingConfirmCallback = null;
-          cb();
-        }
+        window.executeUniversalConfirm(e);
       };
     }
 
@@ -1652,10 +1675,10 @@
     // Custom Modal Delete Confirm Action Button
     const confirmDeleteBtn = document.getElementById('confirm-do-delete-btn');
     if (confirmDeleteBtn) {
-      confirmDeleteBtn.addEventListener('click', () => {
-        if (pendingDeleteAccId) {
-          deleteAccountById(pendingDeleteAccId);
-          pendingDeleteAccId = null;
+      confirmDeleteBtn.addEventListener('click', (e) => {
+        if (e && e.preventDefault) e.preventDefault();
+        if (typeof window.executeAccountDeletion === 'function') {
+          window.executeAccountDeletion(confirmDeleteBtn);
         }
       });
     }
@@ -2233,7 +2256,7 @@
     let aggregatedAttendance = [];
 
     userDatasets.forEach((data, email) => {
-      const acc = accountsList.find(a => a.email.toLowerCase() === email) || {};
+      const acc = accountsList.find(a => (a.email || '').toLowerCase() === email) || {};
       const parishName = (data.parishInfo && data.parishInfo.name)
         || (data.account_info && data.account_info.parish)
         || acc.parish
@@ -2297,8 +2320,8 @@
         }
       }
       const existing = aggregatedCatechists.find(c =>
-        (c.email && c.email.toLowerCase() === acc.email.toLowerCase()) ||
-        (c.fullName && c.fullName.toLowerCase() === acc.name.toLowerCase())
+        (c.email && acc.email && c.email.toLowerCase() === acc.email.toLowerCase()) ||
+        (c.fullName && acc.name && c.fullName.toLowerCase() === acc.name.toLowerCase())
       );
       if (!existing) {
         aggregatedCatechists.push({
@@ -5379,7 +5402,7 @@
 
     // Merge Cloud data with local accountsList
     const combinedAccounts = accountsList.map(acc => {
-      const cloudMatch = cloudDataRows.find(r => r.email && r.email.toLowerCase() === acc.email.toLowerCase());
+      const cloudMatch = cloudDataRows.find(r => r.email && acc.email && r.email.toLowerCase() === acc.email.toLowerCase());
       const uData = (cloudMatch && cloudMatch.data) ? cloudMatch.data : null;
       const parish = (uData && uData.parishInfo && uData.parishInfo.name)
         || (uData && uData.account_info && uData.account_info.parish)
@@ -5405,7 +5428,7 @@
 
     // Ingest any cloud rows not yet in accountsList
     cloudDataRows.forEach(r => {
-      if (r.email && !combinedAccounts.some(a => a.email.toLowerCase() === r.email.toLowerCase())) {
+      if (r.email && !combinedAccounts.some(a => a.email && a.email.toLowerCase() === r.email.toLowerCase())) {
         const uData = r.data || {};
         const parish = (uData.parishInfo && uData.parishInfo.name) || (uData.account_info && uData.account_info.parish) || 'Giáo Xứ Hoà Khánh';
         const classes = Array.isArray(uData.classes) ? uData.classes : [];
@@ -5636,8 +5659,15 @@
                   const badgeClass = isMission ? 'badge-mission' : (isHK ? 'badge-hk' : 'badge-other');
                   const parishIcon = isMission ? 'fa-map-pin' : 'fa-church';
 
+                  const accEmailLower = (acc.email || '').toLowerCase().trim();
+                  const isMaster = accEmailLower === 'philthienhao@gmail.com' || accEmailLower === 'philthienhao' || (acc.role === 'Admin' && (acc.name || '').toLowerCase().includes('thiện hảo'));
+                  const isSelf = currentUser && (
+                    (currentUser.email && currentUser.email.toLowerCase().trim() === accEmailLower) ||
+                    (currentUser.id && acc.id && currentUser.id === acc.id)
+                  );
+
                   let roleBadgeHtml = '';
-                  if (acc.email.toLowerCase() === 'philthienhao@gmail.com' || acc.role === 'Admin') {
+                  if (isMaster) {
                     roleBadgeHtml = '<span class="badge-role-master"><i class="fa-solid fa-crown text-warning"></i> Admin Master</span>';
                   } else if (acc.role === 'ParishAdmin' || acc.role === 'Admin Cấp 2') {
                     roleBadgeHtml = `<span class="badge-role-parish" title="Admin Cấp 2 quản lý ${acc.parish || 'Giáo xứ'}"><i class="fa-solid fa-church"></i> Admin Cấp 2</span>`;
@@ -5693,11 +5723,19 @@
                           <button class="btn btn-sm btn-outline-secondary" onclick="window.openAdminEditModal('${acc.id}')" title="Sửa thông tin / Mật khẩu" style="font-size: 11px; padding: 4px 7px;">
                             <i class="fa-solid fa-pen"></i>
                           </button>
-                          ${(isSuper && acc.email.toLowerCase() !== 'philthienhao@gmail.com') ? `
+                          ${isMaster ? `
+                            <button class="btn btn-sm btn-outline-secondary" disabled title="Tài khoản Quản trị viên tối cao (Không thể xóa)" style="font-size: 11px; padding: 4px 7px;">
+                              <i class="fa-solid fa-shield"></i>
+                            </button>
+                          ` : (isSelf ? `
+                            <button class="btn btn-sm btn-outline-secondary" disabled title="Tài khoản hiện đang đăng nhập (Không thể tự xóa)" style="font-size: 11px; padding: 4px 7px;">
+                              <i class="fa-solid fa-user-lock"></i>
+                            </button>
+                          ` : (hasAdminAccess(currentUser) ? `
                             <button class="btn btn-sm btn-outline-danger" onclick="window.quickDeleteAdminUser('${acc.id}', '${acc.email || ''}')" title="Xóa tài khoản" style="font-size: 11px; padding: 4px 7px;">
                               <i class="fa-solid fa-trash"></i>
                             </button>
-                          ` : ''}
+                          ` : ''))}
                         </div>
                       </td>
                     </tr>
@@ -6080,6 +6118,9 @@
       select.innerHTML = classes.map(c => `<option value="${c.id}">${c.name} (${c.grade || 'Giáo lý'})</option>`).join('');
     }
 
+    const delBtn = document.getElementById('student-modal-delete-btn');
+    if (delBtn) delBtn.style.display = 'none';
+
     openModal('student-modal');
   };
 
@@ -6157,6 +6198,12 @@
     document.getElementById('std-father-phone').value = student.fatherPhone || '';
     document.getElementById('std-mother').value = student.motherName || '';
     document.getElementById('std-mother-phone').value = student.motherPhone || '';
+
+    const delBtn = document.getElementById('student-modal-delete-btn');
+    if (delBtn) {
+      delBtn.style.display = 'inline-block';
+      delBtn.setAttribute('data-id', student.id || cleanId);
+    }
 
     openModal('student-modal');
   };
@@ -6430,7 +6477,7 @@
     const gradeSelect = document.getElementById('cls-grade');
     const targetGrade = cls.grade || 'Giáo Lý';
     if (gradeSelect) {
-      let hasGrade = Array.from(gradeSelect.options).some(opt => opt.value === targetGrade);
+      let hasGrade = Array.from(gradeSelect.options || []).some(opt => opt.value === targetGrade);
       if (!hasGrade) {
         const opt = document.createElement('option');
         opt.value = targetGrade;
@@ -6473,6 +6520,23 @@
     if (!clsId && !clsName) return;
     closeModal('class-modal');
     window.deleteClass(clsId || clsName, clsName, teacherEmail);
+  };
+
+  window.handleDeleteStudentFromModal = function() {
+    const delBtn = document.getElementById('student-modal-delete-btn');
+    const stdId = (delBtn && delBtn.getAttribute('data-id')) || document.getElementById('student-form-id')?.value;
+    if (!stdId) return;
+    closeModal('student-modal');
+    window.deleteStudent(stdId);
+  };
+
+  window.handleDeleteCatechistFromModal = function() {
+    const delBtn = document.getElementById('cat-modal-delete-btn');
+    const catId = (delBtn && delBtn.getAttribute('data-id')) || document.getElementById('cat-form-id')?.value;
+    const catEmail = (delBtn && delBtn.getAttribute('data-email')) || document.getElementById('cat-email')?.value;
+    if (!catId && !catEmail) return;
+    closeModal('catechist-modal');
+    window.deleteCatechist(catId, catEmail);
   };
 
   window.deleteClass = function (clsIdentifier, optionalName, optionalTeacherEmail) {
@@ -6972,6 +7036,8 @@
     const form = document.getElementById('catechist-form');
     if (form) form.reset();
     document.getElementById('cat-form-id').value = '';
+    const delBtn = document.getElementById('cat-modal-delete-btn');
+    if (delBtn) delBtn.style.display = 'none';
     openModal('catechist-modal');
   };
 
@@ -6988,8 +7054,8 @@
     // 2. Search in accountsList
     if (!cat) {
       const acc = accountsList.find(a => 
-        (idStr && (a.id === idStr || a.email.toLowerCase() === idStr.toLowerCase())) ||
-        (emailStr && a.email.toLowerCase() === emailStr)
+        (idStr && (a.id === idStr || (a.email && a.email.toLowerCase() === idStr.toLowerCase()))) ||
+        (emailStr && a.email && a.email.toLowerCase() === emailStr)
       );
       if (acc) {
         cat = {
@@ -7057,7 +7123,7 @@
     const roleSelect = document.getElementById('cat-role');
     const targetRole = cat.role || 'Giáo lý viên';
     if (roleSelect) {
-      let hasRole = Array.from(roleSelect.options).some(opt => opt.value === targetRole);
+      let hasRole = Array.from(roleSelect.options || []).some(opt => opt.value === targetRole);
       if (!hasRole) {
         const opt = document.createElement('option');
         opt.value = targetRole;
@@ -7069,6 +7135,21 @@
     document.getElementById('cat-phone').value = cat.phone || '';
     document.getElementById('cat-email').value = cat.email || '';
     document.getElementById('cat-class').value = cat.assignedClass || '';
+
+    const delBtn = document.getElementById('cat-modal-delete-btn');
+    if (delBtn) {
+      const cEmailLower = (cat.email || emailStr || '').toLowerCase().trim();
+      const isMaster = cEmailLower === 'philthienhao@gmail.com' || cEmailLower === 'philthienhao';
+      const isSelf = currentUser && currentUser.email && currentUser.email.toLowerCase().trim() === cEmailLower;
+      if (isMaster || isSelf) {
+        delBtn.style.display = 'none';
+      } else {
+        delBtn.style.display = 'inline-block';
+        delBtn.setAttribute('data-id', cat.id || idStr);
+        delBtn.setAttribute('data-email', cat.email || emailStr);
+      }
+    }
+
     openModal('catechist-modal');
   };
 
@@ -8124,7 +8205,13 @@
     openModal('custom-confirm-modal');
   };
 
+  let isExecutingAccountDeletion = false;
   window.executeAccountDeletion = async function (btnElement) {
+    if (isExecutingAccountDeletion) {
+      console.warn('Account deletion already in progress, skipping duplicate call');
+      return;
+    }
+    isExecutingAccountDeletion = true;
     try {
       const targetEmail = (btnElement && btnElement.getAttribute('data-target-email'))
         || (pendingDeleteAcc && pendingDeleteAcc.email)
@@ -8144,14 +8231,14 @@
         return;
       }
 
-      // Guard check
-      if (emailLower === 'philthienhao@gmail.com' || emailLower === 'philthienhao') {
-        alert('Không thể xóa tài khoản Admin Master!');
+      // Guard check: Rule 2 Root Protection Invariant
+      if (emailLower === 'philthienhao@gmail.com' || emailLower === 'philthienhao' || emailLower === 'vothienhao' || (targetName && targetName.toLowerCase().includes('thiện hảo'))) {
+        alert('Đây là tài khoản Admin Master tối cao của hệ thống (Võ Thiện Hảo), không thể xóa!');
         closeModal('custom-confirm-modal');
         return;
       }
 
-      if (currentUser && currentUser.email && currentUser.email.toLowerCase().trim() === emailLower) {
+      if (currentUser && ((currentUser.email && currentUser.email.toLowerCase().trim() === emailLower) || (currentUser.id && targetId && currentUser.id === targetId))) {
         alert('Bạn không thể xóa tài khoản Admin hiện đang sử dụng!');
         closeModal('custom-confirm-modal');
         return;
@@ -8304,6 +8391,7 @@
       console.error('Failure in executeAccountDeletion:', err);
       alert('Đã xảy ra lỗi khi xóa tài khoản: ' + err.message);
     } finally {
+      isExecutingAccountDeletion = false;
       if (btnElement) {
         btnElement.disabled = false;
         btnElement.innerHTML = '<i class="fa-solid fa-trash"></i> Đồng Ý Xóa Ngay';
@@ -8808,6 +8896,7 @@
   window.handleSaveClass = handleSaveClass;
   window.loadUserData = loadUserData;
   window.saveUserData = saveUserData;
+  window.saveAccounts = saveAccounts;
   window.navigateTo = navigateTo;
   window.renderClasses = renderClasses;
   window.renderCatechists = renderCatechists;
@@ -8816,6 +8905,8 @@
   window.renderOverview = renderOverview;
   window.getCurrentUser = () => currentUser;
   window.getAppData = () => appData;
+  window.getAccountsList = () => accountsList;
+  window.getAllCloudUserDataMap = () => allCloudUserDataMap;
   try {
     Object.defineProperty(window, 'currentUser', {
       get: () => currentUser,
@@ -8825,6 +8916,16 @@
     Object.defineProperty(window, 'appData', {
       get: () => appData,
       set: (d) => { appData = d; },
+      configurable: true
+    });
+    Object.defineProperty(window, 'accountsList', {
+      get: () => accountsList,
+      set: (a) => { accountsList = a; },
+      configurable: true
+    });
+    Object.defineProperty(window, 'allCloudUserDataMap', {
+      get: () => allCloudUserDataMap,
+      set: (m) => { allCloudUserDataMap = m; },
       configurable: true
     });
   } catch(e) {}
