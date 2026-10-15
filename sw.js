@@ -3,7 +3,7 @@
  * Version: 2026.10.13-v1
  */
 
-const CACHE_NAME = 'magnificatedu-cache-v5';
+const CACHE_NAME = 'magnificatedu-cache-v6';
 const STATIC_ASSETS = [
   './',
   './index.html',
