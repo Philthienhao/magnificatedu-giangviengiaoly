@@ -3,12 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#d97706">
+  <meta name="theme-color" content="#0f172a">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="MagnificatEdu">
+  <meta name="application-name" content="MagnificatEdu">
   <meta name="mobile-web-app-capable" content="yes">
   <title>MagnificatEdu - Hệ Thống Quản Lý Giáo Lý Công Giáo</title>
+  
+  <!-- PWA Manifest & App Icons -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+  <link rel="shortcut icon" href="apple-touch-icon.png">
   
   <!-- Montserrat Font -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -36,7 +44,8 @@
   </script>
   
   <!-- Custom Stylesheet -->
-  <link rel="stylesheet" href="styles.css?v=20261010_v3800">
+  <link rel="stylesheet" href="styles.css?v=20261015_v4000">
+  <link rel="stylesheet" href="activities_flipbook.css?v=20261015_v4000">
 </head>
 <body>
 
@@ -119,9 +128,17 @@
           </button>
           <div class="nav-sub-menu" id="sub-materials">
             <a href="#library" class="nav-sub-item" data-page="library"><i class="fa-solid fa-book-bookmark"></i> Thư viện Giáo lý</a>
+            <a href="#activities-library" class="nav-sub-item" data-page="activities-library"><i class="fa-solid fa-icons text-warning"></i> Trò chơi, Bài hát, Băng reo</a>
             <a href="#quizzes" class="nav-sub-item" data-page="quizzes"><i class="fa-solid fa-file-pen"></i> Ngân hàng đề thi</a>
           </div>
         </div>
+
+        <!-- Thư viện trò chơi, bài hát, băng reo (Menu Chính Cấp 1 Nổi Bật) -->
+        <a href="#activities-library" class="nav-item" data-page="activities-library" id="sidebar-activities-library-item">
+          <i class="fa-solid fa-icons text-warning"></i>
+          <span>Thư viện trò chơi, bài hát, băng reo</span>
+          <span class="badge badge-pill badge-warning" style="background: rgba(245, 158, 11, 0.25); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.5); font-size: 10px; font-weight: 800; padding: 2px 7px;">MỚI</span>
+        </a>
 
         <a href="#certificates" class="nav-item" data-page="certificates">
           <i class="fa-solid fa-certificate"></i>
@@ -142,6 +159,12 @@
         <a href="#settings" class="nav-item" data-page="settings">
           <i class="fa-solid fa-church"></i>
           <span>Thông tin Giáo Xứ</span>
+        </a>
+
+        <a href="javascript:void(0)" class="nav-item" onclick="window.triggerPWAInstall()" id="sidebar-pwa-install-item" title="Cài đặt App MagnificatEdu">
+          <i class="fa-solid fa-mobile-screen-button text-warning"></i>
+          <span>Cài đặt App Mobile</span>
+          <span class="badge badge-pill badge-warning" style="background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4);">App</span>
         </a>
 
         <!-- ADMIN SECTION (Visible to Admin & Parish Admin) -->
@@ -213,6 +236,11 @@
             <i class="fa-solid fa-expand" id="fullscreen-icon"></i>
           </button>
 
+          <!-- PWA Mobile App Install Button -->
+          <button type="button" class="topbar-action-btn pwa-install-topbar-btn" id="pwa-install-btn" onclick="window.triggerPWAInstall()" title="Cài đặt App MagnificatEdu về điện thoại">
+            <i class="fa-solid fa-mobile-screen-button text-warning"></i>
+          </button>
+
           <!-- User Profile Dropdown Menu -->
           <div class="user-profile-menu-container">
             <button id="user-profile-trigger" class="user-profile-btn">
@@ -230,6 +258,10 @@
                 <p id="dropdown-user-email" class="user-email">philthienhao@gmail.com</p>
                 <span id="dropdown-user-role-tag" class="role-badge role-admin">Tài Khoản Admin</span>
               </div>
+              <div class="dropdown-divider"></div>
+              <button type="button" class="dropdown-item text-warning" onclick="window.triggerPWAInstall()">
+                <i class="fa-solid fa-mobile-screen-button text-warning"></i> 📱 Cài đặt Ứng Dụng Điện Thoại
+              </button>
               <div class="dropdown-divider"></div>
               <button type="button" class="dropdown-item text-primary" onclick="window.manualCloudBackup()">
                 <i class="fa-solid fa-cloud-arrow-up"></i> ☁️ Sao Lưu Đám Mây Supabase
@@ -1529,10 +1561,222 @@
     </div>
   </div>
 
+  <!-- PWA INSTALL MODAL (NATIVE APP EXPERIENCE) -->
+  <div id="pwa-install-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-dialog pwa-install-dialog" style="max-width: 460px; margin: 30px auto; width: 92%;">
+      <div class="modal-content pwa-install-content" style="background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 20px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6); color: #f8fafc;">
+        <div class="modal-header" style="background: rgba(15, 23, 42, 0.7); border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding: 16px 20px; display: flex; align-items: center; justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <img src="icon-192.png" alt="MagnificatEdu App Icon" style="width: 40px; height: 40px; border-radius: 10px; border: 1.5px solid #f59e0b; box-shadow: 0 2px 10px rgba(245, 158, 11, 0.3); object-fit: cover;">
+            <div>
+              <h3 style="margin: 0; font-size: 16px; font-weight: 800; color: #ffffff;">Cài Đặt MagnificatEdu</h3>
+              <p style="margin: 2px 0 0 0; font-size: 11.5px; color: #94a3b8;">Sử dụng như App chuyên nghiệp trên điện thoại</p>
+            </div>
+          </div>
+          <button type="button" class="btn-close-modal" onclick="window.closePWAInstallModal()" style="background: rgba(255, 255, 255, 0.1); border: none; color: #ffffff; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div class="modal-body" style="padding: 20px;">
+          <!-- Standalone notification if already installed -->
+          <div id="pwa-already-installed-box" style="display: none; background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; border-radius: 12px; padding: 16px; text-align: center; margin-bottom: 16px;">
+            <i class="fa-solid fa-circle-check" style="font-size: 32px; color: #10b981; margin-bottom: 8px; display: block;"></i>
+            <h4 style="margin: 0 0 4px 0; color: #34d399; font-size: 15px; font-weight: 700;">Đã Cài Đặt Ứng Dụng Thành Công!</h4>
+            <p style="margin: 0; font-size: 12px; color: #cbd5e1;">Bạn đang sử dụng hệ thống ở chế độ App độc lập toàn màn hình.</p>
+          </div>
+
+          <!-- Direct Install Banner (Android / Chrome) -->
+          <div id="pwa-direct-install-box" style="display: none; background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(217, 119, 6, 0.25)); border: 1px solid #f59e0b; border-radius: 14px; padding: 18px; text-align: center; margin-bottom: 18px;">
+            <i class="fa-solid fa-mobile-screen-button" style="font-size: 28px; color: #fbbf24; margin-bottom: 8px; display: block;"></i>
+            <h4 style="margin: 0 0 6px 0; font-size: 15px; font-weight: 800; color: #fef08a;">Sẵn Sàng Cài Đặt Ngay</h4>
+            <p style="margin: 0 0 14px 0; font-size: 12px; color: #e2e8f0;">Nhấn nút bên dưới để thêm ứng dụng vào Màn hình chính trong 1 giây:</p>
+            <button type="button" id="pwa-prompt-install-btn" onclick="window.installPWAFromPrompt()" class="btn btn-warning" style="width: 100%; padding: 12px; font-size: 14.5px; font-weight: 800; border-radius: 10px; background: linear-gradient(135deg, #f59e0b, #d97706); border: none; color: #0f172a; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4); cursor: pointer;">
+              <i class="fa-solid fa-arrow-down-to-bracket"></i> Cài Đặt Ứng Dụng Ngay
+            </button>
+          </div>
+
+          <!-- iOS / Safari Guide -->
+          <div id="pwa-ios-instructions">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font-size: 13.5px; font-weight: 700; color: #38bdf8;">
+              <i class="fa-brands fa-apple" style="font-size: 18px;"></i> Hướng dẫn trên iPhone / iPad (Safari):
+            </div>
+            <div class="pwa-steps-list" style="display: flex; flex-direction: column; gap: 10px;">
+              <div style="display: flex; align-items: flex-start; gap: 12px; background: rgba(255, 255, 255, 0.05); padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.08);">
+                <div style="width: 26px; height: 26px; border-radius: 50%; background: #0284c7; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px; flex-shrink: 0;">1</div>
+                <div style="font-size: 12px; line-height: 1.45; color: #e2e8f0;">
+                  Nhấn vào nút <strong>Chia sẻ</strong> <i class="fa-solid fa-arrow-up-from-bracket" style="color: #38bdf8; padding: 0 2px;"></i> ở thanh công cụ dưới đáy trình duyệt Safari.
+                </div>
+              </div>
+              <div style="display: flex; align-items: flex-start; gap: 12px; background: rgba(255, 255, 255, 0.05); padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.08);">
+                <div style="width: 26px; height: 26px; border-radius: 50%; background: #0284c7; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px; flex-shrink: 0;">2</div>
+                <div style="font-size: 12px; line-height: 1.45; color: #e2e8f0;">
+                  Cuộn xuống danh sách và chọn <strong>"Thêm vào Màn hình chính"</strong> <i class="fa-regular fa-square-plus" style="color: #fbbf24; padding: 0 2px;"></i> (Add to Home Screen).
+                </div>
+              </div>
+              <div style="display: flex; align-items: flex-start; gap: 12px; background: rgba(255, 255, 255, 0.05); padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.08);">
+                <div style="width: 26px; height: 26px; border-radius: 50%; background: #0284c7; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px; flex-shrink: 0;">3</div>
+                <div style="font-size: 12px; line-height: 1.45; color: #e2e8f0;">
+                  Nhấn nút <strong>"Thêm" (Add)</strong> ở góc trên bên phải màn hình để hoàn tất.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Android Alternative Guide -->
+          <div id="pwa-android-manual-guide" style="margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 12.5px; font-weight: 700; color: #a3e635;">
+              <i class="fa-brands fa-android" style="font-size: 16px;"></i> Trên Android (Chrome / Samsung Internet):
+            </div>
+            <p style="font-size: 11.5px; color: #cbd5e1; margin: 0; line-height: 1.4;">
+              Nếu không thấy nút cài tự động: Bấm vào Menu <strong>(⋮ 3 chấm)</strong> góc trên trình duyệt &rarr; Chọn <strong>"Cài đặt ứng dụng"</strong> hoặc <strong>"Thêm vào Màn hình chính"</strong>.
+            </p>
+          </div>
+
+          <!-- Highlights -->
+          <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+            <div style="font-size: 11.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px;">Trải nghiệm tuyệt vời như App:</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 11.5px; color: #cbd5e1;">
+              <div style="display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-expand text-warning"></i> Toàn màn hình 100%</div>
+              <div style="display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-bolt text-success"></i> Mở siêu tốc độ</div>
+              <div style="display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-hand-pointer text-info"></i> Vuốt chạm mượt mà</div>
+              <div style="display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-cloud-arrow-down text-primary"></i> Không tốn dung lượng</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer" style="background: rgba(15, 23, 42, 0.8); border-top: 1px solid rgba(255, 255, 255, 0.08); padding: 12px 20px; display: flex; justify-content: flex-end;">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="window.closePWAInstallModal()" style="background: #334155; color: #f8fafc; border: none; padding: 8px 18px; border-radius: 8px; cursor: pointer;">Đóng</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3D REALISTIC INTERACTIVE FLIPBOOK MODAL -->
+  <div id="activities-flipbook-modal" class="flipbook-modal-backdrop" style="display: none;">
+    <!-- Topbar Header -->
+    <div class="flipbook-topbar">
+      <div class="flipbook-title-info">
+        <div class="flipbook-brand-crest">
+          <i class="fa-solid fa-cross"></i>
+        </div>
+        <div class="flipbook-doc-titles">
+          <h3 id="flipbook-header-title" class="flipbook-active-title">Tên sách</h3>
+          <p id="flipbook-header-cat" class="flipbook-active-sub">Danh mục</p>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="flipbook-topbar-actions">
+        <!-- Table of Contents Toggle -->
+        <button type="button" class="flipbook-tool-btn" onclick="window.toggleTocDrawer()" title="Mở danh mục mục lục">
+          <i class="fa-solid fa-list-ol"></i> <span class="flipbook-hide-mobile">Mục Lục</span>
+        </button>
+
+        <!-- Mode Toggle (2 pages / 1 page) -->
+        <button type="button" class="flipbook-tool-btn flipbook-hide-mobile" id="flipbook-btn-mode" onclick="window.toggleFlipbookMode()" title="Đổi chế độ 2 trang / 1 trang">
+          <i class="fa-solid fa-book-open"></i> 2 Trang
+        </button>
+
+        <!-- Font Size Adjuster -->
+        <button type="button" class="flipbook-tool-btn flipbook-hide-mobile" onclick="window.adjustFlipbookFontSize(-1)" title="Thu nhỏ cỡ chữ">A-</button>
+        <button type="button" class="flipbook-tool-btn flipbook-hide-mobile" onclick="window.adjustFlipbookFontSize(1)" title="Phóng to cỡ chữ">A+</button>
+
+        <!-- Sound Toggle -->
+        <button type="button" class="flipbook-tool-btn" id="flipbook-btn-sound" onclick="window.toggleFlipbookSound()" title="Bật/Tắt âm thanh lật sách">
+          <i class="fa-solid fa-volume-high"></i>
+        </button>
+
+        <!-- Fullscreen Toggle -->
+        <button type="button" class="flipbook-tool-btn flipbook-hide-mobile" onclick="window.toggleFlipbookFullscreen()" title="Bật/Tắt toàn màn hình">
+          <i class="fa-solid fa-expand"></i>
+        </button>
+
+        <!-- Download Buttons -->
+        <button type="button" class="flipbook-tool-btn" onclick="window.downloadCurrentDocx()" id="flipbook-btn-dl-word" title="Tải file Word (.docx)">
+          <i class="fa-solid fa-file-word text-info"></i> <span class="flipbook-hide-mobile">Word</span>
+        </button>
+        <button type="button" class="flipbook-tool-btn" onclick="window.downloadCurrentPdf()" id="flipbook-btn-dl-pdf" title="Tải file PDF (.pdf)">
+          <i class="fa-solid fa-file-pdf text-danger"></i> <span class="flipbook-hide-mobile">PDF</span>
+        </button>
+
+        <!-- Close Button -->
+        <button type="button" class="flipbook-tool-btn btn-close" onclick="window.closeActivityFlipbook()" title="Đóng sách lật (ESC)">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Slide-out Table of Contents (Mục Lục) Drawer -->
+    <div id="flipbook-toc-drawer" class="flipbook-toc-drawer">
+      <div class="toc-drawer-header">
+        <h4 class="toc-drawer-title"><i class="fa-solid fa-list-check"></i> Bảng Mục Lục</h4>
+        <button type="button" class="toc-drawer-close-btn" onclick="window.toggleTocDrawer(false)" title="Đóng mục lục">
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
+      </div>
+      <div class="toc-drawer-search-wrap">
+        <input type="text" class="toc-drawer-search" placeholder="Lọc nhanh theo tên mục..." oninput="window.filterTocDrawer(this.value)">
+      </div>
+      <ul id="flipbook-toc-list" class="toc-drawer-list">
+        <!-- Rendered dynamically -->
+      </ul>
+    </div>
+
+    <!-- Center Stage Area -->
+    <div class="flipbook-stage">
+      <!-- Left Prev Button -->
+      <button type="button" class="flipbook-nav-arrow prev" id="flipbook-arrow-prev" onclick="window.flipPrevPage()" title="Lật trang trước (Mũi tên trái)">
+        <i class="fa-solid fa-chevron-left"></i>
+      </button>
+
+      <!-- Center Book Container -->
+      <div id="flipbook-stage-content" style="width: 100%; display: flex; justify-content: center; height: 100%;">
+        <!-- Dynamic Book rendered here -->
+      </div>
+
+      <!-- Right Next Button -->
+      <button type="button" class="flipbook-nav-arrow next" id="flipbook-arrow-next" onclick="window.flipNextPage()" title="Lật trang sau (Mũi tên phải)">
+        <i class="fa-solid fa-chevron-right"></i>
+      </button>
+    </div>
+
+    <!-- Bottom Control Bar -->
+    <div class="flipbook-bottom-bar">
+      <button type="button" class="flipbook-ctrl-btn" onclick="window.flipbookGoToPage(1)" title="Trang đầu tiên">
+        <i class="fa-solid fa-backward-step"></i>
+      </button>
+      <button type="button" class="flipbook-ctrl-btn" id="flipbook-btn-prev" onclick="window.flipPrevPage()" title="Trang trước">
+        <i class="fa-solid fa-chevron-left"></i>
+      </button>
+
+      <div class="flipbook-slider-wrap">
+        <input type="range" class="flipbook-slider" id="flipbook-scrub-slider" min="1" max="10" value="1" oninput="window.flipbookGoToPage(this.value)" title="Kéo thanh trượt để lật nhanh đến trang bất kỳ">
+        <div class="flipbook-page-indicator" id="flipbook-page-indicator">
+          Trang <span>1</span> / 1
+        </div>
+      </div>
+
+      <button type="button" class="flipbook-ctrl-btn" id="flipbook-btn-next" onclick="window.flipNextPage()" title="Trang sau">
+        <i class="fa-solid fa-chevron-right"></i>
+      </button>
+      <button type="button" class="flipbook-ctrl-btn" onclick="if(window.state && window.state.currentDoc && window.state.currentDoc.pages) window.flipbookGoToPage(window.state.currentDoc.pages.length);" title="Trang cuối cùng">
+        <i class="fa-solid fa-forward-step"></i>
+      </button>
+    </div>
+  </div>
+
   <!-- TOAST NOTIFICATION CONTAINER -->
   <div id="toast-container" class="toast-container"></div>
 
+  <!-- PWA Manager & Service Worker Registration -->
+  <script src="pwa.js?v=20261015_v4000"></script>
+
+  <!-- Activities Library & 3D Flipbook Core -->
+  <script src="activities_data.js?v=20261015_v4000"></script>
+  <script src="activities_flipbook.js?v=20261015_v4000"></script>
+
   <!-- Application JS Code -->
-  <script src="app_v2.js?v=20261012_v3600"></script>
+  <script src="app_v2.js?v=20261015_v4000"></script>
 </body>
 </html>

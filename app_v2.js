@@ -1721,6 +1721,15 @@
         case 'library':
           renderLibrary(container);
           break;
+        case 'activities-library':
+        case 'activities':
+        case 'sinhhoat':
+          if (typeof window.renderActivitiesLibrary === 'function') {
+            window.renderActivitiesLibrary(container);
+          } else {
+            renderLibrary(container);
+          }
+          break;
         case 'quizzes':
           renderQuizzes(container);
           break;
@@ -2065,6 +2074,29 @@
             <div class="kpi-number">${attendanceRate}</div>
             <span class="kpi-sub">${attendanceSub}</span>
           </div>
+        </div>
+      </div>
+
+      <!-- ACTIVITIES LIBRARY HIGHLIGHT BANNER -->
+      <div class="card mb-4" style="background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 60%, #1e3a8a 100%); color: #ffffff; border-radius: 14px; padding: 18px 24px; border: 1px solid rgba(245, 158, 11, 0.4); box-shadow: 0 10px 20px -5px rgba(15, 23, 42, 0.3); margin-bottom: 24px; position: relative; overflow: hidden;">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; position: relative; z-index: 2;">
+          <div style="display: flex; align-items: center; gap: 16px;">
+            <div style="width: 52px; height: 52px; border-radius: 12px; background: linear-gradient(135deg, #f59e0b, #d97706); color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4); flex-shrink: 0;">
+              <i class="fa-solid fa-icons"></i>
+            </div>
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                <span class="badge" style="background: #f59e0b; color: #000; font-weight: 800; font-size: 11px; padding: 2px 8px; border-radius: 9999px;">TÍNH NĂNG MỚI</span>
+                <h3 style="font-size: 17px; font-weight: 800; color: #ffffff; margin: 0;">Thư Viện Trò Chơi, Bài Hát, Băng Reo</h3>
+              </div>
+              <p style="font-size: 13px; color: #cbd5e1; margin: 0; line-height: 1.4;">
+                Tuyển tập 130+ trò chơi vòng tròn &amp; có dụng cụ, 68 băng reo Giáo Lý cử điệu và các ca khúc sinh hoạt. Xem dưới dạng <strong>sách lật 3D trực quan</strong>, tải về định dạng Word &amp; PDF.
+              </p>
+            </div>
+          </div>
+          <button type="button" class="btn btn-warning" onclick="window.appNavigate('activities-library')" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: #0f172a; font-weight: 800; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);">
+            <i class="fa-solid fa-book-open-reader"></i> Khám Phá Thư Viện Ngay
+          </button>
         </div>
       </div>
 
@@ -2655,9 +2687,9 @@
                   <p style="font-size: 13px; margin-bottom: 12px;"><strong>GLV Phụ trách:</strong> <span style="font-weight: 700; color: var(--primary);"><i class="fa-solid fa-user-tie"></i> ${teacher1}</span> ${teacher1Email ? `<span style="font-size: 11px; color: var(--slate-muted);">(${teacher1Email})</span>` : ''}</p>
                 `}
 
-                <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--slate-border); padding-top: 12px;">
-                  <span style="font-weight: 700; color: var(--slate-dark);"><i class="fa-solid fa-users text-primary"></i> ${classStudentCount} Học viên</span>
-                  <div style="display: flex; gap: 6px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--slate-border); padding-top: 12px; gap: 8px; flex-wrap: wrap;">
+                  <span style="font-weight: 700; color: var(--slate-dark); white-space: nowrap;"><i class="fa-solid fa-users text-primary"></i> ${classStudentCount} Học viên</span>
+                  <div style="display: flex; gap: 6px; flex-shrink: 0;">
                     <button class="btn btn-sm btn-outline-primary" data-class-id="${safeId}" data-class-name="${escapedName}" data-teacher-email="${teacher1Email}" onclick="window.editClass(this)"><i class="fa-solid fa-pen"></i> Sửa</button>
                     <button class="btn btn-sm btn-outline-danger btn-delete-class" data-class-id="${safeId}" data-class-name="${escapedName}" data-teacher-email="${teacher1Email}" onclick="window.deleteClass(this)" title="Xóa lớp học này"><i class="fa-solid fa-trash"></i> Xóa</button>
                   </div>
@@ -2836,7 +2868,7 @@
           <button class="btn btn-primary" onclick="window.openAddCatechistModal()"><i class="fa-solid fa-plus"></i> Thêm Giáo Lý Viên Mới</button>
         </div>
       ` : `
-        <div class="kpi-grid">
+        <div class="catechist-grid kpi-grid">
           ${catechists.map(cat => {
             const fullName = cat.fullName || cat.name || '';
             const firstLetter = fullName.charAt(0) || 'G';
@@ -2846,33 +2878,35 @@
             const isSelf = currentUser && currentUser.email && currentUser.email.toLowerCase().trim() === catEmail;
             const badgeClass = cat.role === 'Admin' ? 'badge-warning' : (cat.role === 'Huấn Luyện Viên' ? 'badge-info' : 'badge-primary');
             return `
-            <div class="card">
+            <div class="card catechist-card">
               <div class="card-body">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
-                  <div style="display: flex; align-items: center; gap: 12px;">
-                    <div style="width: 46px; height: 46px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800;">
+                <div class="catechist-card-header">
+                  <div class="catechist-info-wrap">
+                    <div class="catechist-avatar">
                       ${firstLetter}
                     </div>
-                    <div>
-                      <span style="font-size: 11px; font-weight: 700; color: var(--primary);">${cat.holyName || ''}</span>
-                      <h3 style="font-size: 15px; font-weight: 800; color: var(--dark-navy); margin: 0;">${fullName}</h3>
-                      <span class="badge ${badgeClass}">${cat.role || 'Giáo lý viên'}</span>
+                    <div class="catechist-meta">
+                      <span class="catechist-holy-name">${cat.holyName || ''}</span>
+                      <h3 class="catechist-name" title="${fullName}">${fullName}</h3>
+                      <span class="badge ${badgeClass}" style="margin-top: 4px; display: inline-block;">${cat.role || 'Giáo lý viên'}</span>
                     </div>
                   </div>
-                  <div style="display: flex; gap: 4px;">
-                    <button class="btn btn-xs btn-outline-primary" onclick="window.editCatechist('${catId}', '${catEmail}')" title="Chỉnh sửa thông tin"><i class="fa-solid fa-pen"></i></button>
+                  <div class="catechist-actions">
+                    <button class="btn btn-xs btn-outline-primary btn-action-icon" onclick="window.editCatechist('${catId}', '${catEmail}')" title="Chỉnh sửa thông tin"><i class="fa-solid fa-pen"></i></button>
                     ${isMaster ? `
-                      <button class="btn btn-xs btn-outline-secondary" disabled title="Tài khoản Quản trị viên tối cao (Không thể xóa)"><i class="fa-solid fa-shield"></i></button>
+                      <button class="btn btn-xs btn-outline-secondary btn-action-icon" disabled title="Tài khoản Quản trị viên tối cao (Không thể xóa)"><i class="fa-solid fa-shield"></i></button>
                     ` : (isSelf ? `
-                      <button class="btn btn-xs btn-outline-secondary" disabled title="Tài khoản hiện đang đăng nhập (Không thể tự xóa)"><i class="fa-solid fa-user-lock"></i></button>
+                      <button class="btn btn-xs btn-outline-secondary btn-action-icon" disabled title="Tài khoản hiện đang đăng nhập (Không thể tự xóa)"><i class="fa-solid fa-user-lock"></i></button>
                     ` : `
-                      <button class="btn btn-xs btn-outline-danger" onclick="window.deleteCatechist('${catId}', '${catEmail}')" title="Xóa tài khoản"><i class="fa-solid fa-trash"></i></button>
+                      <button class="btn btn-xs btn-outline-danger btn-action-icon" onclick="window.deleteCatechist('${catId}', '${catEmail}')" title="Xóa tài khoản"><i class="fa-solid fa-trash"></i></button>
                     `)}
                   </div>
                 </div>
-                <p style="font-size: 12px; margin-bottom: 4px;"><i class="fa-solid fa-phone text-muted"></i> <strong>SĐT:</strong> ${cat.phone || '---'}</p>
-                <p style="font-size: 12px; margin-bottom: 4px;"><i class="fa-solid fa-envelope text-muted"></i> <strong>Email:</strong> ${cat.email || '---'}</p>
-                <p style="font-size: 12px;"><i class="fa-solid fa-chalkboard text-muted"></i> <strong>Phụ trách:</strong> ${cat.assignedClass || 'Chưa phân công'}</p>
+                <div class="catechist-card-details">
+                  <p class="catechist-detail-row"><i class="fa-solid fa-phone text-muted"></i> <strong>SĐT:</strong> <span>${cat.phone || '---'}</span></p>
+                  <p class="catechist-detail-row"><i class="fa-solid fa-envelope text-muted"></i> <strong>Email:</strong> <span class="catechist-detail-text" title="${cat.email || ''}">${cat.email || '---'}</span></p>
+                  <p class="catechist-detail-row"><i class="fa-solid fa-chalkboard text-muted"></i> <strong>Phụ trách:</strong> <span class="catechist-detail-text" title="${cat.assignedClass || 'Chưa phân công'}">${cat.assignedClass || 'Chưa phân công'}</span></p>
+                </div>
               </div>
             </div>
           `;
@@ -4917,11 +4951,11 @@
           ${materials.map(lib => `
             <div class="card">
               <div class="card-body">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
-                  <h4 style="font-size: 15px; font-weight: 800; color: var(--dark-navy); margin: 0;">${lib.title}</h4>
-                  <div style="display: flex; gap: 4px;">
-                    <button class="btn btn-xs btn-outline-primary" onclick="window.editLibrary('${lib.id}')"><i class="fa-solid fa-pen"></i></button>
-                    <button class="btn btn-xs btn-outline-danger" onclick="window.deleteLibrary('${lib.id}')"><i class="fa-solid fa-trash"></i></button>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 10px;">
+                  <h4 style="font-size: 15px; font-weight: 800; color: var(--dark-navy); margin: 0; min-width: 0; flex: 1; word-break: break-word;">${lib.title}</h4>
+                  <div style="display: flex; gap: 4px; flex-shrink: 0;">
+                    <button class="btn btn-xs btn-outline-primary btn-action-icon" onclick="window.editLibrary('${lib.id}')" title="Chỉnh sửa tài liệu"><i class="fa-solid fa-pen"></i></button>
+                    <button class="btn btn-xs btn-outline-danger btn-action-icon" onclick="window.deleteLibrary('${lib.id}')" title="Xóa tài liệu"><i class="fa-solid fa-trash"></i></button>
                   </div>
                 </div>
                 <span class="badge badge-primary mb-2">${lib.format} • ${lib.grade}</span>
