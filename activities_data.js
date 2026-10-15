@@ -1436,7 +1436,7 @@ window.ACTIVITIES_DOCUMENTS = [
     "subtitle": "68 băng reo cử điệu đức tin, Kinh Thánh & Thánh Thể",
     "format": "docx",
     "icon": "fa-solid fa-bullhorn",
-    "docxUrl": "bangreosinhhoat/BẢNGEOSINHHOATGIAOLI.docx",
+    "docxUrl": "bangreosinhhoat/BANGREOSINHHOATGIAOLI.docx",
     "pdfUrl": "bangreosinhhoat/BANGREOSINHHOATGIAOLI.pdf",
     "itemCount": 68,
     "badge": "68 Băng reo Giáo lý",
