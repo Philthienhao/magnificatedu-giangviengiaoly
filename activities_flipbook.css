@@ -11,32 +11,6 @@
   padding-bottom: 40px;
 }
 
-/* Sidebar Menu Highlight */
-#sidebar-activities-library-item {
-  background: rgba(245, 158, 11, 0.08);
-  border: 1px solid rgba(245, 158, 11, 0.22);
-  color: #f1f5f9;
-  margin-top: 4px;
-}
-
-#sidebar-activities-library-item:hover {
-  background: rgba(245, 158, 11, 0.16);
-  border-color: rgba(245, 158, 11, 0.45);
-  color: #ffffff;
-}
-
-#sidebar-activities-library-item.active {
-  background: linear-gradient(90deg, #d97706 0%, #f59e0b 100%) !important;
-  color: #0f172a !important;
-  font-weight: 800;
-  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4) !important;
-}
-
-#sidebar-activities-library-item.active i,
-#sidebar-activities-library-item.active span {
-  color: #0f172a !important;
-}
-
 /* Hero Header Banner */
 .activities-hero-banner {
   background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #1e3a8a 100%);
