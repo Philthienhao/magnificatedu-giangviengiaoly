@@ -4523,6 +4523,22 @@
     showToast('🔍 Đang kiểm tra tin nhắn Zalo gần đây để tìm mã nhóm...', 'info');
 
     try {
+      // 1. Try getRecentGroups first (instant, from webhook & database)
+      try {
+        const recentRes = await fetch('/api/zalo', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'getRecentGroups' })
+        });
+        const recentData = await recentRes.json();
+        if (recentData && recentData.ok && recentData.latestId && input) {
+          input.value = recentData.latestId;
+          showToast(`✅ Đã tìm thấy mã nhóm: ${recentData.latestId} (${recentData.latestTitle || 'Nhóm Phụ Huynh'})!`, 'success');
+          return;
+        }
+      } catch(e) {}
+
+      // 2. Try getUpdates
       const response = await fetch('/api/zalo', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -4530,11 +4546,7 @@
       });
       const data = await response.json();
 
-      if (!data.ok) {
-        throw new Error(data.description || 'Không thể kết nối Zalo Bot');
-      }
-
-      const updates = data.result || [];
+      const updates = (data && data.result) || [];
       let foundGroup = null;
 
       for (let i = updates.length - 1; i >= 0; i--) {
@@ -4552,7 +4564,7 @@
         input.value = foundGroup.id;
         showToast(`✅ Đã tìm thấy mã nhóm: ${foundGroup.id} (${foundGroup.title || 'Nhóm Zalo'})!`, 'success');
       } else {
-        showToast('Chưa tìm thấy tin nhắn mới trong nhóm. Vui lòng vào nhóm Zalo, gõ "@Bot Điểm Danh" 1 câu rồi bấm lại nút này nhé!', 'warning');
+        showToast('Chưa nhận được tin nhắn từ nhóm. Vui lòng vào nhóm Zalo phụ huynh, gõ "@Bot Điểm Danh" gửi 1 câu rồi bấm lại nút này nhé!', 'warning');
       }
     } catch (err) {
       showToast(`⚠️ Không thể dò mã nhóm: ${err.message}`, 'warning');
