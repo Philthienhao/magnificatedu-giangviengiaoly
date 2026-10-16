@@ -461,7 +461,17 @@
       let changed = false;
       data.forEach(r => {
         if (!r.email) return;
-        const uEmail = r.email.toLowerCase().trim();
+        let rawEmail = r.email.toLowerCase().trim();
+        const isMaster = rawEmail === 'philthienhao' || rawEmail === 'philthienhao@gmail.com' || rawEmail === 'vothienhao';
+        
+        // If legacy non-email master user exists in Supabase, purge it so it doesn't resurrect
+        if (rawEmail === 'philthienhao' && window.supabaseClient) {
+          window.supabaseClient.from('user_data').delete().eq('email', 'philthienhao').catch(() => {});
+          try { localStorage.removeItem(STORAGE_PREFIX_DATA + 'philthienhao'); } catch(e) {}
+          delete allCloudUserDataMap['philthienhao'];
+        }
+
+        const uEmail = isMaster ? 'philthienhao@gmail.com' : rawEmail;
         const uData = (r.data && typeof r.data === 'object') ? r.data : {};
         if (!uData.account_info) uData.account_info = {};
         uData.account_info.email = uEmail;
@@ -480,17 +490,19 @@
 
         const accInfo = uData.account_info || {};
         const parish = (uData.parishInfo && uData.parishInfo.name) || accInfo.parish || 'Giáo Xứ Hoà Khánh';
-        const role = (uEmail === 'philthienhao@gmail.com') ? 'Admin' : (accInfo.role || 'Giáo lý viên');
+        const role = isMaster ? 'Admin' : (accInfo.role || 'Giáo lý viên');
         const managedParish = accInfo.managedParish || parish;
+        const holyName = isMaster ? (accInfo.holyName && accInfo.holyName !== 'T. Giuse' ? accInfo.holyName : 'Philiphê') : (accInfo.holyName || 'T. Giuse');
+        const name = isMaster ? (accInfo.name && accInfo.name !== 'PHILTHIENHAO' ? accInfo.name : 'Võ Thiện Hảo') : (accInfo.name || uEmail.split('@')[0].toUpperCase());
 
-        const existing = accountsList.find(a => a.email.toLowerCase() === uEmail);
+        const existing = accountsList.find(a => a.email.toLowerCase() === uEmail || (isMaster && a.email.toLowerCase() === 'philthienhao'));
         if (!existing) {
           accountsList.push({
             id: accInfo.id || ('acc_' + emailKey),
             email: uEmail,
-            password: accInfo.password || '123456',
-            name: accInfo.name || uEmail.split('@')[0].toUpperCase(),
-            holyName: accInfo.holyName || 'T. Giuse',
+            password: accInfo.password || '123',
+            name: name,
+            holyName: holyName,
             phone: accInfo.phone || '',
             parish: parish,
             role: role,
@@ -504,26 +516,27 @@
           });
           changed = true;
         } else {
+          existing.email = uEmail;
           existing.classes = Array.isArray(uData.classes) ? uData.classes : [];
           existing.students = Array.isArray(uData.students) ? uData.students : [];
           if (accInfo.password && existing.password !== accInfo.password) {
             existing.password = accInfo.password;
             changed = true;
           }
-          if (accInfo.name && existing.name !== accInfo.name) {
-            existing.name = accInfo.name;
+          if (name && existing.name !== name) {
+            existing.name = name;
             changed = true;
           }
-          if (accInfo.holyName && existing.holyName !== accInfo.holyName) {
-            existing.holyName = accInfo.holyName;
+          if (holyName && existing.holyName !== holyName) {
+            existing.holyName = holyName;
             changed = true;
           }
           if (parish && existing.parish !== parish) {
             existing.parish = parish;
             changed = true;
           }
-          if (accInfo.role && existing.role !== accInfo.role && uEmail !== 'philthienhao@gmail.com') {
-            existing.role = accInfo.role;
+          if (role && existing.role !== role) {
+            existing.role = role;
             changed = true;
           }
           if (accInfo.managedParish && existing.managedParish !== accInfo.managedParish) {
@@ -532,6 +545,13 @@
           }
         }
       });
+
+      // Purge any lingering non-email philthienhao account from accountsList
+      const filteredAccounts = accountsList.filter(a => !(a.email && a.email.toLowerCase().trim() === 'philthienhao'));
+      if (filteredAccounts.length !== accountsList.length) {
+        accountsList = filteredAccounts;
+        changed = true;
+      }
 
       if (changed) {
         saveAccounts();
@@ -2349,7 +2369,37 @@
     // Deduplicate by ID
     const uniqueClasses = Array.from(new Map(aggregatedClasses.map(item => [item.id, item])).values());
     const uniqueStudents = Array.from(new Map(aggregatedStudents.map(item => [item.id, item])).values());
-    const uniqueCatechists = Array.from(new Map(aggregatedCatechists.map(item => [item.id || item.email || item.fullName, item])).values());
+    // Deduplicate and canonicalize catechists
+    const uniqueCatechistsMap = new Map();
+    aggregatedCatechists.forEach(cat => {
+      if (!cat) return;
+      let emailKey = (cat.email || '').toLowerCase().trim();
+      const isMasterCat = emailKey === 'philthienhao' || emailKey === 'philthienhao@gmail.com' || 
+                          (cat.fullName && cat.fullName.toLowerCase().includes('thiện hảo'));
+      if (isMasterCat) {
+        emailKey = 'philthienhao@gmail.com';
+        cat.email = 'philthienhao@gmail.com';
+        cat.role = 'Admin';
+        cat.fullName = 'Võ Thiện Hảo';
+        if (!cat.holyName || cat.holyName === 'T. Giuse') {
+          cat.holyName = 'Philiphê';
+        }
+      }
+      const mapKey = isMasterCat ? 'philthienhao@gmail.com' : (emailKey || String(cat.id) || cat.fullName);
+      const existing = uniqueCatechistsMap.get(mapKey);
+      if (!existing) {
+        uniqueCatechistsMap.set(mapKey, { ...cat });
+      } else {
+        uniqueCatechistsMap.set(mapKey, {
+          ...existing,
+          ...cat,
+          holyName: cat.holyName || existing.holyName,
+          phone: cat.phone || existing.phone,
+          assignedClass: (cat.assignedClass && cat.assignedClass !== 'Chưa phân công') ? cat.assignedClass : existing.assignedClass
+        });
+      }
+    });
+    const uniqueCatechists = Array.from(uniqueCatechistsMap.values());
 
     return {
       classes: uniqueClasses,
@@ -7047,6 +7097,14 @@
     const form = document.getElementById('catechist-form');
     if (form) form.reset();
     document.getElementById('cat-form-id').value = '';
+    const origEmail = document.getElementById('cat-form-orig-email');
+    if (origEmail) origEmail.value = '';
+    const origId = document.getElementById('cat-form-orig-id');
+    if (origId) origId.value = '';
+
+    const title = document.getElementById('catechist-modal-title');
+    if (title) title.innerHTML = '<i class="fa-solid fa-chalkboard-user"></i> Thêm Giáo Lý Viên Mới';
+
     const delBtn = document.getElementById('cat-modal-delete-btn');
     if (delBtn) delBtn.style.display = 'none';
     openModal('catechist-modal');
@@ -7114,20 +7172,36 @@
       }
     }
 
+    const isMasterFallback = idStr.toLowerCase().includes('philthienhao') || emailStr.toLowerCase().includes('philthienhao');
     // 5. Fallback catechist object so modal ALWAYS opens
     if (!cat) {
       cat = {
         id: idStr || ('cat_' + Date.now()),
-        holyName: 'T. Giuse',
-        fullName: idStr || 'Giáo lý viên',
-        role: 'Giáo lý viên',
+        holyName: isMasterFallback ? 'Philiphê' : 'T. Giuse',
+        fullName: isMasterFallback ? 'Võ Thiện Hảo' : (idStr || 'Giáo lý viên'),
+        role: isMasterFallback ? 'Admin' : 'Giáo lý viên',
         phone: '',
         email: emailStr || (idStr.includes('@') ? idStr : ''),
         assignedClass: ''
       };
     }
 
+    if (isMasterFallback) {
+      if (!cat.holyName || cat.holyName === 'T. Giuse') cat.holyName = 'Philiphê';
+      if (!cat.fullName || cat.fullName === 'PHILTHIENHAO') cat.fullName = 'Võ Thiện Hảo';
+      cat.role = 'Admin';
+      cat.email = 'philthienhao@gmail.com';
+    }
+
     document.getElementById('cat-form-id').value = cat.id || '';
+    const origEmailInput = document.getElementById('cat-form-orig-email');
+    if (origEmailInput) origEmailInput.value = cat.email || optionalEmail || emailStr || '';
+    const origIdInput = document.getElementById('cat-form-orig-id');
+    if (origIdInput) origIdInput.value = cat.id || idStr || '';
+
+    const title = document.getElementById('catechist-modal-title');
+    if (title) title.innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Chỉnh Sửa Thông Tin Giáo Lý Viên';
+
     document.getElementById('cat-holyname').value = cat.holyName || '';
     document.getElementById('cat-fullname').value = cat.fullName || cat.name || '';
     
@@ -7173,34 +7247,108 @@
   window.saveCatechistForm = async function(e) {
     if (e) e.preventDefault();
     const id = document.getElementById('cat-form-id')?.value?.trim() || '';
-    const email = document.getElementById('cat-email')?.value?.trim() || '';
-    const emailLower = email.toLowerCase().trim();
-    const catData = {
-      id: id || 'cat_' + Date.now(),
-      holyName: document.getElementById('cat-holyname')?.value?.trim() || '',
-      fullName: document.getElementById('cat-fullname')?.value?.trim() || '',
-      role: document.getElementById('cat-role')?.value || 'Giáo lý viên',
-      phone: document.getElementById('cat-phone')?.value?.trim() || '',
-      email: email,
-      assignedClass: document.getElementById('cat-class')?.value?.trim() || ''
-    };
+    const origId = document.getElementById('cat-form-orig-id')?.value?.trim() || id;
+    const origEmail = (document.getElementById('cat-form-orig-email')?.value?.trim() || '').toLowerCase();
+    let email = document.getElementById('cat-email')?.value?.trim() || '';
+    let emailLower = email.toLowerCase().trim();
+    let holyName = document.getElementById('cat-holyname')?.value?.trim() || '';
+    let fullName = document.getElementById('cat-fullname')?.value?.trim() || '';
+    let role = document.getElementById('cat-role')?.value || 'Giáo lý viên';
+    const phone = document.getElementById('cat-phone')?.value?.trim() || '';
+    const assignedClass = document.getElementById('cat-class')?.value?.trim() || '';
 
-    if (!Array.isArray(appData.catechists)) appData.catechists = [];
-    const idx = appData.catechists.findIndex(c => (id && c.id === id) || (emailLower && c.email && c.email.toLowerCase() === emailLower));
-    if (idx !== -1) {
-      appData.catechists[idx] = { ...appData.catechists[idx], ...catData };
-    } else {
-      appData.catechists.push(catData);
+    const isMaster = emailLower === 'philthienhao' || emailLower === 'philthienhao@gmail.com' ||
+                     origEmail === 'philthienhao' || origEmail === 'philthienhao@gmail.com' ||
+                     fullName.toLowerCase().includes('thiện hảo');
+    if (isMaster) {
+      email = 'philthienhao@gmail.com';
+      emailLower = 'philthienhao@gmail.com';
+      role = 'Admin';
+      if (!holyName || holyName === 'T. Giuse') holyName = 'Philiphê';
+      if (!fullName || fullName === 'PHILTHIENHAO') fullName = 'Võ Thiện Hảo';
     }
 
+    const catData = {
+      id: id || ('cat_' + Date.now()),
+      holyName: holyName,
+      fullName: fullName,
+      role: role,
+      phone: phone,
+      email: email,
+      assignedClass: assignedClass
+    };
+
+    // Clean up old email / alias if changed or if master admin
+    if (origEmail && origEmail !== emailLower) {
+      delete allCloudUserDataMap[origEmail];
+      try { localStorage.removeItem(STORAGE_PREFIX_DATA + origEmail.replace(/[^a-z0-9]/g, '_')); } catch(err) {}
+      accountsList = accountsList.filter(a => !(a.email && a.email.toLowerCase().trim() === origEmail));
+      if (window.supabaseClient) {
+        window.supabaseClient.from('user_data').delete().eq('email', origEmail).catch(() => {});
+      }
+    }
+    if (isMaster) {
+      delete allCloudUserDataMap['philthienhao'];
+      try { localStorage.removeItem(STORAGE_PREFIX_DATA + 'philthienhao'); } catch(err) {}
+      accountsList = accountsList.filter(a => !(a.email && a.email.toLowerCase().trim() === 'philthienhao'));
+      if (window.supabaseClient) {
+        window.supabaseClient.from('user_data').delete().eq('email', 'philthienhao').catch(() => {});
+      }
+    }
+
+    if (!Array.isArray(appData.catechists)) appData.catechists = [];
+    appData.catechists = appData.catechists.filter(c => {
+      const cEmail = (c.email || '').toLowerCase().trim();
+      const cId = String(c.id || '').trim();
+      if (id && cId === id) return false;
+      if (origId && cId === origId) return false;
+      if (origEmail && cEmail === origEmail) return false;
+      if (emailLower && cEmail === emailLower) return false;
+      if (isMaster && (cEmail === 'philthienhao' || cEmail === 'philthienhao@gmail.com' || (c.fullName && c.fullName.toLowerCase().includes('thiện hảo')))) return false;
+      return true;
+    });
+    appData.catechists.push(catData);
+
     // If this catechist corresponds to an account in accountsList, update it as well
-    const acc = accountsList.find(a => (id && a.id === id) || (emailLower && a.email && a.email.toLowerCase() === emailLower));
+    let acc = accountsList.find(a => 
+      (emailLower && a.email && a.email.toLowerCase() === emailLower) ||
+      (origEmail && a.email && a.email.toLowerCase() === origEmail) ||
+      (id && a.id === id) ||
+      (isMaster && a.email && (a.email.toLowerCase() === 'philthienhao@gmail.com' || a.email.toLowerCase() === 'philthienhao'))
+    );
     if (acc) {
       acc.name = catData.fullName;
       acc.holyName = catData.holyName;
       acc.role = catData.role;
       acc.phone = catData.phone;
-      saveAccounts();
+      acc.email = emailLower;
+    } else {
+      accountsList.push({
+        id: catData.id,
+        email: emailLower,
+        name: catData.fullName,
+        holyName: catData.holyName,
+        role: catData.role,
+        phone: catData.phone,
+        parish: (currentUser && currentUser.parish) || 'Giáo Xứ Hoà Khánh',
+        status: 'active'
+      });
+    }
+    saveAccounts();
+
+    // If editing self or master admin, keep currentUser in sync immediately
+    const isCurrentUser = (currentUser && currentUser.email && (currentUser.email.toLowerCase().trim() === emailLower || currentUser.email.toLowerCase().trim() === origEmail)) ||
+                          (isMaster && currentUser && hasAdminAccess(currentUser));
+    if (isCurrentUser && currentUser) {
+      currentUser.name = catData.fullName;
+      currentUser.holyName = catData.holyName;
+      currentUser.role = catData.role;
+      currentUser.phone = catData.phone;
+      currentUser.email = emailLower;
+      try { localStorage.setItem(STORAGE_KEY_CURRENT_USER, JSON.stringify(currentUser)); } catch(err) {}
+      if (typeof updateHeaderAndSidebarUserInfo === 'function') {
+        updateHeaderAndSidebarUserInfo();
+      }
     }
 
     // Update in-memory allCloudUserDataMap and Supabase for this catechist

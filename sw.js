@@ -1,9 +1,9 @@
 /**
  * MagnificatEdu - Progressive Web App Service Worker
- * Version: 2026.10.13-v1
+ * Version: 2026.10.16-v1
  */
 
-const CACHE_NAME = 'magnificatedu-cache-v8';
+const CACHE_NAME = 'magnificatedu-cache-v9';
 const STATIC_ASSETS = [
   './',
   './index.html',
