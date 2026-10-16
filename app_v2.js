@@ -2714,9 +2714,22 @@
                   <p style="font-size: 13px; margin-bottom: 12px;"><strong>GLV Phụ trách:</strong> <span style="font-weight: 700; color: var(--primary);"><i class="fa-solid fa-user-tie"></i> ${teacher1}</span> ${teacher1Email ? `<span style="font-size: 11px; color: var(--slate-muted);">(${teacher1Email})</span>` : ''}</p>
                 `}
 
+                <div style="margin-bottom: 10px;">
+                  ${c.zaloChatId ? `
+                    <span class="badge" style="background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-size: 11px;">
+                      <i class="fa-solid fa-robot"></i> Zalo Bot: <strong>${c.zaloChatId}</strong>
+                    </span>
+                  ` : `
+                    <span class="badge" style="background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; font-size: 11px;">
+                      <i class="fa-solid fa-robot"></i> Chưa cài Zalo Bot
+                    </span>
+                  `}
+                </div>
+
                 <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--slate-border); padding-top: 12px; gap: 8px; flex-wrap: wrap;">
                   <span style="font-weight: 700; color: var(--slate-dark); white-space: nowrap;"><i class="fa-solid fa-users text-primary"></i> ${classStudentCount} Học viên</span>
                   <div style="display: flex; gap: 6px; flex-shrink: 0;">
+                    <button class="btn btn-sm btn-outline-primary" style="color: #2563eb; border-color: #93c5fd;" data-class-id="${safeId}" data-class-name="${escapedName}" data-teacher-email="${teacher1Email}" onclick="window.editClass(this)" title="Cài đặt mã nhóm Zalo Bot cho lớp này"><i class="fa-solid fa-robot"></i> Cài Zalo</button>
                     <button class="btn btn-sm btn-outline-primary" data-class-id="${safeId}" data-class-name="${escapedName}" data-teacher-email="${teacher1Email}" onclick="window.editClass(this)"><i class="fa-solid fa-pen"></i> Sửa</button>
                     <button class="btn btn-sm btn-outline-danger btn-delete-class" data-class-id="${safeId}" data-class-name="${escapedName}" data-teacher-email="${teacher1Email}" onclick="window.deleteClass(this)" title="Xóa lớp học này"><i class="fa-solid fa-trash"></i> Xóa</button>
                   </div>
@@ -3012,6 +3025,7 @@
     // Find saved historical record for current (selectedClassId, selectedDate, selectedSessionType)
     const logs = getAccessibleAttendanceLogs();
     const savedLog = logs.find(l => String(l.classId) === String(selectedClassId) && l.date === selectedDate && l.sessionType === selectedSessionType);
+    const selectedClassObj = classes.find(c => String(c.id) === String(selectedClassId)) || {};
 
     container.innerHTML = `
       <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
@@ -3048,6 +3062,11 @@
               <select id="att-class-select" class="form-control" onchange="window.handleAttFilterChange()">
                 ${classes.map(c => `<option value="${c.id}" ${c.id === selectedClassId ? 'selected' : ''}>${c.name} (${c.grade})</option>`).join('')}
               </select>
+              <div style="margin-top: 6px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px;">
+                <button type="button" class="btn btn-xs ${selectedClassObj.zaloChatId ? 'btn-outline-success' : 'btn-outline-primary'}" onclick="window.editClass('${selectedClassId}')" title="Cài đặt mã nhóm Zalo để tự động báo vắng học cho lớp này" style="font-size: 11px; padding: 4px 8px; border-radius: 6px; font-weight: 600;">
+                  <i class="fa-solid fa-robot"></i> ${selectedClassObj.zaloChatId ? `Đã kết nối Zalo (Mã: ${selectedClassObj.zaloChatId})` : '⚙️ Cài Đặt Zalo Nhóm Lớp Này'}
+                </button>
+              </div>
             </div>
             <div class="col-4">
               <label>Ngày Điểm Danh: <span class="text-danger">*</span></label>
