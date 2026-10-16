@@ -3,7 +3,7 @@
  * Version: 2026.10.16-v1
  */
 
-const CACHE_NAME = 'magnificatedu-cache-v19';
+const CACHE_NAME = 'magnificatedu-cache-v20';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -18,6 +18,12 @@ const STATIC_ASSETS = [
   './anh/games/thumb_head_tilt.jpg',
   './anh/games/thumb_shepherd_rescue.jpg',
   './anh/games/thumb_bible_memory.jpg',
+  './anh/games/thumb_angel_wheel.jpg',
+  './anh/games/thumb_bible_millionaire.jpg',
+  './anh/games/thumb_covenant_boxes.jpg',
+  './anh/games/thumb_faith_tugofwar.jpg',
+  './anh/games/thumb_holy_picture_flip.jpg',
+  './anh/games/thumb_temple_builder.jpg',
   './app_v2.js',
   './pwa.js',
   './manifest.json',

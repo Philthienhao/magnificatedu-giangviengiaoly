@@ -419,6 +419,280 @@ window.BIBLE_GAME_DATA = {
     { id: 'fish', name: 'Cá Biển Phép Lạ', avatar: '🐟', color: '#06b6d4', quote: 'Ngư phủ lưới người' },
     { id: 'boat_peter', name: 'Thuyền Đánh Cá Phê-rô', avatar: '⛵', color: '#3b82f6', quote: 'Chèo ra chỗ nước sâu' },
     { id: 'bear', name: 'Gấu Bác Ái Tốt Lành', avatar: '🐻', color: '#a16207', quote: 'Thương giúp bạn bè' }
+  ],
+
+  // BỘ CÂU HỎI THỬ THÁCH TRIỆU PHÚ KINH THÁNH (15 CẤP ĐỘ ÂN SỦNG)
+  millionaireQuestions: [
+    {
+      level: 1,
+      reward: '200.000 Ơn',
+      question: 'Chúa Giê-su sinh ra tại thành phố nào?',
+      options: ['Bê-lem', 'Na-da-rét', 'Giê-ru-sa-lem', 'Rô-ma'],
+      correct: 0,
+      explain: 'Chúa Giê-su giáng sinh tại Bê-lem xứ Giu-đê như lời các ngôn sứ đã tiên báo (Lc 2, 4-7).'
+    },
+    {
+      level: 2,
+      reward: '400.000 Ơn',
+      question: 'Kinh Thánh Công Giáo trọn bộ gồm tất cả bao nhiêu cuốn sách?',
+      options: ['66 cuốn', '73 cuốn', '70 cuốn', '46 cuốn'],
+      correct: 1,
+      explain: 'Kinh Thánh Công Giáo gồm 73 cuốn: 46 cuốn Cựu Ước và 27 cuốn Tân Ước.'
+    },
+    {
+      level: 3,
+      reward: '600.000 Ơn',
+      question: 'Bí tích nào là cửa ngõ đón nhận người tín hữu vào Hội Thánh?',
+      options: ['Bí tích Thêm Sức', 'Bí tích Thánh Thể', 'Bí tích Rửa Tội', 'Bí tích Giải Tội'],
+      correct: 2,
+      explain: 'Bí tích Rửa Tội tái sinh chúng ta vào đời sống mới của con cái Thiên Chúa.'
+    },
+    {
+      level: 4,
+      reward: '1.000.000 Ơn',
+      question: 'Ai là người đã vâng lệnh Chúa đóng con tàu lớn để cứu muôn loài khỏi trận Đại Hồng Thủy?',
+      options: ['Ông Áp-ra-ham', 'Ông Môi-sê', 'Ông Nô-ê', 'Ông Đa-vít'],
+      correct: 2,
+      explain: 'Ông Nô-ê là người công chính trước mặt Chúa và đã đóng con tàu Nô-ê theo lệnh Người (St 6, 14).'
+    },
+    {
+      level: 5,
+      reward: '2.000.000 Ơn (MỐC AN TOÀN 1)',
+      question: 'Điều Răn thứ Nhất trong Mười Điều Răn của Chúa dạy điều gì?',
+      options: ['Thảo kính cha mẹ', 'Chớ giết người', 'Thờ phượng một Đức Chúa Trời và kính mến Người trên hết mọi sự', 'Chớ làm chứng dối'],
+      correct: 2,
+      explain: 'Điều Răn 1: Thờ phượng một Đức Chúa Trời và kính mến Người trên hết mọi sự.'
+    },
+    {
+      level: 6,
+      reward: '3.000.000 Ơn',
+      question: 'Phép lạ đầu tiên Chúa Giê-su thực hiện công khai là gì?',
+      options: ['Hóa bánh ra nhiều', 'Chữa lành người mù', 'Hóa nước thành rượu tại tiệc cưới Ca-na', 'Đi trên mặt nước'],
+      correct: 2,
+      explain: 'Chúa làm phép lạ đầu tiên tại tiệc cưới Ca-na theo lời cầu bầu của Mẹ Maria (Ga 2, 1-11).'
+    },
+    {
+      level: 7,
+      reward: '6.000.000 Ơn',
+      question: 'Vị Tông Đồ nào được Chúa Giê-su trao chìa khóa Nước Trời và làm thủ lãnh Hội Thánh?',
+      options: ['Thánh Gio-an', 'Thánh Phao-lô', 'Thánh Phê-rô', 'Thánh Gia-cô-bê'],
+      correct: 2,
+      explain: 'Thầy là Phê-rô, nghĩa là Tảng Đá, trên tảng đá này Thầy sẽ xây Hội Thánh của Thầy (Mt 16, 18).'
+    },
+    {
+      level: 8,
+      reward: '10.000.000 Ơn',
+      question: 'Ai đã dũng cảm dùng trành ném đá hạ gục tên khổng lồ Gô-li-át?',
+      options: ['Sam-son', 'Cậu bé Đa-vít', 'Giô-suê', 'Ghi-đê-on'],
+      correct: 1,
+      explain: 'Đa-vít chiến thắng Gô-li-át nhờ vững lòng tin vào sức mạnh Thiên Chúa (1Sm 17, 45).'
+    },
+    {
+      level: 9,
+      reward: '14.000.000 Ơn',
+      question: 'Chúa Giê-su chịu phép rửa bởi ai và tại dòng sông nào?',
+      options: ['Thánh Phê-rô tại sông Nin', 'Thánh Gio-an Tẩy Giả tại sông Gio-đan', 'Ông Môi-sê tại Biển Đỏ', 'Thánh Phao-lô tại sông Êu-phơ-rát'],
+      correct: 1,
+      explain: 'Thánh Gio-an Tẩy Giả làm phép rửa cho Chúa Giê-su tại dòng sông Gio-đan (Mt 3, 13-17).'
+    },
+    {
+      level: 10,
+      reward: '22.000.000 Ơn (MỐC AN TOÀN 2)',
+      question: 'Bí tích Thánh Thể được Chúa Giê-su thiết lập trong sự kiện nào?',
+      options: ['Lễ Hiện Xuống', 'Bữa Tiệc Ly (Thứ Năm Tuần Thánh)', 'Sau khi Phục Sinh', 'Lễ Thăng Thiên'],
+      correct: 1,
+      explain: 'Chúa Giê-su thiết lập Bí tích Thánh Thể và Chức Linh Mục trong Bữa Tiệc Ly (Mt 26, 26-28).'
+    },
+    {
+      level: 11,
+      reward: '30.000.000 Ơn',
+      question: 'Người phụ nữ ngoại giáo Mô-áp mẫu mực về lòng hiếu thảo và trở thành cụ cố của Vua Đa-vít là ai?',
+      options: ['Bà Ét-te', 'Bà Rút', 'Bà Sa-ra', 'Bà Giu-đi-tha'],
+      correct: 1,
+      explain: 'Bà Rút trung kiên theo mẹ chồng Na-o-mi về Bê-lem và sinh ra dòng dõi Đa-vít (Sách Rút).'
+    },
+    {
+      level: 12,
+      reward: '40.000.000 Ơn',
+      question: 'Vị vua nổi tiếng về sự khôn ngoan và đã xây cất Đền Thờ Giê-ru-sa-lem đầu tiên là ai?',
+      options: ['Vua Sau-lơ', 'Vua Đa-vít', 'Vua Sa-lô-môn', 'Vua Hê-rô-đê'],
+      correct: 2,
+      explain: 'Vua Sa-lô-môn xin ơn khôn ngoan và hoàn thành việc xây Đền Thờ Giê-ru-sa-lem (1V 6).'
+    },
+    {
+      level: 13,
+      reward: '60.000.000 Ơn',
+      question: 'Thánh Phao-lô đã được ơn hoán cải biến đổi đời mình trên con đường nào?',
+      options: ['Đường lên Giê-ru-sa-lem', 'Đường đi Đa-mát', 'Đường về Ga-li-lê', 'Đường tới Rô-ma'],
+      correct: 1,
+      explain: 'Sau-lơ bị ngã ngựa và gặp ánh sáng Chúa phục sinh trên đường tới Đa-mát (Cv 9, 3-6).'
+    },
+    {
+      level: 14,
+      reward: '85.000.000 Ơn',
+      question: 'Bài ca nào của Mẹ Maria vang lên khi Mẹ đến viếng thăm bà chị họ Ê-li-sa-bét?',
+      options: ['Kinh Hòa Bình', 'Kinh Lạy Cha', 'Bài ca Magnificat (Linh hồn tôi ngợi khen Đức Chúa)', 'Kinh Tin Kính'],
+      correct: 2,
+      explain: 'Bài ca Magnificat: Linh hồn tôi ngợi khen Đức Chúa, thần trí tôi hớn hở vui mừng (Lc 1, 46-55).'
+    },
+    {
+      level: 15,
+      reward: '150.000.000 ƠN (NGÔI QUÁN QUÂN TRIỆU PHÚ KINH THÁNH)',
+      question: 'Cuốn sách cuối cùng của toàn bộ Kinh Thánh Công Giáo là cuốn sách nào?',
+      options: ['Thư gửi tín hữu Do Thái', 'Sách Các Ngôn Sứ', 'Sách Khải Huyền', 'Tin Mừng theo Thánh Gio-an'],
+      correct: 2,
+      explain: 'Sách Khải Huyền do Thánh Gio-an biên soạn là sách cuối cùng trong 73 sách Kinh Thánh.'
+    }
+  ],
+
+  // BỘ HỘP QUÀ BÍ MẬT & CHIẾC RƯƠNG GIAO ƯỚC (COVENANT MYSTERY BOXES)
+  covenantBoxes: [
+    {
+      id: 1,
+      title: 'Rương Vàng 01',
+      prize: '+100 Ơn Bác Ái',
+      question: 'Chúa Giê-su truyền dạy điều răn cốt lõi nào là tóm tắt toàn bộ Lề Luật?',
+      options: ['Kính Chúa yêu người', 'Chỉ cần giữ ngày Chúa Nhật', 'Không cần cầu nguyện', 'Tích trữ của cải trần thế'],
+      correct: 0
+    },
+    {
+      id: 2,
+      title: 'Rương Vàng 02',
+      prize: '+150 Ơn Đức Tin',
+      question: 'Trong Tiệc Ly, Chúa Giê-su đã làm hành động gì để nêu gương khiêm nhường?',
+      options: ['Ngồi ghế cao nhất', 'Rửa chân cho các môn đệ', 'Phân chia bạc vàng', 'Mời sứ giả La Mã'],
+      correct: 1
+    },
+    {
+      id: 3,
+      title: 'Rương Vàng 03',
+      prize: '🌟 NHÂN ĐÔI ĐIỂM SỐ',
+      question: 'Chúa Giê-su đã sống lại vào ngày thứ mấy sau khi chịu đóng đinh?',
+      options: ['Ngày thứ hai', 'Ngày thứ ba', 'Ngày thứ bảy', 'Sau 40 ngày'],
+      correct: 1
+    },
+    {
+      id: 4,
+      title: 'Rương Vàng 04',
+      prize: '+200 Ơn Khôn Ngoan',
+      question: 'Thiên Thần nào đã truyền tin cho Đức Mẹ Maria thụ thai Chúa Giê-su?',
+      options: ['Sứ thần Mi-ca-e', 'Sứ thần Gáp-ri-en', 'Sứ thần Ra-pha-en', 'Sứ thần U-ri-en'],
+      correct: 1
+    },
+    {
+      id: 5,
+      title: 'Rương Vàng 05',
+      prize: '+300 Ơn Hy Vọng',
+      question: 'Hội Thánh Công Giáo có tất cả bao nhiêu Bí tích?',
+      options: ['5 Bí tích', '7 Bí tích', '10 Bí tích', '12 Bí tích'],
+      correct: 1
+    },
+    {
+      id: 6,
+      title: 'Rương Vàng 06',
+      prize: '🛡️ LÁ CHẮN BẢO VỆ',
+      question: 'Ông Môi-sê đã dẫn dân Do Thái vượt qua biển nào bằng phép lạ rẽ nước?',
+      options: ['Biển Hồ Ga-li-lê', 'Biển Đỏ', 'Địa Trung Hải', 'Biển Chết'],
+      correct: 1
+    },
+    {
+      id: 7,
+      title: 'Rương Vàng 07',
+      prize: '+250 Ơn Khiêm Nhường',
+      question: 'Người cha nhân hậu trong dụ ngôn Đứa Con Hoang Đàng tượng trưng cho ai?',
+      options: ['Một vị quan tòa', 'Thiên Chúa giàu lòng thương xót', 'Người anh cả', 'Một thương gia giàu có'],
+      correct: 1
+    },
+    {
+      id: 8,
+      title: 'Rương Vàng 08',
+      prize: '+500 ƠN THIÊN ĐÀNG',
+      question: 'Mùa nào chuẩn bị tâm hồn người tín hữu đón mừng Đại Lễ Phục Sinh?',
+      options: ['Mùa Vọng', 'Mùa Chay', 'Mùa Giáng Sinh', 'Mùa Thường Niên'],
+      correct: 1
+    }
+  ],
+
+  // BỘ CÂU HỎI KÉO CO ĐỨC TIN (TUG OF WAR QUESTIONS)
+  tugOfWarQuestions: [
+    {
+      question: 'Đức Maria là Mẹ của ai?',
+      options: ['Chúa Giê-su Kitô', 'Thánh Phê-rô'],
+      correct: 0
+    },
+    {
+      question: 'Thánh Giuse làm nghề gì tại làng Na-da-rét?',
+      options: ['Nghề mộc', 'Nghề đánh cá'],
+      correct: 0
+    },
+    {
+      question: 'Bí tích Thánh Thể là Mình và Máu thật của Chúa Giê-su, đúng hay sai?',
+      options: ['Đúng', 'Sai'],
+      correct: 0
+    },
+    {
+      question: 'Ai đã phản bội Chúa Giê-su với 30 đồng bạc?',
+      options: ['Giu-đa Ít-ca-ri-ốt', 'Thánh Gio-an'],
+      correct: 0
+    },
+    {
+      question: 'Chúa Giê-su chịu khổ hình và chết trên thập giá vì ai?',
+      options: ['Vì tội lỗi loài người để cứu độ chúng ta', 'Vì chính tội lỗi của Người'],
+      correct: 0
+    },
+    {
+      question: 'Sau khi Phục sinh bao nhiêu ngày thì Chúa Giê-su Lên Trời (Thăng Thiên)?',
+      options: ['40 ngày', '3 ngày'],
+      correct: 0
+    },
+    {
+      question: 'Chúa Thánh Thần hiện xuống trên các Tông đồ dưới hình lưỡi lửa vào dịp lễ nào?',
+      options: ['Lễ Hiện Xuống', 'Lễ Giáng Sinh'],
+      correct: 0
+    },
+    {
+      question: 'Lời Kinh do chính Chúa Giê-su dạy các môn đệ cầu nguyện là kinh nào?',
+      options: ['Kinh Lạy Cha', 'Kinh Cảm Ơn'],
+      correct: 0
+    },
+    {
+      question: 'Thánh Tông đồ nào trước đó có tên là Sau-lơ và chuyên bắt bớ người theo đạo?',
+      options: ['Thánh Phao-lô', 'Thánh An-rê'],
+      correct: 0
+    },
+    {
+      question: 'Trong Vườn Địa Đàng, con vật nào đã cám dỗ bà E-và ăn trái cấm?',
+      options: ['Con rắn', 'Con sư tử'],
+      correct: 0
+    }
+  ],
+
+  // BỘ 9 CÂU HỎI LẬT MẢNH GHÉP TRANH THÁNH (PICTURE FLIP PUZZLE)
+  pictureFlipQuestions: [
+    { piece: 1, question: 'Ai là người Mục Tử Tốt Lành hy sinh tính mạng vì đoàn chiên?', options: ['Chúa Giê-su', 'Ông Mô-sê', 'Thánh Phê-rô'], correct: 0 },
+    { piece: 2, question: 'Người chăn chiên khi bị mất 1 con trong 100 con thì sẽ làm gì?', options: ['Bỏ đi tìm con chiên lạc', 'Mặc kệ con chiên đó', 'Về nhà ngủ'], correct: 0 },
+    { piece: 3, question: 'Con chiên được tìm thấy thì người mục tử đặt ở đâu đưa về?', options: ['Vác trên vai đầy hân hoan', 'Buộc dây kéo lê', 'Bán cho người khác'], correct: 0 },
+    { piece: 4, question: 'Thánh vịnh 23 có câu nổi tiếng: "Chúa là mục tử chăn dắt tôi, tôi chẳng...?"', options: ['Thiếu thốn gì', 'Muốn gì nữa', 'Biết đi đâu'], correct: 0 },
+    { piece: 5, question: 'Đồng cỏ xanh tươi và dòng nước êm đềm Chúa dẫn chiên tới biểu trưng cho điều gì?', options: ['Ân sủng và bình an của Chúa', 'Của cải giàu sang', 'Thời tiết tốt'], correct: 0 },
+    { piece: 6, question: 'Khi sói dữ đến tấn công bầy chiên, kẻ làm thuê sẽ làm gì?', options: ['Bỏ chạy thoát thân', 'Bảo vệ chiên', 'Chiến đấu đến cùng'], correct: 0 },
+    { piece: 7, question: 'Chúa Giê-su phán: "Tôi chính là Cửa cho ai ra vào để được cứu rỗi?"', options: ['Cửa chuồng chiên', 'Cửa thành Giê-ri-cô', 'Cửa hoàng cung'], correct: 0 },
+    { piece: 8, question: 'Đoàn chiên nhận biết Chúa nhờ dấu chỉ nào?', options: ['Nghe tiếng chủ chiên', 'Nhìn vào quần áo', 'Theo sau người lạ'], correct: 0 },
+    { piece: 9, question: 'Chúa Giê-su đến để cho chiên được điều gì dồi dào?', options: ['Được sống và sống dồi dào', 'Được ăn uống no nê', 'Được nghỉ ngơi mãi mãi'], correct: 0 }
+  ],
+
+  // BỘ CÂU HỎI XÂY ĐỀN THỜ GIÊ-RU-SA-LEM (TEMPLE BUILDER)
+  templeQuestions: [
+    { block: 1, question: 'Ai là người khởi công xây dựng Đền Thờ Giê-ru-sa-lem đầu tiên?', options: ['Vua Sa-lô-môn', 'Vua Đa-vít', 'Vua Sau-lơ'], correct: 0 },
+    { block: 2, question: 'Gỗ quý dùng để ốp bên trong Đền Thờ lấy từ vùng nào?', options: ['Gỗ bá hương Li-băng', 'Gỗ rừng Ai Cập', 'Gỗ cọ Bê-lem'], correct: 0 },
+    { block: 3, question: 'Vật thánh thiêng liêng nhất đặt trong Nơi Cực Thánh của Đền Thờ là gì?', options: ['Hòm Bia Giao Ước', 'Vương miện vàng', 'Thanh gươm của Đa-vít'], correct: 0 },
+    { block: 4, question: 'Bên trong Hòm Bia Giao Ước đựng hai bia đá gì?',
+      options: ['Mười Điều Răn của Chúa', 'Luật thuế hoàng gia', 'Gia phả các chi tộc'], correct: 0 },
+    { block: 5, question: 'Chúa Giê-su tuyên bố Đền Thờ đích thực sau 3 ngày sẽ được xây lại chính là gì?',
+      options: ['Thân Thể Phục Sinh của Người', 'Một nhà thờ bằng đá', 'Cung điện La Mã'], correct: 0 },
+    { block: 6, question: 'Thánh Phao-lô dạy: "Anh em không biết thân xác anh em là...?"',
+      options: ['Đền Thờ của Chúa Thánh Thần', 'Cát bụi bình thường', 'Cỗ máy trần gian'], correct: 0 },
+    { block: 7, question: 'Đá tảng góc tường bị thợ xây loại bỏ nay trở nên gì?',
+      options: ['Đá tảng góc tường chính Chúa Giê-su', 'Đá lót đường', 'Đá ném quân thù'], correct: 0 }
   ]
 };
 
