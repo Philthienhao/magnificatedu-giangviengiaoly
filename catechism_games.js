@@ -187,10 +187,10 @@
           <div class="cg-hero-badge">
             <i class="fa-solid fa-cross"></i> KHO TRÒ CHƠI GIÁO LÝ & KINH THÁNH TƯƠNG TÁC
           </div>
-          <h1 class="cg-hero-title">Đồ Nghề Dạy Giáo Lý Hiện Đại 3D & AI</h1>
+          <h1 class="cg-hero-title">Đồ Nghề Dạy Giáo Lý & Kinh Thánh</h1>
           <p class="cg-hero-desc">
             Không gian trò chơi giáo dục tích cực mang đậm phong cách Công Giáo. 
-            Kết hợp công nghệ Camera AI nhận diện cử chỉ, cuộc đua tương tác đồng đội và hình ảnh Kinh Thánh sống động 
+            Kết hợp công nghệ tương tác Camera nhận diện cử chỉ, cuộc đua tương tác đồng đội và hình ảnh Kinh Thánh sống động 
             giúp các em thiếu nhi học Lời Chúa hào hứng, say mê!
           </p>
 
@@ -206,7 +206,7 @@
             <div class="cg-stat-item">
               <div class="cg-stat-icon"><i class="fa-solid fa-video"></i></div>
               <div>
-                <strong>Tương Tác Camera AI</strong>
+                <strong>Tương Tác Camera</strong>
                 <div style="font-size: 0.8rem; color: #94a3b8;">Nghiêng đầu trả lời qua Webcam</div>
               </div>
             </div>
@@ -239,8 +239,8 @@
             <button class="cg-filter-btn" data-filter="noah">
               <i class="fa-solid fa-ship"></i> Đua Nô-ê & Gọi Tên
             </button>
-            <button class="cg-filter-btn" data-filter="ai">
-              <i class="fa-solid fa-camera"></i> Camera AI Nghiêng Đầu
+            <button class="cg-filter-btn" data-filter="camera">
+              <i class="fa-solid fa-camera"></i> Camera Nghiêng Đầu
             </button>
             <button class="cg-filter-btn" data-filter="reflex">
               <i class="fa-solid fa-hands"></i> Vận Động & Phản Xạ
@@ -251,7 +251,7 @@
           </div>
 
           <div class="cg-quick-select-class">
-            <span style="font-size: 0.85rem; color: #94a3b8;"><i class="fa-solid fa-users"></i> Lớp học:</span>
+            <span><i class="fa-solid fa-users"></i> Lớp học:</span>
             <select id="cg-selected-class-dropdown">
               <option value="all">-- Toàn bộ Học viên --</option>
               ${classes.map(c => `<option value="${c.id}">${c.name || c.id}</option>`).join('')}
@@ -284,12 +284,12 @@
             </div>
           </div>
 
-          <!-- GAME 2: THỬ THÁCH NGHIÊNG ĐẦU CAMERA AI -->
-          <div class="cg-game-card" data-category="ai">
+          <!-- GAME 2: THỬ THÁCH NGHIÊNG ĐẦU CAMERA -->
+          <div class="cg-game-card" data-category="camera">
             <div class="cg-card-thumb-wrap">
-              <img src="anh/games/thumb_head_tilt.jpg" class="cg-card-thumb" alt="Nghiêng Đầu Trả Lời Trắc Nghiệm AI">
-              <div class="cg-card-overlay-badge"><i class="fa-solid fa-camera"></i> TƯƠNG TÁC CAMERA AI</div>
-              <div class="cg-card-tech-tag" style="background: linear-gradient(135deg, #10b981, #059669);"><i class="fa-solid fa-wand-magic-sparkles"></i> WEBCAM AI</div>
+              <img src="anh/games/thumb_head_tilt.jpg" class="cg-card-thumb" alt="Nghiêng Đầu Trả Lời Trắc Nghiệm">
+              <div class="cg-card-overlay-badge"><i class="fa-solid fa-camera"></i> TƯƠNG TÁC CAMERA</div>
+              <div class="cg-card-tech-tag" style="background: linear-gradient(135deg, #10b981, #059669);"><i class="fa-solid fa-video"></i> WEBCAM</div>
             </div>
             <div class="cg-card-body">
               <h3 class="cg-card-title">Thử Thách Nghiêng Đầu: Phân Định Thiêng Liêng</h3>
@@ -369,9 +369,10 @@
           <div class="cg-books-grid">
             ${books.map(b => `
               <div class="cg-book-chip ${b.testament === 'new' ? 'new-testament' : 'old-testament'}" 
-                   title="${b.name} (${b.abbr}) - ${b.chapters} chương - ${b.group}">
+                   onclick="window.CatechismGames.openBookDetails('${b.id}')"
+                   title="Bấm để xem chi tiết sách ${b.name} (${b.abbr}) - ${b.chapters} chương">
                 <span><i class="fa-solid ${b.icon || 'fa-scroll'}"></i> <strong>${b.abbr}.</strong> ${b.name}</span>
-                <small style="color: #94a3b8;">${b.chapters}c</small>
+                <small style="color: #94a3b8; font-weight: 700;">${b.chapters}c</small>
               </div>
             `).join('')}
           </div>
@@ -1091,6 +1092,140 @@
         </button>
       `;
       document.body.appendChild(modal);
+    },
+
+    // ------------------------------------------------------------------------
+    // 5. MODAL: 73 BIBLE BOOKS EXPLORER & SCRIPTURE DETAILS
+    // ------------------------------------------------------------------------
+    openBookDetails: function(bookId) {
+      SoundFX.playClick();
+      const data = window.BIBLE_GAME_DATA || {};
+      const books = data.books || [];
+      const bookIndex = books.findIndex(b => b.id === bookId);
+      if (bookIndex === -1) return;
+      const book = books[bookIndex];
+      const prevBook = bookIndex > 0 ? books[bookIndex - 1] : null;
+      const nextBook = bookIndex < books.length - 1 ? books[bookIndex + 1] : null;
+
+      // Remove existing modal if any
+      const existing = document.getElementById('cg-book-detail-modal');
+      if (existing) existing.remove();
+
+      const modalEl = document.createElement('div');
+      modalEl.className = 'cg-book-modal-backdrop';
+      modalEl.id = 'cg-book-detail-modal';
+
+      // Generate chapters
+      const chapsHtml = Array.from({ length: book.chapters }, (_, i) => i + 1)
+        .map(chapNum => `<button type="button" class="cg-chap-chip" onclick="window.CatechismGames.selectChapter('${book.name}', ${chapNum})" title="Xem Chương ${chapNum}">${chapNum}</button>`)
+        .join('');
+
+      modalEl.innerHTML = `
+        <div class="cg-book-modal-card" onclick="event.stopPropagation()">
+          <div class="cg-book-modal-header">
+            <button class="cg-modal-close-btn" onclick="document.getElementById('cg-book-detail-modal')?.remove()" title="Đóng">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="cg-book-modal-badges">
+              <span class="cg-badge-testament ${book.testament}">${book.testament === 'new' ? 'Tân Ước' : 'Cựu Ước'}</span>
+              <span class="cg-badge-group"><i class="fa-solid fa-bookmark"></i> Nhóm: ${book.group}</span>
+              <span class="cg-badge-group"><i class="fa-solid fa-list-ol"></i> ${book.chapters} Chương</span>
+            </div>
+            <h2 class="cg-book-modal-title">
+              <i class="fa-solid ${book.icon || 'fa-book-bible'}" style="color: #fbbf24;"></i>
+              Sách ${book.name} (${book.abbr})
+            </h2>
+            <div class="cg-book-modal-meta">
+              Sách thứ ${bookIndex + 1} trong 73 Sách Kinh Thánh Công Giáo • Tác giả: <strong>${book.author || 'Truyền thống'}</strong>
+            </div>
+          </div>
+
+          <div class="cg-book-modal-body">
+            <div class="cg-book-info-card">
+              <div class="cg-book-info-label"><i class="fa-solid fa-lightbulb" style="color: #f59e0b;"></i> Chủ Đề Then Chốt</div>
+              <div class="cg-book-info-val" style="font-weight: 700; color: #1e3a8a;">${book.theme || 'Đang cập nhật'}</div>
+            </div>
+
+            <div class="cg-book-info-card">
+              <div class="cg-book-info-label"><i class="fa-solid fa-book-open" style="color: #2563eb;"></i> Tóm Lược Nội Dung Sách</div>
+              <div class="cg-book-info-val">${book.summary || 'Đang cập nhật'}</div>
+            </div>
+
+            <div class="cg-book-golden-box">
+              <div class="cg-book-info-label" style="color: #92400e;">
+                <i class="fa-solid fa-quote-left"></i> Câu Lời Chúa Nổi Bật (Kim Ngôn)
+              </div>
+              <div class="cg-book-golden-text">
+                "${book.goldenVerse || 'Đang cập nhật'}"
+              </div>
+              <div style="margin-top: 10px; display: flex; justify-content: flex-end;">
+                <button type="button" class="cg-btn-book-nav" style="padding: 5px 12px; font-size: 0.78rem;" onclick="window.CatechismGames.copyVerse('${encodeURIComponent(book.goldenVerse || '')}')">
+                  <i class="fa-solid fa-copy"></i> Sao chép Lời Chúa
+                </button>
+              </div>
+            </div>
+
+            <div class="cg-book-chaps-wrapper">
+              <div class="cg-book-info-label">
+                <i class="fa-solid fa-list-check" style="color: #10b981;"></i> Tra Cứu Các Chương (${book.chapters} Chương)
+              </div>
+              <div class="cg-book-chaps-grid">
+                ${chapsHtml}
+              </div>
+            </div>
+          </div>
+
+          <div class="cg-book-modal-footer">
+            ${prevBook ? `
+              <button class="cg-btn-book-nav" onclick="window.CatechismGames.openBookDetails('${prevBook.id}')" title="Sách trước">
+                <i class="fa-solid fa-chevron-left"></i> ${prevBook.name} (${prevBook.abbr})
+              </button>
+            ` : '<div></div>'}
+
+            <div style="display: flex; gap: 8px;">
+              <a href="https://kinhthanh.cgkpv.org/" target="_blank" rel="noopener" class="cg-btn-book-read" title="Mở trang Kinh Thánh CGKPV">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i> Đọc Kinh Thánh CGKPV
+              </a>
+              <button class="cg-btn-book-nav" onclick="document.getElementById('cg-book-detail-modal')?.remove()">
+                <i class="fa-solid fa-xmark"></i> Đóng
+              </button>
+            </div>
+
+            ${nextBook ? `
+              <button class="cg-btn-book-nav" onclick="window.CatechismGames.openBookDetails('${nextBook.id}')" title="Sách tiếp theo">
+                ${nextBook.name} (${nextBook.abbr}) <i class="fa-solid fa-chevron-right"></i>
+              </button>
+            ` : '<div></div>'}
+          </div>
+        </div>
+      `;
+
+      modalEl.addEventListener('click', (e) => {
+        if (e.target === modalEl) modalEl.remove();
+      });
+
+      document.body.appendChild(modalEl);
+    },
+
+    selectChapter: function(bookName, chapNum) {
+      SoundFX.playClick();
+      if (typeof window.showToast === 'function') {
+        window.showToast(`📖 Đang chọn Sách ${bookName} - Chương ${chapNum}`, 'info');
+      } else {
+        alert(`📖 Sách ${bookName} - Chương ${chapNum}`);
+      }
+    },
+
+    copyVerse: function(encodedText) {
+      const text = decodeURIComponent(encodedText);
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text);
+        if (typeof window.showToast === 'function') {
+          window.showToast('✅ Đã sao chép câu Lời Chúa!', 'success');
+        } else {
+          alert('Đã sao chép câu Lời Chúa!');
+        }
+      }
     },
 
     closeArena: function(arenaId) {

@@ -2075,10 +2075,10 @@
           </div>
           <div>
             <div style="font-weight: 800; font-size: 1.15rem; color: #fff; display: flex; align-items: center; gap: 8px;">
-              🎮 Kho Game Giáo Lý & Kinh Thánh Tương Tác 3D & AI
+              🎮 Kho Game Giáo Lý & Kinh Thánh Tương Tác
               <span style="background: #ef4444; color: #fff; font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 999px;">MỚI</span>
             </div>
-            <div style="font-size: 0.88rem; color: #cbd5e1;">Cuộc đua Con Tàu Nô-ê • Camera AI Nghiêng đầu • Bảo vệ đàn chiên • Lật thẻ Chibi Công Giáo</div>
+            <div style="font-size: 0.88rem; color: #cbd5e1;">Cuộc đua Con Tàu Nô-ê • Camera Nghiêng đầu • Bảo vệ đàn chiên • Lật thẻ Chibi Công Giáo</div>
           </div>
         </div>
         <button class="btn btn-warning" onclick="window.appNavigate('catechism-games')" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: #0f172a; font-weight: 800; border: none; padding: 10px 24px; border-radius: 10px; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35); cursor: pointer;">
