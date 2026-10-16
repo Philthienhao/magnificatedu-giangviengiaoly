@@ -5643,8 +5643,8 @@
               </div>
             </div>
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-              <a href="https://bot.zaloplatforms.com/groups/invite/bot.kTCMljuF" target="_blank" class="btn btn-outline-primary btn-sm" style="font-weight: 600;">
-                <i class="fa-solid fa-user-plus"></i> Link Mời Bot Vào Nhóm Phụ Huynh
+              <a href="https://bot.zaloplatforms.com/groups/invite/bot.kTCMIjuF" target="_blank" class="btn btn-outline-primary btn-sm" style="font-weight: 600;">
+                <i class="fa-solid fa-user-plus"></i> Link Mời Bot Vào Nhóm Phụ Huynh (Mở trên điện thoại)
               </a>
               <button type="button" class="btn btn-primary btn-sm" onclick="window.testZaloBotConnection()">
                 <i class="fa-solid fa-bolt"></i> Kiểm Tra Kết Nối
@@ -5655,7 +5655,7 @@
           <div style="font-size: 12.5px; color: #475569; line-height: 1.5;">
             <strong>📌 Hướng dẫn sử dụng:</strong>
             <ol style="margin: 6px 0 0 18px; padding: 0;">
-              <li>Mời Bot vào nhóm Zalo phụ huynh của lớp bằng link: <a href="https://bot.zaloplatforms.com/groups/invite/bot.kTCMljuF" target="_blank" style="color: #2563eb; font-weight: 700; text-decoration: underline;">bot.kTCMljuF</a>.</li>
+              <li>Mở link trên <strong>điện thoại</strong> để mời Bot vào nhóm Zalo phụ huynh: <a href="https://bot.zaloplatforms.com/groups/invite/bot.kTCMIjuF" target="_blank" style="color: #2563eb; font-weight: 700; text-decoration: underline;">bot.kTCMIjuF</a> <em>(Zalo chỉ cho phép thêm bot vào nhóm từ điện thoại, không hỗ trợ thêm từ máy tính PC)</em>.</li>
               <li>Trong nhóm Zalo đó, gõ tin nhắn tag bot một lần (ví dụ: <code>@Bot Điểm Danh xin chào</code>).</li>
               <li>Vào phần <strong>Quản Lý Lớp Học</strong> &rarr; Bấm <strong>Chỉnh Sửa</strong> lớp &rarr; Bấm nút <strong>"Tìm mã nhóm"</strong> để hệ thống tự động điền mã nhóm.</li>
               <li>Từ nay, mỗi khi Giáo lý viên điểm danh xong và bấm <strong>"Lưu Kết Quả Điểm Danh Vĩnh Viễn"</strong>, danh sách các em vắng sẽ tự động được gửi thẳng vào nhóm Zalo phụ huynh!</li>
