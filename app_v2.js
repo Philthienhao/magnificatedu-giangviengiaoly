@@ -3446,10 +3446,21 @@
           </div>
         </div>
         <div class="card-footer" style="padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--slate-border); flex-wrap: wrap; gap: 10px;">
-          <span style="font-size: 13px; color: var(--slate-muted);">
-            <i class="fa-solid fa-circle-info text-primary"></i> Đã tự động ghi nhận <strong>${absentCount} học sinh vắng mặt</strong>. Giáo viên có thể bấm trực tiếp vào từng ghế để điều chỉnh.
-          </span>
-          <button class="btn btn-primary" onclick="window.saveAISeatingAttendance('${classId}')">
+          <div>
+            <div style="font-size: 13px; color: var(--slate-muted);">
+              <i class="fa-solid fa-circle-info text-primary"></i> Đã tự động ghi nhận <strong>${absentCount} học sinh vắng mặt</strong>. Giáo viên có thể bấm trực tiếp vào từng ghế để điều chỉnh.
+            </div>
+            ${(() => {
+              const cls = (getAccessibleClasses() || []).find(c => String(c.id) === String(classId));
+              if (cls && cls.zaloChatId && cls.zaloAutoSend !== false) {
+                return `<div style="font-size: 12px; color: #16a34a; font-weight: 700; margin-top: 4px; display: flex; align-items: center; gap: 6px;">
+                  <i class="fa-solid fa-robot"></i> Đã kích hoạt Zalo Bot (Mã: <code>${cls.zaloChatId}</code>): Hệ thống sẽ tự động gửi danh sách vắng vào nhóm Zalo phụ huynh ngay khi bấm Lưu!
+                </div>`;
+              }
+              return '';
+            })()}
+          </div>
+          <button class="btn btn-primary" onclick="window.saveAISeatingAttendance('${classId}')" style="font-weight: 700;">
             <i class="fa-solid fa-floppy-disk"></i> Lưu Kết Quả Điểm Danh AI
           </button>
         </div>
@@ -4041,8 +4052,10 @@
 
       records.push({
         studentId: st.id,
+        studentCode: st.code || `HV${st.id}`,
+        studentName: `${st.holyName ? st.holyName + ' ' : ''}${st.fullName || ''}`.trim(),
         status: status,
-        note: isAbsent ? 'AI phát hiện vắng mặt' : 'Có mặt (AI)'
+        note: isAbsent ? 'Ghế trống (AI nhận diện)' : 'Có mặt (AI)'
       });
     });
 
@@ -4070,7 +4083,17 @@
 
     syncAttendanceLogToCoTeachers(logEntry);
     saveUserData();
-    showToast(`✓ Đã lưu vĩnh viễn kết quả điểm danh AI cho lớp lên Supabase Cloud! (Vắng ${absentSeats.length} em)`, 'success');
+    showToast(`✓ Đã lưu kết quả điểm danh AI cho lớp lên Supabase Cloud! (Vắng ${absentSeats.length} em)`, 'success');
+
+    // AUTO-TRIGGER ZALO BOT FOR ABSENT STUDENTS
+    if (absentCount > 0) {
+      const clsObj = (getAccessibleClasses() || []).find(c => String(c.id) === String(classId));
+      if (clsObj && clsObj.zaloChatId && clsObj.zaloAutoSend !== false) {
+        window.sendZaloAttendanceNotice(classId, today, sessionType, true);
+      } else if (absentCount > 0) {
+        showToast(`Buổi học có ${absentCount} em vắng. Bạn có thể nhấn nút [Zalo] trong lịch sử điểm danh để gửi thông báo vào nhóm phụ huynh.`, 'info');
+      }
+    }
   };
 
   // ATTENDANCE FILTER CONTROLLER
@@ -4307,7 +4330,18 @@
 
     let absentList = [];
     if (log && Array.isArray(log.records)) {
-      absentList = log.records.filter(r => r.status === 'excused' || r.status === 'unexcused');
+      absentList = log.records.filter(r => r.status === 'excused' || r.status === 'unexcused').map(r => {
+        let name = r.studentName;
+        if (!name) {
+          const st = (appData.students || []).find(s => String(s.id) === String(r.studentId));
+          if (st) name = `${st.holyName ? st.holyName + ' ' : ''}${st.fullName || ''}`.trim();
+        }
+        return {
+          studentName: name || 'Học viên',
+          status: r.status,
+          note: r.note
+        };
+      });
     } else {
       const students = (getAccessibleStudents() || []).filter(s => String(s.classId) === String(classId));
       students.forEach(s => {
