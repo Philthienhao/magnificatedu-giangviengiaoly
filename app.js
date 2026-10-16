@@ -4318,7 +4318,7 @@
     } catch(e) {}
 
     let msg = `📋 THÔNG BÁO ĐIỂM DANH - ${parishName.toUpperCase()}\n`;
-    msg += `⛪ Ngành: ${grade} | Lớp: ${className}\n`;
+    msg += `⛪ Lớp: ${className}\n`;
     msg += `📅 Buổi: ${dateFormatted} (${sessionType || 'Giáo lý'})\n`;
     msg += `👤 GLV phụ trách: ${teacher}\n`;
     msg += `------------------------------------\n`;
@@ -4387,7 +4387,7 @@
     document.getElementById('zalo-notice-class-id').value = classId;
     document.getElementById('zalo-notice-date').value = date;
     document.getElementById('zalo-notice-session').value = sessionType || 'Giáo lý';
-    document.getElementById('zalo-notice-class-name').textContent = `${targetClass.name || 'Lớp học'} (${targetClass.grade || 'Giáo lý'})`;
+    document.getElementById('zalo-notice-class-name').textContent = `${targetClass.name || 'Lớp học'}`;
     
     const chatIdInput = document.getElementById('zalo-notice-chat-id');
     if (chatIdInput) chatIdInput.value = targetClass.zaloChatId || '';
