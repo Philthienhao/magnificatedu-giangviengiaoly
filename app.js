@@ -5633,12 +5633,28 @@
   function renderNotifications(container) {
     const notifications = appData.notifications || [];
     container.innerHTML = `
-      <div class="page-header">
+      <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
         <div>
           <h2 class="page-title"><i class="fa-solid fa-bell"></i> Trung Tâm Thông Báo</h2>
           <p class="page-subtitle">Gửi và quản lý thông báo tới Phụ huynh và Học viên Giáo lý</p>
         </div>
-        <button class="btn btn-primary" onclick="window.openAddNotificationModal()"><i class="fa-solid fa-paper-plane"></i> Gửi Thông Báo Mới</button>
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+          ${notifications.length > 0 ? `
+            <button type="button" class="btn btn-outline-danger" onclick="window.confirmClearAllNotifications()" title="Xóa toàn bộ ${notifications.length} thông báo trong hệ thống" style="font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+              <i class="fa-solid fa-trash-can"></i> Xóa Tất Cả (${notifications.length})
+            </button>
+          ` : ''}
+          <button type="button" class="btn btn-primary" onclick="window.openAddNotificationModal()"><i class="fa-solid fa-paper-plane"></i> Gửi Thông Báo Mới</button>
+        </div>
+      </div>
+
+      <div id="notif-batch-bar" style="display: none; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 10px 16px; margin-bottom: 14px; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+        <span style="font-weight: 700; color: #991b1b; font-size: 13px;">
+          <i class="fa-solid fa-check-double"></i> Đã chọn <span id="notif-selected-count">0</span> thông báo
+        </span>
+        <button type="button" class="btn btn-sm btn-danger" onclick="window.deleteSelectedNotifications()" style="font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+          <i class="fa-solid fa-trash"></i> Xóa Các Mục Đã Chọn
+        </button>
       </div>
 
       <div class="card">
@@ -5647,25 +5663,31 @@
             <table class="custom-table">
               <thead>
                 <tr>
+                  <th style="width: 44px; text-align: center;">
+                    <input type="checkbox" id="notif-check-all" onchange="window.toggleSelectAllNotifs(this)" title="Chọn tất cả" style="cursor: pointer; width: 16px; height: 16px;">
+                  </th>
                   <th>Loại Thông Báo</th>
                   <th>Tiêu Đề Thông Báo</th>
                   <th>Nội Dung Chi Tiết</th>
                   <th>Ngày Gửi</th>
-                  <th>Thao Tác</th>
+                  <th style="text-align: right; width: 110px;">Thao Tác</th>
                 </tr>
               </thead>
               <tbody>
                 ${notifications.length === 0 ? `
-                  <tr><td colspan="5" class="text-center p-3 text-muted">Chưa có thông báo nào. Bấm 'Gửi Thông Báo Mới' để tạo!</td></tr>
+                  <tr><td colspan="6" class="text-center p-3 text-muted">Chưa có thông báo nào. Bấm 'Gửi Thông Báo Mới' để tạo!</td></tr>
                 ` : notifications.map(n => `
                   <tr>
+                    <td style="text-align: center;">
+                      <input type="checkbox" class="notif-row-check" value="${n.id}" onchange="window.updateNotifBatchBar()" style="cursor: pointer; width: 16px; height: 16px;">
+                    </td>
                     <td><span class="badge badge-primary">${n.category}</span></td>
                     <td><strong>${n.title}</strong></td>
                     <td>${n.content}</td>
                     <td><small style="color: var(--slate-muted);">${n.date}</small></td>
-                    <td>
-                      <button class="btn btn-sm btn-outline-primary" onclick="window.editNotification('${n.id}')"><i class="fa-solid fa-pen"></i></button>
-                      <button class="btn btn-sm btn-outline-danger" onclick="window.deleteNotification('${n.id}')"><i class="fa-solid fa-trash"></i></button>
+                    <td style="text-align: right;">
+                      <button class="btn btn-sm btn-outline-primary" onclick="window.editNotification('${n.id}')" title="Chỉnh sửa"><i class="fa-solid fa-pen"></i></button>
+                      <button class="btn btn-sm btn-outline-danger" onclick="window.deleteNotification('${n.id}')" title="Xóa thông báo này"><i class="fa-solid fa-trash"></i></button>
                     </td>
                   </tr>
                 `).join('')}
@@ -8060,6 +8082,131 @@
     }
   };
 
+  window.confirmClearAllNotifications = function() {
+    const list = appData.notifications || [];
+    const count = list.length;
+    if (count === 0) {
+      showToast('Hiện tại không có thông báo nào để xóa!', 'info');
+      return;
+    }
+
+    const performDeleteAll = async function() {
+      appData.notifications = [];
+      saveUserData();
+
+      const curEmail = (currentUser && currentUser.email ? currentUser.email.toLowerCase().trim() : '');
+      if (curEmail && allCloudUserDataMap[curEmail]) {
+        allCloudUserDataMap[curEmail].notifications = [];
+        const storageKey = STORAGE_PREFIX_DATA + curEmail.replace(/[^a-z0-9]/g, '_');
+        try { localStorage.setItem(storageKey, JSON.stringify(allCloudUserDataMap[curEmail])); } catch(e) {}
+        if (window.supabaseClient) {
+          try {
+            await window.supabaseClient.from('user_data').upsert({
+              email: curEmail,
+              data: allCloudUserDataMap[curEmail],
+              updated_at: new Date().toISOString()
+            });
+          } catch(err) {
+            console.warn('Sync cleared notifications to Supabase:', err);
+          }
+        }
+      }
+
+      renderAppHeaderAndSidebar();
+      if (activePage === 'notifications') {
+        const container = document.getElementById('content-area');
+        if (container) renderNotifications(container);
+      }
+      showToast(`✅ Đã xóa toàn bộ ${count} thông báo thành công!`, 'success');
+    };
+
+    if (typeof window.showConfirmDialog === 'function') {
+      window.showConfirmDialog(
+        'Xóa Toàn Bộ Thông Báo',
+        `Bạn có chắc chắn muốn XÓA TẤT CẢ ${count} thông báo hiện có trong hệ thống? Thao tác này sẽ làm sạch danh sách và không thể hoàn tác.`,
+        performDeleteAll
+      );
+    } else if (window.confirm(`Bạn có chắc chắn muốn XÓA TẤT CẢ ${count} thông báo hiện có khỏi hệ thống?`)) {
+      performDeleteAll();
+    }
+  };
+
+  window.toggleSelectAllNotifs = function(masterCheck) {
+    const checks = document.querySelectorAll('.notif-row-check');
+    checks.forEach(c => c.checked = !!masterCheck.checked);
+    window.updateNotifBatchBar();
+  };
+
+  window.updateNotifBatchBar = function() {
+    const checks = document.querySelectorAll('.notif-row-check:checked');
+    const bar = document.getElementById('notif-batch-bar');
+    const countEl = document.getElementById('notif-selected-count');
+    const masterCheck = document.getElementById('notif-check-all');
+    const allChecks = document.querySelectorAll('.notif-row-check');
+    
+    if (masterCheck && allChecks.length > 0) {
+      masterCheck.checked = (checks.length === allChecks.length);
+      masterCheck.indeterminate = (checks.length > 0 && checks.length < allChecks.length);
+    }
+
+    if (bar && countEl) {
+      if (checks.length > 0) {
+        countEl.textContent = checks.length;
+        bar.style.display = 'flex';
+      } else {
+        bar.style.display = 'none';
+      }
+    }
+  };
+
+  window.deleteSelectedNotifications = function() {
+    const checks = Array.from(document.querySelectorAll('.notif-row-check:checked'));
+    if (checks.length === 0) {
+      showToast('Vui lòng chọn ít nhất một thông báo để xóa!', 'warning');
+      return;
+    }
+    const selectedIds = new Set(checks.map(c => String(c.value)));
+    const count = selectedIds.size;
+
+    const performDeleteSelected = async function() {
+      appData.notifications = (appData.notifications || []).filter(n => !selectedIds.has(String(n.id)));
+      saveUserData();
+
+      const curEmail = (currentUser && currentUser.email ? currentUser.email.toLowerCase().trim() : '');
+      if (curEmail && allCloudUserDataMap[curEmail]) {
+        allCloudUserDataMap[curEmail].notifications = appData.notifications;
+        const storageKey = STORAGE_PREFIX_DATA + curEmail.replace(/[^a-z0-9]/g, '_');
+        try { localStorage.setItem(storageKey, JSON.stringify(allCloudUserDataMap[curEmail])); } catch(e) {}
+        if (window.supabaseClient) {
+          try {
+            await window.supabaseClient.from('user_data').upsert({
+              email: curEmail,
+              data: allCloudUserDataMap[curEmail],
+              updated_at: new Date().toISOString()
+            });
+          } catch(err) {}
+        }
+      }
+
+      renderAppHeaderAndSidebar();
+      if (activePage === 'notifications') {
+        const container = document.getElementById('content-area');
+        if (container) renderNotifications(container);
+      }
+      showToast(`✅ Đã xóa ${count} thông báo đã chọn thành công!`, 'success');
+    };
+
+    if (typeof window.showConfirmDialog === 'function') {
+      window.showConfirmDialog(
+        'Xóa Các Thông Báo Đã Chọn',
+        `Bạn có chắc chắn muốn xóa ${count} thông báo đã chọn khỏi hệ thống?`,
+        performDeleteSelected
+      );
+    } else if (window.confirm(`Bạn có chắc chắn muốn xóa ${count} thông báo đã chọn?`)) {
+      performDeleteSelected();
+    }
+  };
+
   window.saveNotificationForm = function(e) {
     e.preventDefault();
     const id = document.getElementById('ntf-form-id').value;
@@ -9526,6 +9673,10 @@
   window.openAddNotificationModal = window.openAddNotificationModal;
   window.editNotification = window.editNotification;
   window.deleteNotification = window.deleteNotification;
+  window.confirmClearAllNotifications = window.confirmClearAllNotifications;
+  window.toggleSelectAllNotifs = window.toggleSelectAllNotifs;
+  window.updateNotifBatchBar = window.updateNotifBatchBar;
+  window.deleteSelectedNotifications = window.deleteSelectedNotifications;
   window.saveNotificationForm = window.saveNotificationForm;
   window.downloadCSVTemplate = window.downloadCSVTemplate;
   window.openCSVImportModal = window.openCSVImportModal;
