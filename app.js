@@ -4518,6 +4518,19 @@
     }
   };
 
+  function highlightSaveZaloBtn(btnId = 'btn-save-zalo-chat-id') {
+    const btn = document.getElementById(btnId);
+    if (btn) {
+      btn.style.transition = 'all 0.3s ease';
+      btn.style.transform = 'scale(1.08)';
+      btn.style.boxShadow = '0 0 12px rgba(22, 163, 74, 0.8)';
+      setTimeout(() => {
+        btn.style.transform = 'none';
+        btn.style.boxShadow = '0 2px 4px rgba(22,163,74,0.3)';
+      }, 1800);
+    }
+  }
+
   window.detectZaloGroupChatId = async function(targetInputId = 'cls-zalo-chat-id') {
     const input = document.getElementById(targetInputId);
     showToast('🔍 Đang kiểm tra tin nhắn Zalo gần đây để tìm mã nhóm...', 'info');
@@ -4533,7 +4546,8 @@
         const recentData = await recentRes.json();
         if (recentData && recentData.ok && recentData.latestId && input) {
           input.value = recentData.latestId;
-          showToast(`✅ Đã tìm thấy mã nhóm: ${recentData.latestId} (${recentData.latestTitle || 'Nhóm Phụ Huynh'})!`, 'success');
+          showToast(`✅ Đã tìm thấy mã nhóm: ${recentData.latestId} (${recentData.latestTitle || 'Nhóm Phụ Huynh'})! Hãy bấm nút "Lưu Mã Nhóm" màu xanh.`, 'success');
+          highlightSaveZaloBtn();
           return;
         }
       } catch(e) {}
@@ -4562,7 +4576,8 @@
 
       if (foundGroup && input) {
         input.value = foundGroup.id;
-        showToast(`✅ Đã tìm thấy mã nhóm: ${foundGroup.id} (${foundGroup.title || 'Nhóm Zalo'})!`, 'success');
+        showToast(`✅ Đã tìm thấy mã nhóm: ${foundGroup.id} (${foundGroup.title || 'Nhóm Zalo'})! Hãy bấm nút "Lưu Mã Nhóm" màu xanh.`, 'success');
+        highlightSaveZaloBtn();
       } else {
         showToast('Chưa nhận được tin nhắn từ nhóm. Vui lòng vào nhóm Zalo phụ huynh, gõ "@Bot Điểm Danh" gửi 1 câu rồi bấm lại nút này nhé!', 'warning');
       }
@@ -4571,8 +4586,72 @@
     }
   };
 
+  window.saveZaloChatIdDirectly = function() {
+    const input = document.getElementById('cls-zalo-chat-id');
+    const chatId = input ? input.value.trim() : '';
+    if (!chatId) {
+      showToast('⚠️ Vui lòng nhập hoặc bấm "Tìm mã nhóm" trước khi lưu!', 'warning');
+      if (input) input.focus();
+      return;
+    }
+    const form = document.getElementById('class-form');
+    if (form) {
+      if (typeof form.requestSubmit === 'function') {
+        form.requestSubmit();
+      } else {
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) submitBtn.click();
+        else if (typeof handleSaveClass === 'function') handleSaveClass();
+      }
+    }
+  };
+
   window.detectZaloGroupChatIdForNotice = function() {
     window.detectZaloGroupChatId('zalo-notice-chat-id');
+  };
+
+  window.saveZaloNoticeChatIdDirectly = async function() {
+    const classId = document.getElementById('zalo-notice-class-id')?.value;
+    const chatId = document.getElementById('zalo-notice-chat-id')?.value?.trim();
+    if (!chatId) {
+      showToast('⚠️ Vui lòng nhập hoặc dò mã nhóm trước khi lưu!', 'warning');
+      return;
+    }
+    if (!classId) {
+      showToast('⚠️ Không tìm thấy thông tin lớp học!', 'warning');
+      return;
+    }
+    
+    // Find class and update in appData
+    if (appData && Array.isArray(appData.classes)) {
+      const target = appData.classes.find(c => String(c.id) === String(classId));
+      if (target) {
+        target.zaloChatId = chatId;
+        saveUserData();
+      }
+    }
+    // Also update in allCloudUserDataMap
+    for (const uEmail of Object.keys(allCloudUserDataMap)) {
+      const uData = allCloudUserDataMap[uEmail];
+      if (uData && Array.isArray(uData.classes)) {
+        const c = uData.classes.find(item => String(item.id) === String(classId));
+        if (c) {
+          c.zaloChatId = chatId;
+          const k = STORAGE_PREFIX_DATA + uEmail.replace(/[^a-z0-9]/g, '_');
+          try { localStorage.setItem(k, JSON.stringify(uData)); } catch(e) {}
+          if (window.supabaseClient) {
+            try {
+              await window.supabaseClient.from('user_data').upsert({
+                email: uEmail,
+                data: uData,
+                updated_at: new Date().toISOString()
+              });
+            } catch(e) {}
+          }
+        }
+      }
+    }
+    showToast(`✅ Đã lưu mã nhóm Zalo (${chatId}) cho lớp thành công!`, 'success');
   };
 
   window.testZaloBotConnection = async function() {
