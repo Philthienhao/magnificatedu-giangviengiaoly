@@ -481,5 +481,24 @@ Hệ thống đã tích hợp toàn bộ **62 đơn vị mục vụ** gồm **56
 
 ---
 
+### ⚡ Cập nhật Giao diện: Tinh gọn ô Điểm Danh & Chuyển hướng nhanh từ Dashboard Tổng quan (2026-10-16)
+1. **Tinh gọn bảng điểm danh**:
+   - Loại bỏ các chấm màu emoji (`🟢`, `🟡`, `🔵`, `🔴`) thừa thãi bên cạnh ô radio điểm danh.
+   - Giữ lại ô tick tương ứng trực tiếp với nội dung: `( ) Có mặt`, `( ) Đi trễ`, `( ) Vắng có phép`, `( ) Vắng không phép`.
+   - Căn lề thẳng hàng, gọn gàng, tăng trải nghiệm thị giác và dễ thao tác trên cả máy tính lẫn điện thoại.
+   - Đồng bộ nhãn trạng thái và file xuất Excel không còn bị dính emoji màu.
+2. **Kích hoạt điều hướng trực tiếp cho các thẻ Tổng quan (Overview KPI Cards)**:
+   - Thêm hiệu ứng trỏ chuột (`cursor: pointer`), tooltip và sự kiện click trực tiếp:
+     - **Lớp Học Giáo Lý**: Bấm vào chuyển ngay tới trang **Lớp học** (`#classes`).
+     - **Tổng Số Học Viên**: Bấm vào chuyển ngay tới trang **Học viên** (`#students`).
+     - **Giáo Lý Viên**: Bấm vào chuyển ngay tới trang **Giáo lý viên** (`#catechists`).
+     - **Tỷ Lệ Chuyên Cần**: Bấm vào chuyển ngay tới trang **Điểm danh** (`#attendance`).
+   - Các khối tóm tắt điểm danh trong ngày (Có mặt, Đi trễ, Vắng có phép, Vắng không phép) khi bấm vào cũng tự động dẫn thẳng tới trang Điểm danh.
+3. **Đồng bộ hóa & Cache Buster**:
+   - Đồng bộ hoàn toàn giữa `app_v2.js` và `app.js`.
+   - Nâng phiên bản cache buster trong `index.html` lên `v=20261016_v4100` và Service Worker cache trong `sw.js` lên `magnificatedu-cache-v7`.
+
+---
+
 *Hệ Thống Quản Lý Giáo Lý Công Giáo - MagnificatEdu © 2026*
 

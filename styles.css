@@ -1085,6 +1085,8 @@ input, select, textarea {
   min-width: 0;
   box-sizing: border-box;
   overflow: hidden;
+  cursor: pointer;
+  user-select: none;
 }
 
 .kpi-card:hover {
@@ -1217,6 +1219,14 @@ input, select, textarea {
   border-radius: var(--radius-md);
   text-align: center;
   border: 1px solid transparent;
+  cursor: pointer;
+  transition: var(--transition);
+  user-select: none;
+}
+
+.att-status-box:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
 }
 
 .att-present { background: var(--success-bg); border-color: #a7f3d0; color: #065f46; }

@@ -2040,7 +2040,7 @@
 
       <!-- KPI METRICS GRID -->
       <div class="kpi-grid">
-        <div class="kpi-card">
+        <div class="kpi-card" data-page="classes" onclick="window.appNavigate('classes')" title="Bấm để xem danh sách Lớp Học Giáo Lý">
           <div class="kpi-icon kpi-blue"><i class="fa-solid fa-layer-group"></i></div>
           <div class="kpi-info">
             <h4>Lớp Học Giáo Lý</h4>
@@ -2049,7 +2049,7 @@
           </div>
         </div>
 
-        <div class="kpi-card">
+        <div class="kpi-card" data-page="students" onclick="window.appNavigate('students')" title="Bấm để xem danh sách Học Viên Giáo Lý">
           <div class="kpi-icon kpi-green"><i class="fa-solid fa-user-graduate"></i></div>
           <div class="kpi-info">
             <h4>Tổng Số Học Viên</h4>
@@ -2058,7 +2058,7 @@
           </div>
         </div>
 
-        <div class="kpi-card">
+        <div class="kpi-card" data-page="catechists" onclick="window.appNavigate('catechists')" title="Bấm để xem Đội Ngũ Giáo Lý Viên">
           <div class="kpi-icon kpi-amber"><i class="fa-solid fa-chalkboard-user"></i></div>
           <div class="kpi-info">
             <h4>Giáo Lý Viên</h4>
@@ -2067,7 +2067,7 @@
           </div>
         </div>
 
-        <div class="kpi-card">
+        <div class="kpi-card" data-page="attendance" onclick="window.appNavigate('attendance')" title="Bấm để xem Sổ Điểm Danh Học Viên">
           <div class="kpi-icon kpi-purple"><i class="fa-solid fa-chart-line"></i></div>
           <div class="kpi-info">
             <h4>Tỷ Lệ Chuyên Cần</h4>
@@ -2106,26 +2106,26 @@
           <!-- Attendance Quick Summary Widget -->
           <div class="card">
             <div class="card-header">
-              <h3 class="card-title"><i class="fa-solid fa-clipboard-user"></i> Tình Hình Điểm Danh Hôm Nay</h3>
+              <h3 class="card-title" style="cursor: pointer;" onclick="window.appNavigate('attendance')"><i class="fa-solid fa-clipboard-user"></i> Tình Hình Điểm Danh Hôm Nay</h3>
               <button class="btn btn-sm btn-primary" onclick="window.appNavigate('attendance')">Điểm danh ngay</button>
             </div>
             <div class="card-body">
               <div class="attendance-summary-grid">
-                <div class="att-status-box att-present">
+                <div class="att-status-box att-present" onclick="window.appNavigate('attendance')" title="Bấm để chuyển tới trang Điểm Danh">
                   <div class="num">${todayPresent}</div>
-                  <div class="lbl">🟢 Có Mặt</div>
+                  <div class="lbl">Có Mặt</div>
                 </div>
-                <div class="att-status-box att-late">
+                <div class="att-status-box att-late" onclick="window.appNavigate('attendance')" title="Bấm để chuyển tới trang Điểm Danh">
                   <div class="num">${todayLate}</div>
-                  <div class="lbl">🟡 Đi Trễ</div>
+                  <div class="lbl">Đi Trễ</div>
                 </div>
-                <div class="att-status-box att-excused">
+                <div class="att-status-box att-excused" onclick="window.appNavigate('attendance')" title="Bấm để chuyển tới trang Điểm Danh">
                   <div class="num">${todayExcused}</div>
-                  <div class="lbl">🔵 Vắng Có Phép</div>
+                  <div class="lbl">Vắng Có Phép</div>
                 </div>
-                <div class="att-status-box att-unexcused">
+                <div class="att-status-box att-unexcused" onclick="window.appNavigate('attendance')" title="Bấm để chuyển tới trang Điểm Danh">
                   <div class="num">${todayUnexcused}</div>
-                  <div class="lbl">🔴 Vắng Không Phép</div>
+                  <div class="lbl">Vắng Không Phép</div>
                 </div>
               </div>
 
@@ -3108,11 +3108,11 @@
                           <strong>${s.holyName || ''}</strong> ${s.fullName || ''}
                         </td>
                         <td>
-                          <div style="display: flex; gap: 10px; font-size: 12px; flex-wrap: wrap;">
-                            <label style="cursor: pointer;"><input type="radio" name="att_${s.id}" value="present" ${currentStatus === 'present' ? 'checked' : ''}> 🟢 Có mặt</label>
-                            <label style="cursor: pointer;"><input type="radio" name="att_${s.id}" value="late" ${currentStatus === 'late' ? 'checked' : ''}> 🟡 Đi trễ</label>
-                            <label style="cursor: pointer;"><input type="radio" name="att_${s.id}" value="excused" ${currentStatus === 'excused' ? 'checked' : ''}> 🔵 Vắng có phép</label>
-                            <label style="cursor: pointer;"><input type="radio" name="att_${s.id}" value="unexcused" ${currentStatus === 'unexcused' ? 'checked' : ''}> 🔴 Vắng không phép</label>
+                          <div style="display: flex; gap: 12px; font-size: 12.5px; flex-wrap: wrap; align-items: center;">
+                            <label style="cursor: pointer; display: inline-flex; align-items: center; gap: 4px;"><input type="radio" name="att_${s.id}" value="present" ${currentStatus === 'present' ? 'checked' : ''}> Có mặt</label>
+                            <label style="cursor: pointer; display: inline-flex; align-items: center; gap: 4px;"><input type="radio" name="att_${s.id}" value="late" ${currentStatus === 'late' ? 'checked' : ''}> Đi trễ</label>
+                            <label style="cursor: pointer; display: inline-flex; align-items: center; gap: 4px;"><input type="radio" name="att_${s.id}" value="excused" ${currentStatus === 'excused' ? 'checked' : ''}> Vắng có phép</label>
+                            <label style="cursor: pointer; display: inline-flex; align-items: center; gap: 4px;"><input type="radio" name="att_${s.id}" value="unexcused" ${currentStatus === 'unexcused' ? 'checked' : ''}> Vắng không phép</label>
                           </div>
                         </td>
                         <td><input type="text" id="att_note_${s.id}" class="form-control form-control-sm" placeholder="Ghi chú..." value="${currentNote}"></td>
@@ -4092,10 +4092,10 @@
                       <td><span class="badge badge-primary">${log.sessionType || 'Giáo lý'}</span></td>
                       <td>
                         <div style="display: flex; gap: 6px; flex-wrap: wrap; font-size: 11.5px;">
-                          <span class="badge badge-success">🟢 Có mặt: ${log.stats ? log.stats.present : 0}</span>
-                          <span class="badge badge-warning">🟡 Trễ: ${log.stats ? log.stats.late : 0}</span>
-                          <span class="badge badge-info">🔵 Vắng phép: ${log.stats ? log.stats.excused : 0}</span>
-                          <span class="badge badge-danger">🔴 Vắng K.Phép: ${log.stats ? log.stats.unexcused : 0}</span>
+                          <span class="badge badge-success">Có mặt: ${log.stats ? log.stats.present : 0}</span>
+                          <span class="badge badge-warning">Trễ: ${log.stats ? log.stats.late : 0}</span>
+                          <span class="badge badge-info">Vắng phép: ${log.stats ? log.stats.excused : 0}</span>
+                          <span class="badge badge-danger">Vắng K.Phép: ${log.stats ? log.stats.unexcused : 0}</span>
                         </div>
                       </td>
                       <td>
@@ -4243,10 +4243,10 @@
     }
 
     const statusTextMap = {
-      present: '🟢 Có mặt',
-      late: '🟡 Đi trễ',
-      excused: '🔵 Vắng có phép',
-      unexcused: '🔴 Vắng không phép'
+      present: 'Có mặt',
+      late: 'Đi trễ',
+      excused: 'Vắng có phép',
+      unexcused: 'Vắng không phép'
     };
 
     const rowsData = [
@@ -4263,11 +4263,11 @@
 
     filteredStudents.forEach((st, idx) => {
       const rec = recordsMap[st.id];
-      let statusStr = '🟢 Có mặt';
+      let statusStr = 'Có mặt';
       let noteStr = '';
 
       if (rec) {
-        statusStr = statusTextMap[rec.status] || '🟢 Có mặt';
+        statusStr = statusTextMap[rec.status] || 'Có mặt';
         noteStr = rec.note || '';
         if (rec.status === 'present') present++;
         else if (rec.status === 'late') late++;
@@ -4276,7 +4276,7 @@
       } else {
         const radio = document.querySelector(`input[name="att_${st.id}"]:checked`);
         const noteInput = document.getElementById(`att_note_${st.id}`);
-        if (radio) statusStr = statusTextMap[radio.value] || '🟢 Có mặt';
+        if (radio) statusStr = statusTextMap[radio.value] || 'Có mặt';
         if (noteInput) noteStr = noteInput.value.trim();
 
         if (radio && radio.value === 'late') late++;
