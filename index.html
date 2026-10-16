@@ -44,8 +44,8 @@
   </script>
   
   <!-- Custom Stylesheet -->
-  <link rel="stylesheet" href="styles.css?v=20261016_v4300">
-  <link rel="stylesheet" href="activities_flipbook.css?v=20261016_v4300">
+  <link rel="stylesheet" href="styles.css?v=20261016_v4400">
+  <link rel="stylesheet" href="activities_flipbook.css?v=20261016_v4400">
 </head>
 <body>
 
@@ -839,6 +839,30 @@
                 <i class="fa-solid fa-circle-info text-primary"></i> <strong>Cơ chế đồng bộ 2 Chủ nhiệm:</strong> Điền chính xác Gmail cá nhân của 2 GLV. Cả 2 sẽ cùng truy cập, quản lý danh sách học sinh, điểm danh và chấm điểm của lớp này bằng mật khẩu và tài khoản riêng của mỗi người mà không cần dùng chung mật khẩu.
               </p>
             </div>
+            
+            <!-- Zalo Bot Integration -->
+            <div style="background: #f0f7ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 14px; margin-top: 10px;">
+              <div style="font-weight: 700; color: #1d4ed8; font-size: 13px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px;">
+                <span><i class="fa-solid fa-robot"></i> Kết Nối Zalo Bot (Tự Động Báo Vắng Học)</span>
+                <span class="badge" style="background: #2563eb; color: #fff; font-size: 11px;">Zalo Bot Platform</span>
+              </div>
+              <div class="form-group" style="margin-bottom: 8px;">
+                <label style="font-size: 12px; font-weight: 600;"><i class="fa-solid fa-comments"></i> Mã Nhóm Zalo (Group Chat ID):</label>
+                <div style="display: flex; gap: 8px;">
+                  <input type="text" id="cls-zalo-chat-id" class="form-control" placeholder="Ví dụ: -123456789 hoặc 425850578...">
+                  <button type="button" class="btn btn-outline-primary" style="white-space: nowrap; font-size: 12px; padding: 6px 12px;" onclick="window.detectZaloGroupChatId()" title="Tự động dò tìm mã nhóm gần nhất khi bạn tag bot trong nhóm"><i class="fa-solid fa-wand-magic-sparkles"></i> Tìm mã nhóm</button>
+                </div>
+                <div style="font-size: 11px; color: #3b82f6; margin-top: 5px; line-height: 1.4;">
+                  <i class="fa-solid fa-circle-question"></i> <strong>Cách lấy mã nhóm:</strong> Mời <strong>Bot Điểm Danh</strong> vào nhóm Zalo phụ huynh qua link: <a href="https://bot.zaloplatforms.com/groups/invite/bot.kTCMljuF" target="_blank" style="text-decoration: underline; font-weight: 700; color: #1d4ed8;">bot.kTCMljuF</a>, sau đó tag <code>@Bot Điểm Danh</code> 1 tin nhắn bất kỳ trong nhóm rồi bấm <strong>"Tìm mã nhóm"</strong>.
+                </div>
+              </div>
+              <div class="form-check" style="display: flex; align-items: center; gap: 8px; margin-top: 6px;">
+                <input type="checkbox" id="cls-zalo-auto-send" class="form-check-input" checked style="margin: 0; width: 16px; height: 16px; cursor: pointer;">
+                <label for="cls-zalo-auto-send" class="form-check-label" style="font-size: 12px; margin: 0; cursor: pointer; font-weight: 600; color: #1e293b;">
+                  Tự động gửi thông báo học sinh vắng vào nhóm Zalo ngay sau khi lưu điểm danh
+                </label>
+              </div>
+            </div>
           </div>
           <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
             <button type="button" id="class-modal-delete-btn" class="btn btn-outline-danger" style="display: none;" onclick="window.handleDeleteClassFromModal()">
@@ -850,6 +874,51 @@
             </div>
           </div>
         </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ZALO ATTENDANCE NOTICE MODAL -->
+  <div id="zalo-notice-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-dialog" style="max-width: 550px;">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="zalo-notice-title"><i class="fa-solid fa-paper-plane" style="color: #2563eb;"></i> Báo Cáo Vắng Học Qua Zalo</h3>
+          <button class="close-modal-btn" data-modal="zalo-notice-modal"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="zalo-notice-class-id">
+          <input type="hidden" id="zalo-notice-date">
+          <input type="hidden" id="zalo-notice-session">
+          <div class="form-group" style="margin-bottom: 10px;">
+            <label style="font-weight: 700; font-size: 13px;"><i class="fa-solid fa-users text-primary"></i> Lớp học:</label>
+            <div id="zalo-notice-class-name" style="font-weight: 800; color: var(--primary); font-size: 15px;"></div>
+          </div>
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label style="font-weight: 700; font-size: 13px;"><i class="fa-solid fa-comments text-primary"></i> Mã nhóm Zalo Phụ Huynh (Chat ID):</label>
+            <div style="display: flex; gap: 8px;">
+              <input type="text" id="zalo-notice-chat-id" class="form-control" placeholder="Ví dụ: -123456789">
+              <button type="button" class="btn btn-outline-primary" style="white-space: nowrap; font-size: 12px;" onclick="window.detectZaloGroupChatIdForNotice()"><i class="fa-solid fa-wand-magic-sparkles"></i> Dò mã nhóm</button>
+            </div>
+            <small style="color: var(--slate-muted); font-size: 11px;">Mã nhóm này dùng để Bot bắn tin nhắn trực tiếp vào nhóm Zalo phụ huynh.</small>
+          </div>
+          <div class="form-group" style="margin-bottom: 10px;">
+            <label style="font-weight: 700; font-size: 13px;"><i class="fa-solid fa-message text-primary"></i> Nội dung thông báo gửi vào nhóm:</label>
+            <textarea id="zalo-notice-text" class="form-control" rows="8" style="font-family: inherit; font-size: 13px; line-height: 1.5; resize: vertical;"></textarea>
+          </div>
+          <div id="zalo-notice-feedback" style="display: none; padding: 10px 12px; border-radius: 6px; font-size: 12px; margin-top: 8px;"></div>
+        </div>
+        <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <button type="button" class="btn btn-outline-secondary" onclick="window.copyZaloNoticeText()">
+            <i class="fa-regular fa-copy"></i> Sao chép tin nhắn
+          </button>
+          <div style="display: flex; gap: 8px;">
+            <button type="button" class="btn btn-secondary close-modal-btn" data-modal="zalo-notice-modal">Đóng</button>
+            <button type="button" id="zalo-notice-send-btn" class="btn btn-primary" onclick="window.submitSendZaloNotice()">
+              <i class="fa-solid fa-paper-plane"></i> Gửi qua Zalo Bot
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -1769,13 +1838,13 @@
   <div id="toast-container" class="toast-container"></div>
 
   <!-- PWA Manager & Service Worker Registration -->
-  <script src="pwa.js?v=20261016_v4300"></script>
+  <script src="pwa.js?v=20261016_v4400"></script>
 
   <!-- Activities Library & 3D Flipbook Core -->
-  <script src="activities_data.js?v=20261016_v4300"></script>
-  <script src="activities_flipbook.js?v=20261016_v4300"></script>
+  <script src="activities_data.js?v=20261016_v4400"></script>
+  <script src="activities_flipbook.js?v=20261016_v4400"></script>
 
   <!-- Application JS Code -->
-  <script src="app_v2.js?v=20261016_v4300"></script>
+  <script src="app_v2.js?v=20261016_v4400"></script>
 </body>
 </html>

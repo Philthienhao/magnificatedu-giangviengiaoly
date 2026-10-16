@@ -3156,6 +3156,9 @@
             <button type="button" class="btn btn-outline-success" onclick="window.exportAttendanceToExcel(window._selectedAttendanceClassId, window._selectedAttendanceDate, window._selectedAttendanceSessionType)">
               <i class="fa-solid fa-file-excel"></i> 📊 Tải Bảng Điểm Danh (Excel/CSV)
             </button>
+            <button type="button" class="btn btn-outline-primary" style="color: #2563eb; border-color: #93c5fd;" onclick="window.openZaloNoticeModal(window._selectedAttendanceClassId, window._selectedAttendanceDate, window._selectedAttendanceSessionType)" title="Xem trước và gửi thông báo vắng học vào nhóm Zalo">
+              <i class="fa-solid fa-paper-plane"></i> 📱 Báo Vắng Qua Zalo
+            </button>
           </div>
           <button type="button" class="btn btn-primary" onclick="window.saveAttendanceLog()"><i class="fa-solid fa-floppy-disk"></i> Lưu Kết Quả Điểm Danh Vĩnh Viễn</button>
         </div>
@@ -4134,6 +4137,9 @@
                           <button type="button" class="btn btn-xs btn-outline-primary" onclick="window.viewHistoricalAttendanceLog('${log.classId}', '${log.date}', '${log.sessionType}')" title="Xem & Chỉnh sửa buổi điểm danh ngày này">
                             <i class="fa-solid fa-eye"></i> Xem / Sửa
                           </button>
+                          <button type="button" class="btn btn-xs btn-outline-primary" style="color: #2563eb; border-color: #93c5fd;" onclick="window.openZaloNoticeModal('${log.classId}', '${log.date}', '${log.sessionType}')" title="Gửi thông báo vắng học vào nhóm Zalo">
+                            <i class="fa-solid fa-paper-plane"></i> Zalo
+                          </button>
                           <button type="button" class="btn btn-xs btn-outline-success" onclick="window.exportAttendanceToExcel('${log.classId}', '${log.date}', '${log.sessionType}')" title="Tải file Excel điểm danh ngày này">
                             <i class="fa-solid fa-file-excel"></i> Excel
                           </button>
@@ -4235,6 +4241,17 @@
     saveUserData();
     renderAttendance(document.getElementById('content-area'));
     showToast(`✅ Đã lưu vĩnh viễn lịch sử điểm danh ngày ${date} (${sessionType}) lên hệ thống Cloud!`, 'success');
+
+    // AUTO-TRIGGER ZALO BOT FOR ABSENT STUDENTS
+    const absentCount = (logEntry.stats ? (logEntry.stats.excused + logEntry.stats.unexcused) : 0);
+    if (absentCount > 0) {
+      const clsObj = (getAccessibleClasses() || []).find(c => String(c.id) === String(classId));
+      if (clsObj && clsObj.zaloChatId && clsObj.zaloAutoSend !== false) {
+        window.sendZaloAttendanceNotice(classId, date, sessionType, true);
+      } else {
+        showToast(`Buổi học có ${absentCount} em vắng. Bạn có thể nhấn nút [Zalo] trong danh sách lịch sử để gửi thông báo vào nhóm phụ huynh.`, 'info');
+      }
+    }
   };
 
   // VIEW HISTORICAL ATTENDANCE LOG
@@ -4254,6 +4271,329 @@
     saveUserData();
     renderAttendance(document.getElementById('content-area'));
     showToast('Đã xóa nhật ký điểm danh thành công!', 'success');
+  };
+
+  // ==========================================
+  // ZALO BOT INTEGRATION MODULE
+  // ==========================================
+  window.composeZaloAttendanceMessage = function(classId, date, sessionType) {
+    const targetClass = (getAccessibleClasses() || []).find(c => String(c.id) === String(classId)) || {};
+    const logs = appData.attendanceLogs || [];
+    const log = logs.find(l => String(l.classId) === String(classId) && l.date === date && (sessionType ? l.sessionType === sessionType : true));
+    
+    const parishName = (appData.parishInfo && appData.parishInfo.name) || 'Giáo Xứ Hoà Khánh';
+    const className = targetClass.name || 'Lớp Giáo Lý';
+    const grade = targetClass.grade || 'Giáo Lý';
+    const teacher = targetClass.teacher || (currentUser ? currentUser.name : 'Ban Giáo Lý');
+
+    let absentList = [];
+    if (log && Array.isArray(log.records)) {
+      absentList = log.records.filter(r => r.status === 'excused' || r.status === 'unexcused');
+    } else {
+      const students = (getAccessibleStudents() || []).filter(s => String(s.classId) === String(classId));
+      students.forEach(s => {
+        const radio = document.querySelector(`input[name="att_${s.id}"]:checked`);
+        const status = radio ? radio.value : 'present';
+        const noteInput = document.getElementById(`att_note_${s.id}`);
+        const note = noteInput ? noteInput.value.trim() : '';
+        if (status === 'excused' || status === 'unexcused') {
+          absentList.push({
+            studentName: `${s.holyName ? s.holyName + ' ' : ''}${s.fullName || ''}`.trim(),
+            status: status,
+            note: note
+          });
+        }
+      });
+    }
+
+    let dateFormatted = date;
+    try {
+      const parts = String(date).split('-');
+      if (parts.length === 3) {
+        const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+        const dayNames = ['Chúa Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+        const dayName = dayNames[d.getDay()] || 'Ngày';
+        dateFormatted = `${dayName}, ${parts[2]}/${parts[1]}/${parts[0]}`;
+      }
+    } catch(e) {}
+
+    let msg = `📋 THÔNG BÁO ĐIỂM DANH - ${parishName.toUpperCase()}\n`;
+    msg += `⛪ Ngành: ${grade} | Lớp: ${className}\n`;
+    msg += `📅 Buổi: ${dateFormatted} (${sessionType || 'Giáo lý'})\n`;
+    msg += `👤 GLV phụ trách: ${teacher}\n`;
+    msg += `------------------------------------\n`;
+
+    if (absentList.length === 0) {
+      msg += `🎉 Hôm nay toàn thể các em học sinh trong lớp đều hiện diện đầy đủ và đúng giờ!\n`;
+    } else {
+      msg += `Kính gửi quý phụ huynh, hôm nay lớp có ${absentList.length} em vắng học:\n\n`;
+      absentList.forEach((st, idx) => {
+        const reasonStr = st.status === 'excused' ? 'Nghỉ có phép' : 'Nghỉ không phép';
+        const noteStr = st.note ? ` (Ghi chú: ${st.note})` : '';
+        msg += `${idx + 1}. ${st.studentName} - ${reasonStr}${noteStr}\n`;
+      });
+      msg += `\nKính mong quý phụ huynh phối hợp nhắc nhở và đồng hành cùng các em trong các buổi học tiếp theo. Xin chân thành cảm ơn quý phụ huynh! 🙏`;
+    }
+
+    return msg;
+  };
+
+  window.sendZaloAttendanceNotice = async function(classId, date, sessionType, isAuto = false) {
+    const targetClass = (getAccessibleClasses() || []).find(c => String(c.id) === String(classId));
+    if (!targetClass) {
+      showToast('Không tìm thấy thông tin lớp học!', 'warning');
+      return;
+    }
+
+    const chatId = targetClass.zaloChatId;
+    if (!chatId) {
+      if (!isAuto) {
+        window.openZaloNoticeModal(classId, date, sessionType);
+      }
+      return;
+    }
+
+    const messageText = window.composeZaloAttendanceMessage(classId, date, sessionType);
+    if (isAuto) {
+      showToast(`🤖 Đang tự động gửi thông báo vắng học vào nhóm Zalo lớp ${targetClass.name}...`, 'info');
+    }
+
+    try {
+      const response = await fetch('/api/zalo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'sendMessage',
+          chat_id: chatId,
+          text: messageText
+        })
+      });
+      const data = await response.json();
+      if (data.ok) {
+        showToast(`✅ Đã tự động gửi thông báo vắng học vào nhóm Zalo phụ huynh lớp ${targetClass.name}!`, 'success');
+      } else {
+        console.warn('Lỗi gửi tin Zalo Bot:', data);
+        showToast(`⚠️ Không thể gửi Zalo tự động: ${data.description || data.error || 'Lỗi không xác định'}. Vui lòng kiểm tra mã nhóm.`, 'warning');
+        if (!isAuto) window.openZaloNoticeModal(classId, date, sessionType);
+      }
+    } catch (err) {
+      console.error('Lỗi gọi API Zalo:', err);
+      showToast(`⚠️ Lỗi kết nối Zalo Bot: ${err.message}`, 'warning');
+    }
+  };
+
+  window.openZaloNoticeModal = function(classId, date, sessionType) {
+    const targetClass = (getAccessibleClasses() || []).find(c => String(c.id) === String(classId)) || {};
+    document.getElementById('zalo-notice-class-id').value = classId;
+    document.getElementById('zalo-notice-date').value = date;
+    document.getElementById('zalo-notice-session').value = sessionType || 'Giáo lý';
+    document.getElementById('zalo-notice-class-name').textContent = `${targetClass.name || 'Lớp học'} (${targetClass.grade || 'Giáo lý'})`;
+    
+    const chatIdInput = document.getElementById('zalo-notice-chat-id');
+    if (chatIdInput) chatIdInput.value = targetClass.zaloChatId || '';
+
+    const textInput = document.getElementById('zalo-notice-text');
+    if (textInput) textInput.value = window.composeZaloAttendanceMessage(classId, date, sessionType);
+
+    const feedback = document.getElementById('zalo-notice-feedback');
+    if (feedback) feedback.style.display = 'none';
+
+    openModal('zalo-notice-modal');
+  };
+
+  window.copyZaloNoticeText = function() {
+    const textInput = document.getElementById('zalo-notice-text');
+    if (!textInput || !textInput.value) return;
+    navigator.clipboard.writeText(textInput.value).then(() => {
+      showToast('📋 Đã sao chép nội dung tin nhắn vào khay nhớ tạm!', 'success');
+    }).catch(() => {
+      textInput.select();
+      document.execCommand('copy');
+      showToast('📋 Đã sao chép nội dung tin nhắn!', 'success');
+    });
+  };
+
+  window.submitSendZaloNotice = async function() {
+    const classId = document.getElementById('zalo-notice-class-id')?.value;
+    const chatId = document.getElementById('zalo-notice-chat-id')?.value?.trim();
+    const text = document.getElementById('zalo-notice-text')?.value?.trim();
+    const sendBtn = document.getElementById('zalo-notice-send-btn');
+    const feedback = document.getElementById('zalo-notice-feedback');
+
+    if (!chatId) {
+      if (feedback) {
+        feedback.style.display = 'block';
+        feedback.style.background = '#fef2f2';
+        feedback.style.color = '#991b1b';
+        feedback.style.border = '1px solid #fecaca';
+        feedback.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Vui lòng nhập Mã Nhóm Zalo (hoặc bấm "Dò mã nhóm" sau khi tag bot trong nhóm).';
+      }
+      return;
+    }
+
+    if (!text) {
+      showToast('Nội dung tin nhắn không được để trống!', 'warning');
+      return;
+    }
+
+    if (sendBtn) {
+      sendBtn.disabled = true;
+      sendBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang gửi...';
+    }
+
+    try {
+      const response = await fetch('/api/zalo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'sendMessage',
+          chat_id: chatId,
+          text: text
+        })
+      });
+      const data = await response.json();
+
+      if (data.ok) {
+        // Save the chatId back to the class if changed
+        if (classId) {
+          const targetClass = (appData.classes || []).find(c => String(c.id) === String(classId));
+          if (targetClass) {
+            targetClass.zaloChatId = chatId;
+            saveUserData();
+          }
+        }
+
+        if (feedback) {
+          feedback.style.display = 'block';
+          feedback.style.background = '#ecfdf5';
+          feedback.style.color = '#065f46';
+          feedback.style.border = '1px solid #a7f3d0';
+          feedback.innerHTML = '<i class="fa-solid fa-circle-check"></i> Đã gửi tin nhắn thành công vào nhóm Zalo!';
+        }
+        showToast('✅ Đã gửi thông báo vắng học vào nhóm Zalo thành công!', 'success');
+        setTimeout(() => closeModal('zalo-notice-modal'), 1200);
+      } else {
+        if (feedback) {
+          feedback.style.display = 'block';
+          feedback.style.background = '#fef2f2';
+          feedback.style.color = '#991b1b';
+          feedback.style.border = '1px solid #fecaca';
+          feedback.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Lỗi: ${data.description || data.error || 'Không thể gửi tin'}. Hãy đảm bảo Bot đã được thêm vào nhóm và có quyền gửi tin.`;
+        }
+        showToast(`⚠️ Không thể gửi tin: ${data.description || 'Lỗi Zalo'}`, 'warning');
+      }
+    } catch (err) {
+      if (feedback) {
+        feedback.style.display = 'block';
+        feedback.style.background = '#fef2f2';
+        feedback.style.color = '#991b1b';
+        feedback.style.border = '1px solid #fecaca';
+        feedback.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Lỗi mạng: ${err.message}`;
+      }
+      showToast(`Lỗi gửi tin: ${err.message}`, 'danger');
+    } finally {
+      if (sendBtn) {
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Gửi qua Zalo Bot';
+      }
+    }
+  };
+
+  window.detectZaloGroupChatId = async function(targetInputId = 'cls-zalo-chat-id') {
+    const input = document.getElementById(targetInputId);
+    showToast('🔍 Đang kiểm tra tin nhắn Zalo gần đây để tìm mã nhóm...', 'info');
+
+    try {
+      const response = await fetch('/api/zalo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'getUpdates' })
+      });
+      const data = await response.json();
+
+      if (!data.ok) {
+        throw new Error(data.description || 'Không thể kết nối Zalo Bot');
+      }
+
+      const updates = data.result || [];
+      let foundGroup = null;
+
+      for (let i = updates.length - 1; i >= 0; i--) {
+        const u = updates[i];
+        const msg = u.message || u.edited_message || u.channel_post;
+        if (msg && msg.chat) {
+          if (msg.chat.type === 'group' || msg.chat.id) {
+            foundGroup = msg.chat;
+            break;
+          }
+        }
+      }
+
+      if (foundGroup && input) {
+        input.value = foundGroup.id;
+        showToast(`✅ Đã tìm thấy mã nhóm: ${foundGroup.id} (${foundGroup.title || 'Nhóm Zalo'})!`, 'success');
+      } else {
+        showToast('Chưa tìm thấy tin nhắn mới trong nhóm. Vui lòng vào nhóm Zalo, gõ "@Bot Điểm Danh" 1 câu rồi bấm lại nút này nhé!', 'warning');
+      }
+    } catch (err) {
+      showToast(`⚠️ Không thể dò mã nhóm: ${err.message}`, 'warning');
+    }
+  };
+
+  window.detectZaloGroupChatIdForNotice = function() {
+    window.detectZaloGroupChatId('zalo-notice-chat-id');
+  };
+
+  window.testZaloBotConnection = async function() {
+    const resultBox = document.getElementById('zalo-bot-test-result');
+    if (resultBox) {
+      resultBox.style.display = 'block';
+      resultBox.style.background = '#f0f9ff';
+      resultBox.style.color = '#0369a1';
+      resultBox.style.border = '1px solid #bae6fd';
+      resultBox.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang kiểm tra kết nối với máy chủ Zalo...';
+    }
+
+    try {
+      const response = await fetch('/api/zalo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'getMe' })
+      });
+      const data = await response.json();
+
+      if (data.ok && data.result) {
+        const bot = data.result;
+        if (resultBox) {
+          resultBox.style.background = '#ecfdf5';
+          resultBox.style.color = '#065f46';
+          resultBox.style.border = '1px solid #a7f3d0';
+          resultBox.innerHTML = `
+            <div style="font-weight: 700; margin-bottom: 4px;"><i class="fa-solid fa-circle-check text-success"></i> Kết nối Zalo Bot thành công!</div>
+            <div>• Tên hiển thị: <strong>${bot.display_name || bot.first_name || 'Bot Điểm Danh'}</strong></div>
+            <div>• Tài khoản: <strong>${bot.account_name || 'bot.kTCMIjuF'}</strong> (ID: ${bot.id})</div>
+            <div>• Quyền tham gia nhóm: <span class="badge badge-success">Đã kích hoạt</span></div>
+          `;
+        }
+        showToast('✅ Kết nối Zalo Bot hoàn hảo!', 'success');
+      } else {
+        if (resultBox) {
+          resultBox.style.background = '#fef2f2';
+          resultBox.style.color = '#991b1b';
+          resultBox.style.border = '1px solid #fecaca';
+          resultBox.innerHTML = `<i class="fa-solid fa-circle-xmark text-danger"></i> Kết nối thất bại: ${data.description || 'Lỗi không xác định'}`;
+        }
+        showToast('⚠️ Kết nối Zalo Bot thất bại!', 'warning');
+      }
+    } catch (err) {
+      if (resultBox) {
+        resultBox.style.background = '#fef2f2';
+        resultBox.style.color = '#991b1b';
+        resultBox.style.border = '1px solid #fecaca';
+        resultBox.innerHTML = `<i class="fa-solid fa-circle-xmark text-danger"></i> Lỗi mạng: ${err.message}`;
+      }
+      showToast(`Lỗi kiểm tra Bot: ${err.message}`, 'danger');
+    }
   };
 
   // EXPORT SINGLE DAY ATTENDANCE TO EXCEL / CSV
@@ -5261,6 +5601,47 @@
             <p style="font-size: 12.5px; color: #92400e; margin: 0;">Xóa sạch các dữ liệu lớp học, học viên hiện tại để tự nhập dữ liệu thực tế từ đầu.</p>
           </div>
           <button class="btn btn-outline-danger" onclick="window.confirmResetAllUserData()"><i class="fa-solid fa-trash-can"></i> Reset Dữ Liệu Về Trắng</button>
+        </div>
+      </div>
+
+      <!-- ZALO BOT CONFIGURATION CARD -->
+      <div class="card mb-4" style="border: 1px solid #bfdbfe; background: linear-gradient(to bottom, #f0f7ff, #ffffff);">
+        <div class="card-header" style="background: #e0e7ff; display: flex; justify-content: space-between; align-items: center;">
+          <h3 class="card-title" style="color: #1e3a8a;"><i class="fa-solid fa-robot"></i> Cấu Hình Zalo Bot Tự Động Báo Vắng Cho Phụ Huynh</h3>
+          <span class="badge" style="background: #2563eb; color: #fff; font-size: 11px;">Zalo Bot Platform</span>
+        </div>
+        <div class="card-body">
+          <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; padding: 14px; background: #fff; border-radius: 8px; border: 1px solid #e2e8f0;">
+            <div style="width: 50px; height: 50px; border-radius: 12px; background: #2563eb; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 26px;">
+              <i class="fa-solid fa-robot"></i>
+            </div>
+            <div style="flex: 1; min-width: 240px;">
+              <div style="font-weight: 800; font-size: 15px; color: #1e293b;">Bot Điểm Danh Lớp Giáo Lý</div>
+              <div style="font-size: 12px; color: #64748b; margin-top: 2px;">Tài khoản Bot chính thức của Giáo xứ trên nền tảng Zalo Platform</div>
+              <div style="margin-top: 6px; display: flex; gap: 8px; flex-wrap: wrap;">
+                <span class="badge" style="background: #10b981; color: #fff;"><i class="fa-solid fa-circle-check"></i> Trạng thái: Sẵn sàng</span>
+                <span class="badge" style="background: #e2e8f0; color: #334155;">ID: 425850578770684393</span>
+              </div>
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <a href="https://bot.zaloplatforms.com/groups/invite/bot.kTCMljuF" target="_blank" class="btn btn-outline-primary btn-sm" style="font-weight: 600;">
+                <i class="fa-solid fa-user-plus"></i> Link Mời Bot Vào Nhóm Phụ Huynh
+              </a>
+              <button type="button" class="btn btn-primary btn-sm" onclick="window.testZaloBotConnection()">
+                <i class="fa-solid fa-bolt"></i> Kiểm Tra Kết Nối
+              </button>
+            </div>
+          </div>
+          <div id="zalo-bot-test-result" style="display: none; padding: 12px; border-radius: 8px; font-size: 13px; margin-bottom: 14px;"></div>
+          <div style="font-size: 12.5px; color: #475569; line-height: 1.5;">
+            <strong>📌 Hướng dẫn sử dụng:</strong>
+            <ol style="margin: 6px 0 0 18px; padding: 0;">
+              <li>Mời Bot vào nhóm Zalo phụ huynh của lớp bằng link: <a href="https://bot.zaloplatforms.com/groups/invite/bot.kTCMljuF" target="_blank" style="color: #2563eb; font-weight: 700; text-decoration: underline;">bot.kTCMljuF</a>.</li>
+              <li>Trong nhóm Zalo đó, gõ tin nhắn tag bot một lần (ví dụ: <code>@Bot Điểm Danh xin chào</code>).</li>
+              <li>Vào phần <strong>Quản Lý Lớp Học</strong> &rarr; Bấm <strong>Chỉnh Sửa</strong> lớp &rarr; Bấm nút <strong>"Tìm mã nhóm"</strong> để hệ thống tự động điền mã nhóm.</li>
+              <li>Từ nay, mỗi khi Giáo lý viên điểm danh xong và bấm <strong>"Lưu Kết Quả Điểm Danh Vĩnh Viễn"</strong>, danh sách các em vắng sẽ tự động được gửi thẳng vào nhóm Zalo phụ huynh!</li>
+            </ol>
+          </div>
         </div>
       </div>
 
@@ -6451,6 +6832,8 @@
     }
     if (document.getElementById('cls-co-teacher')) document.getElementById('cls-co-teacher').value = '';
     if (document.getElementById('cls-co-teacher-email')) document.getElementById('cls-co-teacher-email').value = '';
+    if (document.getElementById('cls-zalo-chat-id')) document.getElementById('cls-zalo-chat-id').value = '';
+    if (document.getElementById('cls-zalo-auto-send')) document.getElementById('cls-zalo-auto-send').checked = true;
 
     populateCatechistDatalist();
     setupCoTeacherAutoFill();
@@ -6558,6 +6941,12 @@
     }
     if (document.getElementById('cls-co-teacher-email')) {
       document.getElementById('cls-co-teacher-email').value = cls.coTeacherEmail || '';
+    }
+    if (document.getElementById('cls-zalo-chat-id')) {
+      document.getElementById('cls-zalo-chat-id').value = cls.zaloChatId || '';
+    }
+    if (document.getElementById('cls-zalo-auto-send')) {
+      document.getElementById('cls-zalo-auto-send').checked = cls.zaloAutoSend !== false;
     }
 
     const delBtn = document.getElementById('class-modal-delete-btn');
@@ -6926,6 +7315,8 @@
       teacherEmail: teacherEmail,
       coTeacher: coTeacherName,
       coTeacherEmail: coTeacherEmail,
+      zaloChatId: (document.getElementById('cls-zalo-chat-id')?.value || '').trim(),
+      zaloAutoSend: document.getElementById('cls-zalo-auto-send') ? document.getElementById('cls-zalo-auto-send').checked : true,
       studentCount: 0
     };
 
