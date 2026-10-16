@@ -203,49 +203,57 @@
   background: transparent;
   border: none;
   color: #0f172a;
+}
 .cg-quick-select-class select:focus {
   outline: none;
 }
 
-/* ----------------- GAME CARDS GRID ----------------- */
+/* ----------------- GAME CARDS GRID (GIỐNG GAMEGIAODUC HÌNH 2) ----------------- */
 .cg-games-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
   gap: 1.8rem;
   margin-bottom: 2.5rem;
 }
 
 .cg-game-card {
-  background: var(--cg-bg-card);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(148, 163, 184, 0.15);
-  border-radius: 18px;
+  background: #ffffff;
+  border: 1.5px solid rgba(13, 148, 136, 0.18);
+  border-radius: 22px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  justify-content: space-between;
+  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.06);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.25s ease;
   position: relative;
 }
 
 .cg-game-card:hover {
-  transform: translateY(-6px);
-  border-color: rgba(245, 158, 11, 0.5);
-  box-shadow: 0 16px 35px rgba(0, 0, 0, 0.35), 0 0 25px rgba(245, 158, 11, 0.15);
+  transform: translateY(-5px);
+  box-shadow: 0 16px 32px -6px rgba(13, 148, 136, 0.20), 0 4px 14px rgba(2, 132, 199, 0.10);
+  border-color: rgba(13, 148, 136, 0.45);
 }
 
 .cg-card-thumb-wrap {
-  width: 100%;
-  aspect-ratio: 16 / 9;
+  margin: 12px 12px 0 12px;
+  height: 165px;
+  border-radius: 18px;
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 18px -4px rgba(13, 148, 136, 0.25);
   overflow: hidden;
-  background: #020617;
+  background: #0f172a;
 }
 
 .cg-card-thumb {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  position: absolute;
+  inset: 0;
   transition: transform 0.4s ease;
 }
 
@@ -253,97 +261,200 @@
   transform: scale(1.05);
 }
 
-.cg-card-overlay-badge {
+.cg-card-thumb-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.45) 0%, rgba(15, 23, 42, 0.05) 50%, rgba(15, 23, 42, 0.55) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.cg-card-badge-topleft {
   position: absolute;
   top: 12px;
   left: 12px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #ffffff;
   background: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(6px);
-  border: 1px solid rgba(245, 158, 11, 0.4);
-  color: #fbbf24;
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 4px 10px;
-  border-radius: 999px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  padding: 5px 12px;
+  border-radius: 14px;
+  letter-spacing: 0.05em;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  z-index: 2;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 
-.cg-card-tech-tag {
+.cg-card-badge-topright {
   position: absolute;
-  bottom: 12px;
+  top: 12px;
   right: 12px;
-  background: linear-gradient(135deg, #0284c7, #0369a1);
-  color: #fff;
   font-size: 0.72rem;
-  font-weight: 700;
-  padding: 4px 10px;
-  border-radius: 6px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  color: #ffffff;
+  font-weight: 800;
+  background: rgba(15, 23, 42, 0.85);
+  padding: 5px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  z-index: 2;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.cg-card-engine-icon {
+  position: absolute;
+  bottom: 10px;
+  right: 12px;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.20);
+  border: 1.5px solid rgba(255, 255, 255, 0.9);
+  z-index: 2;
 }
 
 .cg-card-body {
-  padding: 1.4rem;
+  padding: 16px 20px 20px 20px;
+  flex: 1;
   display: flex;
   flex-direction: column;
-  flex: 1;
+  justify-content: space-between;
 }
 
 .cg-card-title {
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: #f8fafc;
-  margin-bottom: 0.5rem;
-  line-height: 1.35;
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: #0f172a;
+  line-height: 1.3;
+  margin-bottom: 6px;
 }
 
 .cg-card-desc {
   font-size: 0.88rem;
-  color: #94a3b8;
-  line-height: 1.55;
-  margin-bottom: 1.2rem;
-  flex: 1;
+  color: #475569;
+  margin-bottom: 14px;
+  line-height: 1.5;
+  font-weight: 500;
+  min-height: 52px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.cg-card-footer {
+.cg-card-meta-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  border-top: 1px solid rgba(148, 163, 184, 0.1);
-  padding-top: 1rem;
+  font-size: 0.82rem;
+  color: #64748b;
+  margin-bottom: 16px;
+  font-weight: 600;
 }
 
-.cg-card-players {
-  font-size: 0.8rem;
-  color: #cbd5e1;
+.cg-card-meta-row strong {
+  color: #0d9488;
+  font-weight: 800;
+}
+
+/* Nút Chơi Ngay dạng viên thuốc gradient xanh biển/teal như Gamegiaoduc */
+.cg-btn-play-primary {
+  width: 100%;
+  border-radius: 16px;
+  font-weight: 800;
+  font-size: 0.95rem;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #0d9488 0%, #0284c7 100%);
+  color: #ffffff;
+  box-shadow: 0 6px 18px rgba(13, 148, 136, 0.35);
+  border: none;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 6px;
-}
-
-.cg-btn-play {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  color: #0f172a;
-  border: none;
-  font-weight: 800;
-  font-size: 0.92rem;
-  padding: 9px 20px;
-  border-radius: 10px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
+  justify-content: center;
   gap: 8px;
+  margin-bottom: 10px;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
 }
 
-.cg-btn-play:hover {
+.cg-btn-play-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(245, 158, 11, 0.5);
-  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  box-shadow: 0 8px 22px rgba(13, 148, 136, 0.45);
+  filter: brightness(1.06);
+}
+
+.cg-btn-play-primary:active {
+  transform: translateY(0);
+}
+
+/* Hàng 3 nút công cụ phụ: Soạn/Tải file | Mẫu Excel | Đặt lại */
+.cg-card-tools-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.cg-btn-tool-upload {
+  flex: 1;
+  border-radius: 12px;
+  font-size: 0.82rem;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #0f172a;
+  font-weight: 700;
+  padding: 9px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cg-btn-tool-upload:hover {
+  background: #e2e8f0;
+  border-color: #94a3b8;
+  color: #0d9488;
+}
+
+.cg-btn-tool-icon {
+  width: 40px;
+  height: 38px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.95rem;
+  border: none;
+}
+
+.cg-btn-tool-template {
+  background: rgba(13, 148, 136, 0.12);
+  color: #0d9488;
+  border: 1.5px solid rgba(13, 148, 136, 0.3);
+}
+
+.cg-btn-tool-template:hover {
+  background: rgba(13, 148, 136, 0.22);
+  transform: scale(1.05);
+}
+
+.cg-btn-tool-reset {
+  background: rgba(239, 68, 68, 0.12);
+  color: #dc2626;
+  border: 1.5px solid rgba(239, 68, 68, 0.3);
+}
+
+.cg-btn-tool-reset:hover {
+  background: rgba(239, 68, 68, 0.22);
+  transform: scale(1.05);
 }
 
 /* ----------------- BIBLE EXPLORER ACCORDION / WIDGET ----------------- */
@@ -1732,7 +1843,85 @@
   animation: cgPopIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-/* Responsive */
+/* ----------------- CUSTOMIZER MODAL (SOẠN & NẠP FILE EXCEL/WORD) ----------------- */
+.cg-customizer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(8px);
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: cgFadeIn 0.2s ease-out;
+}
+
+.cg-customizer-card {
+  background: #ffffff;
+  border-radius: 24px;
+  width: 100%;
+  max-width: 680px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.35);
+  border: 1px solid #cbd5e1;
+  overflow: hidden;
+  animation: cgPopIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cg-customizer-header {
+  padding: 18px 24px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8fafc;
+}
+
+.cg-customizer-header h3 {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cg-customizer-body {
+  padding: 20px 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.cg-customizer-footer {
+  padding: 16px 24px;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  background: #f8fafc;
+}
+
+.cg-dropzone {
+  border: 2px dashed #0d9488;
+  background: #f0fdf4;
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 16px;
+}
+
+.cg-dropzone:hover {
+  background: #ccfbf1;
+  border-color: #0f766e;
+}
+
 @media (max-width: 768px) {
   .cg-hero-title { font-size: 1.6rem; }
   .cg-hero-banner { padding: 1.5rem; }
