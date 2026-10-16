@@ -3,7 +3,7 @@
  * Version: 2026.10.16-v1
  */
 
-const CACHE_NAME = 'magnificatedu-cache-v17';
+const CACHE_NAME = 'magnificatedu-cache-v18';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -11,6 +11,13 @@ const STATIC_ASSETS = [
   './activities_flipbook.css',
   './activities_data.js',
   './activities_flipbook.js',
+  './catechism_games.css',
+  './catechism_games.js',
+  './bible_data.js',
+  './anh/games/thumb_noah_ark.jpg',
+  './anh/games/thumb_head_tilt.jpg',
+  './anh/games/thumb_shepherd_rescue.jpg',
+  './anh/games/thumb_bible_memory.jpg',
   './app_v2.js',
   './pwa.js',
   './manifest.json',

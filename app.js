@@ -1750,6 +1750,15 @@
             renderLibrary(container);
           }
           break;
+        case 'catechism-games':
+        case 'games':
+        case 'bible-games':
+          if (typeof window.renderCatechismGames === 'function') {
+            window.renderCatechismGames(container);
+          } else {
+            renderOverview(container);
+          }
+          break;
         case 'quizzes':
           renderQuizzes(container);
           break;
@@ -2056,6 +2065,25 @@
       <!-- BANNER SLOGAN OVERVIEW - DUNG ANHNEN.PNG TRONG THU MUC GOC THAY THE TRUC TIEP GIAO DIEN CHO NAY -->
       <div class="welcome-slogan-card">
         <img src="anhnen.png" alt="Không phải tất cả chúng ta đều làm được những điều vĩ đại. Nhưng chúng ta có thể làm những điều nhỏ nhặt với tình yêu vĩ đại - Mẹ Thánh Têrêsa Calcutta" class="welcome-slogan-img" onerror="this.onerror=null;this.src='anh/anhnen.png';">
+      </div>
+
+      <!-- QUICK LAUNCH GAME BANNER (NGAY TRÊN ĐẦU TRANG) -->
+      <div style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 58, 138, 0.85)); border: 2px solid rgba(245, 158, 11, 0.45); border-radius: 16px; padding: 1.2rem 1.8rem; margin: 1.5rem 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <div style="width: 52px; height: 52px; border-radius: 14px; background: linear-gradient(135deg, #f59e0b, #d97706); display: flex; align-items: center; justify-content: center; font-size: 1.6rem; color: #0f172a; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);">
+            <i class="fa-solid fa-gamepad"></i>
+          </div>
+          <div>
+            <div style="font-weight: 800; font-size: 1.15rem; color: #fff; display: flex; align-items: center; gap: 8px;">
+              🎮 Kho Game Giáo Lý & Kinh Thánh Tương Tác 3D & AI
+              <span style="background: #ef4444; color: #fff; font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 999px;">MỚI</span>
+            </div>
+            <div style="font-size: 0.88rem; color: #cbd5e1;">Cuộc đua Con Tàu Nô-ê • Camera AI Nghiêng đầu • Bảo vệ đàn chiên • Lật thẻ Chibi Công Giáo</div>
+          </div>
+        </div>
+        <button class="btn btn-warning" onclick="window.appNavigate('catechism-games')" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: #0f172a; font-weight: 800; border: none; padding: 10px 24px; border-radius: 10px; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35); cursor: pointer;">
+          <i class="fa-solid fa-play"></i> VÀO CHƠI NGAY
+        </button>
       </div>
 
       <!-- KPI METRICS GRID -->
@@ -2533,6 +2561,13 @@
 
     return Array.from(studentMap.values());
   }
+
+  window.getMagnificatStudents = function() {
+    try { return getAccessibleStudents(); } catch (e) { return []; }
+  };
+  window.getMagnificatClasses = function() {
+    try { return getAccessibleClasses(); } catch (e) { return []; }
+  };
 
   function getAccessibleAttendanceLogs() {
     const isAdmin = hasAdminAccess(currentUser);
