@@ -2077,29 +2077,6 @@
         </div>
       </div>
 
-      <!-- ACTIVITIES LIBRARY HIGHLIGHT BANNER -->
-      <div class="card mb-4" style="background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 60%, #1e3a8a 100%); color: #ffffff; border-radius: 14px; padding: 18px 24px; border: 1px solid rgba(245, 158, 11, 0.4); box-shadow: 0 10px 20px -5px rgba(15, 23, 42, 0.3); margin-bottom: 24px; position: relative; overflow: hidden;">
-        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; position: relative; z-index: 2;">
-          <div style="display: flex; align-items: center; gap: 16px;">
-            <div style="width: 52px; height: 52px; border-radius: 12px; background: linear-gradient(135deg, #f59e0b, #d97706); color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4); flex-shrink: 0;">
-              <i class="fa-solid fa-icons"></i>
-            </div>
-            <div>
-              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                <span class="badge" style="background: #f59e0b; color: #000; font-weight: 800; font-size: 11px; padding: 2px 8px; border-radius: 9999px;">TÍNH NĂNG MỚI</span>
-                <h3 style="font-size: 17px; font-weight: 800; color: #ffffff; margin: 0;">Thư Viện Trò Chơi, Bài Hát, Băng Reo</h3>
-              </div>
-              <p style="font-size: 13px; color: #cbd5e1; margin: 0; line-height: 1.4;">
-                Tuyển tập 130+ trò chơi vòng tròn &amp; có dụng cụ, 68 băng reo Giáo Lý cử điệu và các ca khúc sinh hoạt. Xem dưới dạng <strong>sách lật 3D trực quan</strong>, tải về định dạng Word &amp; PDF.
-              </p>
-            </div>
-          </div>
-          <button type="button" class="btn btn-warning" onclick="window.appNavigate('activities-library')" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: #0f172a; font-weight: 800; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);">
-            <i class="fa-solid fa-book-open-reader"></i> Khám Phá Thư Viện Ngay
-          </button>
-        </div>
-      </div>
-
       <!-- MAIN DASHBOARD CONTENT -->
       <div class="dashboard-grid">
         <div class="left-col">
