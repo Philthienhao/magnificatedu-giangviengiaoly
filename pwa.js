@@ -33,7 +33,7 @@
   // Register Service Worker
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js')
+      navigator.serviceWorker.register('./sw.js?v=20261020_v30')
         .then((reg) => {
           console.log('✅ MagnificatEdu ServiceWorker registered successfully:', reg.scope);
           try { reg.update(); } catch(e) {}

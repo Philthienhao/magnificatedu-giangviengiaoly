@@ -2267,17 +2267,29 @@ body.auth-gate-active #app {
   display: none !important;
 }
 
-body.auth-gate-active #google-auth-modal {
-  position: relative !important;
-  min-height: 100vh !important;
+body.auth-gate-active #google-auth-modal,
+#google-auth-modal {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  height: 100vh !important;
+  height: 100dvh !important;
   background: transparent !important;
   backdrop-filter: none !important;
-  padding: 40px 16px 60px 16px !important;
+  padding: 8px 12px 24px 12px !important;
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
-  justify-content: flex-start !important;
+  justify-content: center !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
   z-index: 99999 !important;
+  scroll-behavior: smooth;
 }
 
 /* Celestial Light Rays from Heaven */
@@ -2317,14 +2329,14 @@ body.auth-gate-active #google-auth-modal {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin-bottom: -24px;
+  margin-bottom: -10px;
   z-index: 15;
 }
 
 .sacred-aura-pulse {
   position: absolute;
-  width: 136px;
-  height: 136px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   background: radial-gradient(circle, rgba(254, 240, 138, 0.45) 0%, rgba(245, 158, 11, 0.2) 50%, transparent 75%);
   animation: sacredAuraPulse 3.5s ease-in-out infinite;
@@ -2337,9 +2349,9 @@ body.auth-gate-active #google-auth-modal {
 }
 
 .sacred-cross-svg {
-  width: 78px;
-  height: 98px;
-  filter: drop-shadow(0 0 18px rgba(245, 158, 11, 0.7)) drop-shadow(0 4px 12px rgba(0, 0, 0, 0.7));
+  width: 36px;
+  height: 46px;
+  filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.7)) drop-shadow(0 2px 6px rgba(0, 0, 0, 0.45));
   animation: crossFloat 4s ease-in-out infinite;
   cursor: pointer;
   transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -2354,27 +2366,16 @@ body.auth-gate-active #google-auth-modal {
   50% { transform: translateY(-5px); }
 }
 
-
 .sacred-motto-ribbon {
-  margin-top: 6px;
-  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.95) 20%, rgba(255, 255, 255, 0.95) 80%, transparent 100%);
-  padding: 4px 22px;
-  border-top: 1.5px solid rgba(217, 119, 6, 0.6);
-  border-bottom: 1.5px solid rgba(217, 119, 6, 0.6);
-  letter-spacing: 1.6px;
-  font-size: 10.5px;
-  font-weight: 800;
-  color: #92400e;
-  text-transform: uppercase;
-  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+  display: none !important;
 }
 
 /* Modal Dialog & Frame */
 body.auth-gate-active #google-auth-modal .auth-modal,
 #google-auth-modal .auth-modal {
-  max-width: 510px;
+  max-width: 490px;
   width: 100%;
-  margin: 30px auto !important;
+  margin: auto !important;
   position: relative;
   z-index: 10;
   background: transparent !important;
@@ -2382,6 +2383,7 @@ body.auth-gate-active #google-auth-modal .auth-modal,
   border: none !important;
   overflow: visible !important;
   max-height: none !important;
+  flex-shrink: 0 !important;
   animation: sacredModalEntrance 0.75s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
@@ -2390,102 +2392,97 @@ body.auth-gate-active #google-auth-modal .auth-modal,
   100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-body.auth-gate-active #google-auth-modal .modal-content.auth-modal-content {
+body.auth-gate-active #google-auth-modal .modal-content.auth-modal-content,
+#google-auth-modal .modal-content.auth-modal-content {
   position: relative;
-  background: rgba(255, 255, 255, 0.93) !important;
+  background: rgba(255, 255, 255, 0.96) !important;
   backdrop-filter: blur(28px) saturate(190%) !important;
   -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
   border: 2px solid rgba(245, 158, 11, 0.55) !important;
-  border-radius: 34px 34px 24px 24px !important;
+  border-radius: 26px !important;
   box-shadow: 
     0 25px 65px -10px rgba(15, 23, 42, 0.22),
     0 0 50px rgba(254, 240, 138, 0.5),
     inset 0 1px 1px rgba(255, 255, 255, 1) !important;
-  overflow: hidden;
+  max-height: calc(100vh - 30px) !important;
+  max-height: calc(100dvh - 30px) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
   color: #0f172a;
 }
 
-body.auth-gate-active .auth-body {
-  padding: 10px 26px 28px 26px !important;
+body.auth-gate-active .auth-body,
+#google-auth-modal .auth-body,
+.auth-body {
+  padding: 8px 22px 28px 22px !important;
   position: relative;
   z-index: 4;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(217, 119, 6, 0.4) transparent;
 }
 
+.auth-body::-webkit-scrollbar {
+  width: 5px;
+}
+.auth-body::-webkit-scrollbar-track {
+  background: rgba(241, 245, 249, 0.5);
+  border-radius: 10px;
+}
+.auth-body::-webkit-scrollbar-thumb {
+  background: rgba(217, 119, 6, 0.4);
+  border-radius: 10px;
+}
+.auth-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(217, 119, 6, 0.7);
+}
+
+.auth-tab-pane {
+  padding-bottom: 8px;
+}
 
 /* Header & Avatar */
-.auth-brand-emblem-wrap {
-  position: relative;
-  width: 70px;
-  height: 70px;
-  margin: 10px auto 10px auto;
-  display: flex;
+.auth-brand-inline {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 10px;
+  margin-bottom: 2px;
 }
 
-.brand-avatar-halo-ring {
-  position: absolute;
-  inset: -6px;
-  border-radius: 50%;
-  border: 2px dashed rgba(217, 119, 6, 0.6) !important;
-  box-shadow: 0 0 16px rgba(245, 158, 11, 0.4), inset 0 0 10px rgba(245, 158, 11, 0.2);
-  animation: haloRotate 20s linear infinite;
-}
-
-@keyframes haloRotate {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.auth-brand-emblem-wrap .brand-icon {
-  width: 58px;
-  height: 58px;
+.brand-icon-mini {
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   overflow: hidden;
-  border: 2.5px solid #f59e0b;
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.25);
+  border: 2px solid #f59e0b;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.2);
   background: #ffffff;
-  z-index: 2;
+  flex-shrink: 0;
 }
 
-.auth-brand-emblem-wrap .brand-avatar-img {
+.brand-icon-mini .brand-avatar-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.sacred-cross-badge {
-  position: absolute;
-  bottom: -2px;
-  right: 2px;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #f59e0b 0%, #b45309 100%);
-  color: #ffffff;
-  font-size: 11px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px solid #ffffff;
-  box-shadow: 0 0 10px rgba(245, 158, 11, 0.85);
-  z-index: 3;
-  animation: crossPulse 2.5s ease-in-out infinite;
-}
-
-@keyframes crossPulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.15); }
-}
-
-body.auth-gate-active .auth-header {
+body.auth-gate-active .auth-header,
+#google-auth-modal .auth-header {
   position: relative;
   text-align: center;
-  padding: 18px 24px 10px 24px;
+  padding: 10px 18px 4px 18px;
+  flex-shrink: 0 !important;
 }
 
-body.auth-gate-active .auth-logo h2 {
-  font-size: 26px;
+body.auth-gate-active .auth-logo h2,
+#google-auth-modal .auth-logo h2 {
+  font-size: 20px;
   font-weight: 800;
   color: #0f172a !important;
   letter-spacing: -0.5px;
@@ -2496,7 +2493,8 @@ body.auth-gate-active .auth-logo h2 {
   text-shadow: none !important;
 }
 
-body.auth-gate-active .auth-logo h2 span {
+body.auth-gate-active .auth-logo h2 span,
+#google-auth-modal .auth-logo h2 span {
   color: #0284c7 !important;
   font-weight: 800;
   background: none !important;
@@ -2506,49 +2504,71 @@ body.auth-gate-active .auth-logo h2 span {
   text-shadow: none !important;
 }
 
-body.auth-gate-active .auth-subtitle {
+body.auth-gate-active .auth-subtitle,
+#google-auth-modal .auth-subtitle {
   color: #475569 !important;
-  font-size: 13px;
+  font-size: 11.5px;
   font-weight: 600;
-  margin-top: 5px;
-  letter-spacing: 0.3px;
+  margin-top: 2px;
+  letter-spacing: 0.2px;
 }
 
 .chi-rho-symbol {
   color: #d97706 !important;
   font-weight: 800;
-  font-size: 14px;
+  font-size: 12px;
   text-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
 }
 
 /* Slogan Quote Card (Pastoral Warmth & Candle Glow) */
-body.auth-gate-active .slogan-card-auth {
+body.auth-gate-active .slogan-card-auth,
+#google-auth-modal .slogan-card-auth {
   display: flex;
   align-items: center;
-  gap: 14px;
-  background: linear-gradient(135deg, rgba(254, 243, 199, 0.88) 0%, rgba(254, 249, 195, 0.78) 100%) !important;
-  border: 1.5px solid rgba(245, 158, 11, 0.55) !important;
-  border-left: 4px solid #d97706 !important;
-  border-radius: 14px !important;
-  padding: 13px 16px !important;
-  margin-bottom: 20px !important;
+  gap: 8px;
+  background: linear-gradient(135deg, rgba(254, 243, 199, 0.92) 0%, rgba(254, 249, 195, 0.85) 100%) !important;
+  border: 1px solid rgba(245, 158, 11, 0.5) !important;
+  border-left: 3px solid #d97706 !important;
+  border-radius: 9px !important;
+  padding: 6px 10px !important;
+  margin-bottom: 10px !important;
   text-align: left !important;
-  box-shadow: 0 6px 18px rgba(217, 119, 6, 0.12) !important;
+  box-shadow: 0 2px 8px rgba(217, 119, 6, 0.08) !important;
+}
+
+.candle-mini-icon {
+  color: #d97706;
+  font-size: 13px;
+  flex-shrink: 0;
+  animation: candleFlicker 1.8s ease-in-out infinite alternate;
+}
+
+.slogan-text {
+  color: #1e293b;
+  font-size: 11px;
+  font-style: italic;
+  line-height: 1.35;
+  font-weight: 500;
+}
+
+.slogan-text b {
+  color: #92400e;
+  font-weight: 700;
 }
 
 .sacred-candle-glow {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.95) !important;
   border: 1.5px solid rgba(245, 158, 11, 0.55) !important;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #d97706 !important;
-  font-size: 18px;
+  font-size: 15px;
   flex-shrink: 0;
-  box-shadow: 0 0 14px rgba(245, 158, 11, 0.45);
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
 }
 
 .candle-flame-anim {
@@ -2561,57 +2581,63 @@ body.auth-gate-active .slogan-card-auth {
   100% { transform: scale(0.97) rotate(-1deg); opacity: 0.9; filter: drop-shadow(0 0 6px #f59e0b); }
 }
 
-body.auth-gate-active .slogan-card-auth p {
+body.auth-gate-active .slogan-card-auth p,
+#google-auth-modal .slogan-card-auth p {
   color: #1e293b !important;
-  font-size: 12.5px;
+  font-size: 11.5px;
   font-style: italic;
-  line-height: 1.5;
+  line-height: 1.4;
   margin: 0;
   font-weight: 500;
 }
 
-body.auth-gate-active .slogan-card-auth span {
+body.auth-gate-active .slogan-card-auth span,
+#google-auth-modal .slogan-card-auth span {
   color: #92400e !important;
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 700;
-  margin-top: 4px;
+  margin-top: 2px;
   display: block;
 }
 
 /* Tabs */
-body.auth-gate-active .auth-tabs-nav {
+body.auth-gate-active .auth-tabs-nav,
+#google-auth-modal .auth-tabs-nav {
   background: rgba(241, 245, 249, 0.92) !important;
   border: 1px solid rgba(203, 213, 225, 0.9) !important;
-  border-radius: 12px !important;
-  padding: 4px !important;
+  border-radius: 11px !important;
+  padding: 3px !important;
   display: flex;
   gap: 4px;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
 }
 
-body.auth-gate-active .auth-tab-btn {
+body.auth-gate-active .auth-tab-btn,
+#google-auth-modal .auth-tab-btn {
   flex: 1;
-  padding: 10px 14px;
-  font-size: 13px;
+  padding: 8px 12px;
+  font-size: 12.5px;
   font-weight: 700;
   border: none;
   background: transparent;
   color: #475569 !important;
-  border-radius: 9px !important;
+  border-radius: 8px !important;
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 7px;
 }
 
-body.auth-gate-active .auth-tab-btn:hover {
+body.auth-gate-active .auth-tab-btn:hover,
+#google-auth-modal .auth-tab-btn:hover {
   color: #0284c7 !important;
   background: rgba(255, 255, 255, 0.7) !important;
 }
 
-body.auth-gate-active .auth-tab-btn.active {
+body.auth-gate-active .auth-tab-btn.active,
+#google-auth-modal .auth-tab-btn.active {
   background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
   color: #ffffff !important;
   box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
@@ -2619,39 +2645,47 @@ body.auth-gate-active .auth-tab-btn.active {
 }
 
 /* Inputs & Labels */
-body.auth-gate-active .form-group label {
+body.auth-gate-active .form-group label,
+#google-auth-modal .form-group label {
   color: #0f172a !important;
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 700;
-  margin-bottom: 6px;
+  margin-bottom: 5px;
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-body.auth-gate-active .form-group label i {
+body.auth-gate-active .form-group label i,
+#google-auth-modal .form-group label i {
   color: #0284c7 !important;
 }
 
 body.auth-gate-active .sacred-input,
-body.auth-gate-active .form-control {
+body.auth-gate-active .form-control,
+#google-auth-modal .sacred-input,
+#google-auth-modal .form-control {
   background: #ffffff !important;
   border: 1.5px solid #cbd5e1 !important;
   color: #0f172a !important;
   border-radius: 11px !important;
-  padding: 11px 14px !important;
+  padding: 10px 13px !important;
   font-size: 13.5px !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
   transition: all 0.25s ease !important;
 }
 
 body.auth-gate-active .sacred-input::placeholder,
-body.auth-gate-active .form-control::placeholder {
+body.auth-gate-active .form-control::placeholder,
+#google-auth-modal .sacred-input::placeholder,
+#google-auth-modal .form-control::placeholder {
   color: #94a3b8 !important;
 }
 
 body.auth-gate-active .sacred-input:focus,
-body.auth-gate-active .form-control:focus {
+body.auth-gate-active .form-control:focus,
+#google-auth-modal .sacred-input:focus,
+#google-auth-modal .form-control:focus {
   background: #ffffff !important;
   border-color: #0284c7 !important;
   box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.18) !important;
@@ -2905,6 +2939,33 @@ body.auth-gate-active .toggle-pw-btn:hover {
 /* --------------------------------------------------------------------------
    FULLSCREEN & RESPONSIVE LAYOUT OPTIMIZATIONS
    -------------------------------------------------------------------------- */
+:fullscreen,
+:-webkit-full-screen {
+  overflow-y: auto !important;
+}
+
+body.is-fullscreen {
+  overflow-y: auto !important;
+}
+
+:fullscreen #google-auth-modal,
+:-webkit-full-screen #google-auth-modal,
+body.is-fullscreen #google-auth-modal {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  padding: max(20px, env(safe-area-inset-top, 20px)) 16px max(80px, env(safe-area-inset-bottom, 80px)) 16px !important;
+  z-index: 999999 !important;
+}
+
 body.is-fullscreen .content-area {
   padding: 24px 36px;
 }
@@ -3311,17 +3372,28 @@ body.is-fullscreen .catechist-grid {
     min-height: 100vh;
     min-height: 100dvh;
   }
-  body.auth-gate-active #google-auth-modal {
-    padding: max(14px, env(safe-area-inset-top, 14px)) 12px max(30px, env(safe-area-inset-bottom, 30px)) 12px !important;
+  body.auth-gate-active #google-auth-modal,
+  #google-auth-modal {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    padding: max(14px, env(safe-area-inset-top, 14px)) 12px max(80px, env(safe-area-inset-bottom, 80px)) 12px !important;
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
     justify-content: flex-start !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
   }
-  body.auth-gate-active #google-auth-modal .auth-modal {
-    margin: 8px auto !important;
+  body.auth-gate-active #google-auth-modal .auth-modal,
+  #google-auth-modal .auth-modal {
+    margin: 8px auto 60px auto !important;
     max-width: 440px !important;
     width: 100% !important;
+    flex-shrink: 0 !important;
   }
   body.auth-gate-active #google-auth-modal .modal-content.auth-modal-content {
     border-radius: 30px !important;

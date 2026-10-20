@@ -3,11 +3,13 @@
  * Version: 2026.10.16-v1
  */
 
-const CACHE_NAME = 'magnificatedu-cache-v21';
+const CACHE_NAME = 'magnificatedu-cache-v28';
 const STATIC_ASSETS = [
   './',
   './index.html',
   './styles.css',
+  './class_emulation.css',
+  './class_emulation.js',
   './activities_flipbook.css',
   './activities_data.js',
   './activities_flipbook.js',

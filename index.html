@@ -44,9 +44,10 @@
   </script>
   
   <!-- Custom Stylesheet -->
-  <link rel="stylesheet" href="styles.css?v=20261016_v5400">
-  <link rel="stylesheet" href="activities_flipbook.css?v=20261016_v5400">
-  <link rel="stylesheet" href="catechism_games.css?v=20261016_v5500">
+  <link rel="stylesheet" href="styles.css?v=20261020_v6700">
+  <link rel="stylesheet" href="activities_flipbook.css?v=20261017_v6400">
+  <link rel="stylesheet" href="catechism_games.css?v=20261017_v6400">
+  <link rel="stylesheet" href="class_emulation.css?v=20261017_v6400">
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.4/dist/confetti.browser.min.js"></script>
 </head>
 <body>
@@ -103,7 +104,8 @@
             <i class="fa-solid fa-chevron-down arrow"></i>
           </button>
           <div class="nav-sub-menu" id="sub-training">
-            <a href="#classes" class="nav-sub-item" data-page="classes"><i class="fa-solid fa-layer-group"></i> Lớp học</a>
+            <a href="#classes" class="nav-sub-item" data-page="classes"><i class="fa-solid fa-layer-group"></i> Lớp học & Chủ nhiệm</a>
+            <a href="#emulation" class="nav-sub-item" data-page="emulation"><i class="fa-solid fa-award"></i> Thi đua Lớp chủ nhiệm</a>
             <a href="#students" class="nav-sub-item" data-page="students"><i class="fa-solid fa-user-graduate"></i> Học viên</a>
             <a href="#catechists" class="nav-sub-item" data-page="catechists"><i class="fa-solid fa-chalkboard-user"></i> Giáo lý viên</a>
           </div>
@@ -124,6 +126,7 @@
           <div class="nav-sub-menu" id="sub-grades">
             <a href="#gradebook" class="nav-sub-item" data-page="gradebook"><i class="fa-solid fa-table-list"></i> Sổ Điểm & ĐTB Cả Năm</a>
             <a href="#conduct" class="nav-sub-item" data-page="conduct"><i class="fa-solid fa-star"></i> Đánh giá rèn luyện</a>
+            <a href="#emulation" class="nav-sub-item" data-page="emulation"><i class="fa-solid fa-award"></i> Thi đua & Vinh danh</a>
           </div>
         </div>
 
@@ -387,9 +390,6 @@
           <circle cx="60" cy="52" r="4.5" fill="#fef08a"/>
           <circle cx="60" cy="52" r="2.5" fill="#d97706"/>
         </svg>
-        <div class="sacred-motto-ribbon">
-          <span>✝ AD MAJOREM DEI GLORIAM ✝</span>
-        </div>
       </div>
 
       <div class="modal-content auth-modal-content">
@@ -408,29 +408,21 @@
             <i class="fa-solid fa-xmark"></i>
           </button>
           
-          <div class="auth-brand-emblem-wrap">
-            <div class="brand-avatar-halo-ring"></div>
-            <div class="brand-icon">
+          <div class="auth-brand-inline">
+            <div class="brand-icon-mini">
               <img src="brand_logo.jpg" alt="Chân Phước Anrê Phú Yên" class="brand-avatar-img">
             </div>
-            <span class="sacred-cross-badge" title="Thánh Giá"><i class="fa-solid fa-cross"></i></span>
+            <div class="auth-logo">
+              <h2>Magnificat<span>Edu</span></h2>
+            </div>
           </div>
-
-          <div class="auth-logo">
-            <h2>Magnificat<span>Edu</span></h2>
-          </div>
-          <p class="auth-subtitle"><span class="chi-rho-symbol">☧</span> Cổng Đăng Nhập & Đăng Ký Giáo Lý Viên Công Giáo <span class="chi-rho-symbol">☧</span></p>
+          <p class="auth-subtitle"><span class="chi-rho-symbol">☧</span> Cổng Giáo Lý Viên Công Giáo <span class="chi-rho-symbol">☧</span></p>
         </div>
 
         <div class="auth-body">
           <div class="slogan-card-auth">
-            <div class="sacred-candle-glow">
-              <i class="fa-solid fa-fire-flame-curved candle-flame-anim"></i>
-            </div>
-            <div class="slogan-text-wrap">
-              <p>"Chúng ta hãy lấy tình yêu để đáp lại tình yêu của Chúa chúng ta, hãy lấy mạng sống đáp lại mạng sống."</p>
-              <span>Chân Phước Anrê Phú Yên • Bổn Mạng Giáo Lý Viên Việt Nam</span>
-            </div>
+            <i class="fa-solid fa-fire-flame-curved candle-mini-icon"></i>
+            <span class="slogan-text">"Hãy lấy tình yêu đáp lại tình yêu, lấy mạng sống đáp lại mạng sống." • <b>Anrê Phú Yên</b></span>
           </div>
 
           <!-- Auth Navigation Tabs -->
@@ -511,90 +503,92 @@
                 </div>
               </div>
 
-              <div class="form-group mb-2">
-                <label><i class="fa-solid fa-phone"></i> Số điện thoại liên lạc:</label>
-                <input type="tel" id="teacher-reg-phone" class="form-control" placeholder="Số điện thoại di động...">
-              </div>
-
-              <div class="form-group mb-3">
-                <label><i class="fa-solid fa-church text-primary"></i> Trực thuộc Giáo Xứ:</label>
-                <select id="teacher-reg-parish" class="form-control" onchange="window.handleRegisterParishChange(this.value)" required>
-                  <optgroup label="⛪ 56 Giáo Xứ (Giáo Phận Đà Nẵng)">
-                    <option value="Giáo xứ Hòa Khánh" selected>⛪ Giáo xứ Hòa Khánh (Mặc định)</option>
-                    <option value="Giáo xứ Chính Tòa">⛪ Giáo xứ Chính Tòa</option>
-                    <option value="Giáo xứ An Hải">⛪ Giáo xứ An Hải</option>
-                    <option value="Giáo xứ An Hòa">⛪ Giáo xứ An Hòa</option>
-                    <option value="Giáo xứ An Thượng">⛪ Giáo xứ An Thượng</option>
-                    <option value="Giáo xứ Cẩm Lệ">⛪ Giáo xứ Cẩm Lệ</option>
-                    <option value="Giáo xứ Chợ Chiều">⛪ Giáo xứ Chợ Chiều</option>
-                    <option value="Giáo xứ Chính Trạch">⛪ Giáo xứ Chính Trạch</option>
-                    <option value="Giáo xứ Cồn Dầu">⛪ Giáo xứ Cồn Dầu</option>
-                    <option value="Giáo xứ Gia Phước">⛪ Giáo xứ Gia Phước</option>
-                    <option value="Giáo xứ Hòa Cường">⛪ Giáo xứ Hòa Cường</option>
-                    <option value="Giáo xứ Hòa Thuận">⛪ Giáo xứ Hòa Thuận</option>
-                    <option value="Giáo xứ Ngọc Quang">⛪ Giáo xứ Ngọc Quang</option>
-                    <option value="Giáo xứ Nhượng Nghĩa">⛪ Giáo xứ Nhượng Nghĩa</option>
-                    <option value="Giáo xứ Nội Hà">⛪ Giáo xứ Nội Hà</option>
-                    <option value="Giáo xứ Phước Tường">⛪ Giáo xứ Phước Tường</option>
-                    <option value="Giáo xứ Sơn Trà">⛪ Giáo xứ Sơn Trà</option>
-                    <option value="Giáo xứ Tam Tòa">⛪ Giáo xứ Tam Tòa</option>
-                    <option value="Giáo xứ Thanh Bình">⛪ Giáo xứ Thanh Bình</option>
-                    <option value="Giáo xứ Thanh Đức">⛪ Giáo xứ Thanh Đức</option>
-                    <option value="Giáo xứ An Ngãi Đông">⛪ Giáo xứ An Ngãi Đông</option>
-                    <option value="Giáo xứ Đông Vinh">⛪ Giáo xứ Đông Vinh</option>
-                    <option value="Giáo xứ Hòa Minh">⛪ Giáo xứ Hòa Minh</option>
-                    <option value="Giáo xứ Hòa Ninh">⛪ Giáo xứ Hòa Ninh</option>
-                    <option value="Giáo xứ Hội Yên">⛪ Giáo xứ Hội Yên</option>
-                    <option value="Giáo xứ Phú Nghi">⛪ Giáo xứ Phú Nghi</option>
-                    <option value="Giáo xứ Phước Kiều">⛪ Giáo xứ Phước Kiều</option>
-                    <option value="Giáo xứ Song Mỹ">⛪ Giáo xứ Song Mỹ</option>
-                    <option value="Giáo xứ Lệ Sơn">⛪ Giáo xứ Lệ Sơn</option>
-                    <option value="Giáo xứ Lộc Hòa">⛪ Giáo xứ Lộc Hòa</option>
-                    <option value="Giáo xứ Mông Triệu">⛪ Giáo xứ Mông Triệu</option>
-                    <option value="Giáo xứ Phú Hạ">⛪ Giáo xứ Phú Hạ</option>
-                    <option value="Giáo xứ Phú Thượng">⛪ Giáo xứ Phú Thượng</option>
-                    <option value="Giáo xứ Thạch Nham">⛪ Giáo xứ Thạch Nham</option>
-                    <option value="Giáo xứ Hội An">⛪ Giáo xứ Hội An</option>
-                    <option value="Giáo xứ Vĩnh Điện">⛪ Giáo xứ Vĩnh Điện</option>
-                    <option value="Giáo xứ Ái Nghĩa">⛪ Giáo xứ Ái Nghĩa</option>
-                    <option value="Giáo xứ Cẩm Sơn">⛪ Giáo xứ Cẩm Sơn</option>
-                    <option value="Giáo xứ Hà Tân">⛪ Giáo xứ Hà Tân</option>
-                    <option value="Giáo xứ Hòa Lâm">⛪ Giáo xứ Hòa Lâm</option>
-                    <option value="Giáo xứ Hoằng Phước">⛪ Giáo xứ Hoằng Phước</option>
-                    <option value="Giáo xứ La Nang">⛪ Giáo xứ La Nang</option>
-                    <option value="Giáo xứ Phú Hương">⛪ Giáo xứ Phú Hương</option>
-                    <option value="Giáo xứ Trà Kiệu">⛪ Giáo xứ Trà Kiệu</option>
-                    <option value="Giáo xứ Trung Phước">⛪ Giáo xứ Trung Phước</option>
-                    <option value="Giáo xứ Xuân Thạnh">⛪ Giáo xứ Xuân Thạnh</option>
-                    <option value="Giáo xứ An Sơn">⛪ Giáo xứ An Sơn</option>
-                    <option value="Giáo xứ Bình Phong">⛪ Giáo xứ Bình Phong</option>
-                    <option value="Giáo xứ Hà Lam">⛪ Giáo xứ Hà Lam</option>
-                    <option value="Giáo xứ Khánh Thọ">⛪ Giáo xứ Khánh Thọ</option>
-                    <option value="Giáo xứ Tam Kỳ">⛪ Giáo xứ Tam Kỳ</option>
-                    <option value="Giáo xứ Tam Thành">⛪ Giáo xứ Tam Thành</option>
-                    <option value="Giáo xứ Thuận Yên">⛪ Giáo xứ Thuận Yên</option>
-                    <option value="Giáo xứ Tiên Phước">⛪ Giáo xứ Tiên Phước</option>
-                    <option value="Giáo xứ Vân Đóa">⛪ Giáo xứ Vân Đóa</option>
-                    <option value="Giáo xứ Việt An">⛪ Giáo xứ Việt An</option>
-                  </optgroup>
-                  <optgroup label="📍 6 Giáo Họ Biệt Lập (Giáo Phận Đà Nẵng)">
-                    <option value="Giáo họ biệt lập Tùng Sơn">📍 Giáo họ biệt lập Tùng Sơn</option>
-                    <option value="Giáo họ biệt lập Ô Gia">📍 Giáo họ biệt lập Ô Gia</option>
-                    <option value="Giáo họ biệt lập Tam Lãnh">📍 Giáo họ biệt lập Tam Lãnh</option>
-                    <option value="Giáo họ biệt lập Thái Đông">📍 Giáo họ biệt lập Thái Đông</option>
-                    <option value="Giáo họ biệt lập Chiêm Sơn">📍 Giáo họ biệt lập Chiêm Sơn</option>
-                    <option value="Giáo họ biệt lập Đại Hiệp">📍 Giáo họ biệt lập Đại Hiệp</option>
-                  </optgroup>
-                  <optgroup label="➕ Khác">
-                    <option value="OTHER">➕ Giáo Xứ / Giáo Họ Khác (Tự nhập tên...)</option>
-                  </optgroup>
-                </select>
-                <div id="teacher-reg-custom-parish-wrap" style="display: none; margin-top: 6px;">
-                  <input type="text" id="teacher-reg-custom-parish" class="form-control" placeholder="Nhập tên Giáo xứ của bạn (Ví dụ: Giáo Xứ Tân Định...)">
+              <div class="form-row" style="display: flex; gap: 10px;">
+                <div class="form-group mb-2" style="flex: 1;">
+                  <label><i class="fa-solid fa-phone"></i> Số điện thoại:</label>
+                  <input type="tel" id="teacher-reg-phone" class="form-control" placeholder="Số điện thoại di động...">
+                </div>
+                <div class="form-group mb-2" style="flex: 1.3;">
+                  <label><i class="fa-solid fa-church text-primary"></i> Giáo Xứ:</label>
+                  <select id="teacher-reg-parish" class="form-control" onchange="window.handleRegisterParishChange(this.value)" required>
+                    <optgroup label="⛪ 56 Giáo Xứ (Giáo Phận Đà Nẵng)">
+                      <option value="Giáo xứ Hòa Khánh" selected>⛪ Gx Hòa Khánh (Mặc định)</option>
+                      <option value="Giáo xứ Chính Tòa">⛪ Gx Chính Tòa</option>
+                      <option value="Giáo xứ An Hải">⛪ Gx An Hải</option>
+                      <option value="Giáo xứ An Hòa">⛪ Gx An Hòa</option>
+                      <option value="Giáo xứ An Thượng">⛪ Gx An Thượng</option>
+                      <option value="Giáo xứ Cẩm Lệ">⛪ Gx Cẩm Lệ</option>
+                      <option value="Giáo xứ Chợ Chiều">⛪ Gx Chợ Chiều</option>
+                      <option value="Giáo xứ Chính Trạch">⛪ Gx Chính Trạch</option>
+                      <option value="Giáo xứ Cồn Dầu">⛪ Gx Cồn Dầu</option>
+                      <option value="Giáo xứ Gia Phước">⛪ Gx Gia Phước</option>
+                      <option value="Giáo xứ Hòa Cường">⛪ Gx Hòa Cường</option>
+                      <option value="Giáo xứ Hòa Thuận">⛪ Gx Hòa Thuận</option>
+                      <option value="Giáo xứ Ngọc Quang">⛪ Gx Ngọc Quang</option>
+                      <option value="Giáo xứ Nhượng Nghĩa">⛪ Gx Nhượng Nghĩa</option>
+                      <option value="Giáo xứ Nội Hà">⛪ Gx Nội Hà</option>
+                      <option value="Giáo xứ Phước Tường">⛪ Gx Phước Tường</option>
+                      <option value="Giáo xứ Sơn Trà">⛪ Gx Sơn Trà</option>
+                      <option value="Giáo xứ Tam Tòa">⛪ Gx Tam Tòa</option>
+                      <option value="Giáo xứ Thanh Bình">⛪ Gx Thanh Bình</option>
+                      <option value="Giáo xứ Thanh Đức">⛪ Gx Thanh Đức</option>
+                      <option value="Giáo xứ An Ngãi Đông">⛪ Gx An Ngãi Đông</option>
+                      <option value="Giáo xứ Đông Vinh">⛪ Gx Đông Vinh</option>
+                      <option value="Giáo xứ Hòa Minh">⛪ Gx Hòa Minh</option>
+                      <option value="Giáo xứ Hòa Ninh">⛪ Gx Hòa Ninh</option>
+                      <option value="Giáo xứ Hội Yên">⛪ Gx Hội Yên</option>
+                      <option value="Giáo xứ Phú Nghi">⛪ Gx Phú Nghi</option>
+                      <option value="Giáo xứ Phước Kiều">⛪ Gx Phước Kiều</option>
+                      <option value="Giáo xứ Song Mỹ">⛪ Gx Song Mỹ</option>
+                      <option value="Giáo xứ Lệ Sơn">⛪ Gx Lệ Sơn</option>
+                      <option value="Giáo xứ Lộc Hòa">⛪ Gx Lộc Hòa</option>
+                      <option value="Giáo xứ Mông Triệu">⛪ Gx Mông Triệu</option>
+                      <option value="Giáo xứ Phú Hạ">⛪ Gx Phú Hạ</option>
+                      <option value="Giáo xứ Phú Thượng">⛪ Gx Phú Thượng</option>
+                      <option value="Giáo xứ Thạch Nham">⛪ Gx Thạch Nham</option>
+                      <option value="Giáo xứ Hội An">⛪ Gx Hội An</option>
+                      <option value="Giáo xứ Vĩnh Điện">⛪ Gx Vĩnh Điện</option>
+                      <option value="Giáo xứ Ái Nghĩa">⛪ Gx Ái Nghĩa</option>
+                      <option value="Giáo xứ Cẩm Sơn">⛪ Gx Cẩm Sơn</option>
+                      <option value="Giáo xứ Hà Tân">⛪ Gx Hà Tân</option>
+                      <option value="Giáo xứ Hòa Lâm">⛪ Gx Hòa Lâm</option>
+                      <option value="Giáo xứ Hoằng Phước">⛪ Gx Hoằng Phước</option>
+                      <option value="Giáo xứ La Nang">⛪ Gx La Nang</option>
+                      <option value="Giáo xứ Phú Hương">⛪ Gx Phú Hương</option>
+                      <option value="Giáo xứ Trà Kiệu">⛪ Gx Trà Kiệu</option>
+                      <option value="Giáo xứ Trung Phước">⛪ Gx Trung Phước</option>
+                      <option value="Giáo xứ Xuân Thạnh">⛪ Gx Xuân Thạnh</option>
+                      <option value="Giáo xứ An Sơn">⛪ Gx An Sơn</option>
+                      <option value="Giáo xứ Bình Phong">⛪ Gx Bình Phong</option>
+                      <option value="Giáo xứ Hà Lam">⛪ Gx Hà Lam</option>
+                      <option value="Giáo xứ Khánh Thọ">⛪ Gx Khánh Thọ</option>
+                      <option value="Giáo xứ Tam Kỳ">⛪ Gx Tam Kỳ</option>
+                      <option value="Giáo xứ Tam Thành">⛪ Gx Tam Thành</option>
+                      <option value="Giáo xứ Thuận Yên">⛪ Gx Thuận Yên</option>
+                      <option value="Giáo xứ Tiên Phước">⛪ Gx Tiên Phước</option>
+                      <option value="Giáo xứ Vân Đóa">⛪ Gx Vân Đóa</option>
+                      <option value="Giáo xứ Việt An">⛪ Gx Việt An</option>
+                    </optgroup>
+                    <optgroup label="📍 6 Giáo Họ Biệt Lập (Giáo Phận Đà Nẵng)">
+                      <option value="Giáo họ biệt lập Tùng Sơn">📍 Gh biệt lập Tùng Sơn</option>
+                      <option value="Giáo họ biệt lập Ô Gia">📍 Gh biệt lập Ô Gia</option>
+                      <option value="Giáo họ biệt lập Tam Lãnh">📍 Gh biệt lập Tam Lãnh</option>
+                      <option value="Giáo họ biệt lập Thái Đông">📍 Gh biệt lập Thái Đông</option>
+                      <option value="Giáo họ biệt lập Chiêm Sơn">📍 Gh biệt lập Chiêm Sơn</option>
+                      <option value="Giáo họ biệt lập Đại Hiệp">📍 Gh biệt lập Đại Hiệp</option>
+                    </optgroup>
+                    <optgroup label="➕ Khác">
+                      <option value="OTHER">➕ Tự nhập tên Giáo Xứ khác...</option>
+                    </optgroup>
+                  </select>
                 </div>
               </div>
 
-              <button type="submit" class="btn btn-success btn-block btn-sacred-register">
+              <div id="teacher-reg-custom-parish-wrap" style="display: none; margin-bottom: 8px;">
+                <input type="text" id="teacher-reg-custom-parish" class="form-control" placeholder="Nhập tên Giáo xứ của bạn (Ví dụ: Giáo Xứ Tân Định...)">
+              </div>
+
+              <button type="submit" class="btn btn-success btn-block btn-sacred-register" style="margin-top: 6px;">
                 <span class="btn-shimmer-sweep"></span>
                 <i class="fa-solid fa-user-check"></i> Đăng Ký & Vào Hệ Thống Ngay
               </button>
@@ -1848,17 +1842,20 @@
   <div id="toast-container" class="toast-container"></div>
 
   <!-- PWA Manager & Service Worker Registration -->
-  <script src="pwa.js?v=20261016_v5400"></script>
+  <script src="pwa.js?v=20261020_v6800"></script>
 
   <!-- Activities Library & 3D Flipbook Core -->
-  <script src="activities_data.js?v=20261016_v5400"></script>
-  <script src="activities_flipbook.js?v=20261016_v5400"></script>
+  <script src="activities_data.js?v=20261017_v6100"></script>
+  <script src="activities_flipbook.js?v=20261017_v6100"></script>
 
   <!-- Catechism & Bible Interactive Games Engine -->
-  <script src="bible_data.js?v=20261016_v5400"></script>
-  <script src="catechism_games.js?v=20261016_v5500"></script>
+  <script src="bible_data.js?v=20261017_v6400"></script>
+  <script src="catechism_games.js?v=20261017_v6400"></script>
+
+  <!-- Class Emulation & Biblical Hall of Fame Engine -->
+  <script src="class_emulation.js?v=20261017_v6400"></script>
 
   <!-- Application JS Code -->
-  <script src="app_v2.js?v=20261016_v5400"></script>
+  <script src="app_v2.js?v=20261017_v6400"></script>
 </body>
 </html>

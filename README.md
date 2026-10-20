@@ -500,5 +500,50 @@ Hệ thống đã tích hợp toàn bộ **62 đơn vị mục vụ** gồm **56
 
 ---
 
+## 🏆 7. CHỨC NĂNG THI ĐUA LỚP CHỦ NHIỆM & BẢNG VINH DANH TỰ ĐỘNG THÁNH KINH
+
+Hệ thống thi đua hoa thiêng nhân đức cho học sinh trong lớp chủ nhiệm được thiết kế chuyên biệt cho Giáo lý Công giáo & Phong trào Thiếu Nhi Thánh Thể:
+
+1. **Khởi đầu mỗi tháng 100 điểm**:
+   - Mỗi học sinh khi bước sang tháng mới tự động nhận **100 điểm hồng ân** xuất phát.
+   - Không cần cài đặt thủ công; hệ thống tự tính điểm: $Điểm = 100 + \sum(\Delta_{khen\_thưởng}) - \sum(\Delta_{vi\_phạm})$.
+
+2. **Cơ chế Khen thưởng (+10đ) & Nhắc nhở vi phạm (-5đ)**:
+   - **Khen thưởng (+10đ)**: 
+     - 7 lý do chuẩn Công giáo (Thuộc kinh & bài giáo lý, Đi lễ đúng giờ, Gương mẫu bác ái, Tích cực phát biểu, Hát thánh ca sốt sắng, Vệ sinh lớp học, Việc lành hy sinh) hoặc tự nhập lý do riêng.
+     - Âm thanh chuông thiên thần (Pure Synthetic Web Audio) và hiệu ứng bay số `+10` màu xanh ngọc.
+   - **Nhắc nhở vi phạm (-5đ)**:
+     - 7 lý do nề nếp yêu thương (Đi trễ không phép, Nói chuyện riêng trong giờ học/lễ, Quên mang sách Giáo lý/Kinh Thánh, Chưa làm bài tập, Chạy nhảy mất trật tự nơi thánh đường, Dùng điện thoại, Thiếu lễ phép) hoặc tự nhập lý do riêng.
+     - Âm thanh chuông nhắc nhở và hiệu ứng bay số `-5` màu đỏ.
+   - **Nhật ký & Hoàn tác**: Xem lịch sử chi tiết từng lần chấm điểm, cho phép xóa/hoàn tác để hoàn trả điểm ngay lập tức nếu nhập nhầm.
+   - **Thưởng nhiều bạn (+10đ)**: Khen thưởng hàng loạt cho cả lớp hoặc nhóm học sinh được chọn chỉ với 1 click.
+
+3. **Bảng Vinh Danh Tự Động Cuối Tháng (Automatic Monthly Hall of Fame)**:
+   - Tự động xếp hạng học sinh từ điểm cao nhất đến thấp nhất theo từng tháng.
+   - **Bục Vinh Quang 3D (Top 3 Podium)**:
+     - 🥇 **Quán Quân (Hạng 1)**: Vương miện vàng lấp lánh, cúp vàng, danh hiệu cao quý nhất, hiệu ứng hào quang.
+     - 🥈 **Á Quân 1 (Hạng 2)**: Cúp bạc, danh hiệu Kinh Thánh xuất sắc.
+     - 🥉 **Á Quân 2 (Hạng 3)**: Cúp đồng, danh hiệu Kinh Thánh kiên trì.
+   - **Hiệu ứng pháo hoa ăn mừng**: Tích hợp Canvas Confetti rực rỡ với âm thanh đại chuông thánh đường.
+
+4. **Hệ thống Danh Hiệu Nhân Vật Kinh Thánh**:
+   - $\ge 140$ điểm: 👑 **"Người Quản Gia Trung Tín & Khôn Ngoan"** (*Lc 12, 42*)
+   - $125 - 139$ điểm: 🛡️ **"Chiến Binh Đức Tin như Thánh Đa-vít"** (*1 Sm 17, 45*)
+   - $115 - 124$ điểm: 🕊️ **"Tông Đồ Nhiệt Thành như Thánh Phaolô"** (*Gl 2, 20*)
+   - $105 - 114$ điểm: 🌟 **"Người Đẹp Lòng Chúa như Samuel"** (*1 Sm 3, 10*)
+   - $95 - 104$ điểm: 🐑 **"Chiên Ngoan Của Chúa Giêsu Mục Tử"** (*Ga 10, 14*)
+   - $80 - 94$ điểm: 🌿 **"Công Chính & Cần Mẫn như Thánh Giuse"** (*Mt 1, 19*)
+   - $< 80$ điểm: ✨ **"Được Chúa Yêu Thương & Nâng Đỡ Về Nhà Cha"** (*Lc 15, 6*)
+
+5. **Xuất Bản & In Ấn Trang Trọng**:
+   - 🖨️ **In Bảng Vàng A4 Của Lớp**: Mẫu in hoa văn hoàng gia Công giáo, logo giáo phận/giáo xứ, có chỗ ký của GLV Chủ nhiệm và Linh mục Quản xứ.
+   - 📜 **In Phiếu Khen Thánh Thiện**: Giấy khen cá nhân cho từng học sinh hoặc in hàng loạt toàn bộ lớp.
+   - 📲 **Sao chép Báo cáo Zalo**: Định dạng tin nhắn trang trọng, đẹp mắt để gửi ngay vào nhóm Zalo phụ huynh.
+
+6. **Đồng bộ hóa Đám Mây & 2 GLV Đồng Chủ Nhiệm**:
+   - Dữ liệu lưu trong `appData.classEmulations`, đồng bộ tự động giữa các GLV đồng phụ trách lớp và sao lưu trên Supabase Cloud.
+
+---
+
 *Hệ Thống Quản Lý Giáo Lý Công Giáo - MagnificatEdu © 2026*
 

@@ -1738,6 +1738,15 @@
         case 'conduct':
           renderConduct(container);
           break;
+        case 'emulation':
+        case 'thi-dua':
+        case 'vinh-danh':
+          if (typeof window.renderClassEmulation === 'function') {
+            window.renderClassEmulation(container);
+          } else {
+            renderClasses(container);
+          }
+          break;
         case 'library':
           renderLibrary(container);
           break;
@@ -2687,6 +2696,7 @@
           <p class="page-subtitle">${isAdmin ? '👑 Danh sách liên thông tất cả các lớp học giáo lý của các GLV trong hệ thống' : 'Danh sách các lớp học giáo lý phụ trách & đồng chủ nhiệm'} (${classes.length} lớp)</p>
         </div>
         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <button class="btn btn-warning" onclick="window.openClassEmulation('')" style="font-weight: 800; background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; border: none; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);"><i class="fa-solid fa-award"></i> Sổ Thi Đua Lớp Chủ Nhiệm</button>
           <button class="btn btn-outline-primary" onclick="window.downloadCSVTemplate()"><i class="fa-solid fa-file-excel"></i> Tải Mẫu CSV/Excel</button>
           <button class="btn btn-success" onclick="window.openCSVImportModal()"><i class="fa-solid fa-file-import"></i> Tải Danh Sách Up (CSV/Excel)</button>
           <button class="btn btn-primary" onclick="window.openAddClassModal()"><i class="fa-solid fa-plus"></i> Tạo Lớp Học Mới</button>
@@ -2763,7 +2773,8 @@
 
                 <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--slate-border); padding-top: 12px; gap: 8px; flex-wrap: wrap;">
                   <span style="font-weight: 700; color: var(--slate-dark); white-space: nowrap;"><i class="fa-solid fa-users text-primary"></i> ${classStudentCount} Học viên</span>
-                  <div style="display: flex; gap: 6px; flex-shrink: 0;">
+                  <div style="display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap;">
+                    <button class="btn btn-sm" style="color: #b45309; border: 1px solid #f59e0b; background: #fffbeb; font-weight: 700;" onclick="window.openClassEmulation('${safeId}')" title="Mở Sổ Thi Đua & Bảng Vinh Danh Lớp Chủ Nhiệm"><i class="fa-solid fa-award"></i> Thi Đua & Vinh Danh</button>
                     <button class="btn btn-sm btn-outline-primary" style="color: #2563eb; border-color: #93c5fd;" data-class-id="${safeId}" data-class-name="${escapedName}" data-teacher-email="${teacher1Email}" onclick="window.editClass(this)" title="Cài đặt mã nhóm Zalo Bot cho lớp này"><i class="fa-solid fa-robot"></i> Cài Zalo</button>
                     <button class="btn btn-sm btn-outline-primary" data-class-id="${safeId}" data-class-name="${escapedName}" data-teacher-email="${teacher1Email}" onclick="window.editClass(this)"><i class="fa-solid fa-pen"></i> Sửa</button>
                     <button class="btn btn-sm btn-outline-danger btn-delete-class" data-class-id="${safeId}" data-class-name="${escapedName}" data-teacher-email="${teacher1Email}" onclick="window.deleteClass(this)" title="Xóa lớp học này"><i class="fa-solid fa-trash"></i> Xóa</button>
@@ -5282,6 +5293,9 @@
                 <button type="button" class="btn ${selectedSemester === 'year' ? 'btn-success' : 'btn-outline-success'}" onclick="window.changeGradeSemester('year')" style="font-weight: 800; padding: 10px 22px; border-radius: 8px; cursor: pointer; box-shadow: ${selectedSemester === 'year' ? '0 4px 14px rgba(16, 185, 129, 0.4)' : 'none'};">
                   🌟 ĐTB CẢ NĂM = (HK1 + HK2) / 2
                 </button>
+                <button type="button" class="btn btn-warning" onclick="window.openClassEmulation('${selectedClassId}')" style="font-weight: 800; padding: 10px 18px; border-radius: 8px; cursor: pointer; background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; border: none; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);" title="Mở Sổ Thi Đua 100đ & Bảng Vinh Danh Tháng của Lớp Này">
+                  <i class="fa-solid fa-award"></i> 🏆 Thi Đua Lớp Chủ Nhiệm
+                </button>
               </div>
             </div>
 
@@ -5411,6 +5425,11 @@
         <div>
           <h2 class="page-title"><i class="fa-solid fa-star"></i> Đánh Giá Rèn Luyện & Đạo Đức</h2>
           <p class="page-subtitle">Theo dõi thái độ rèn luyện và sinh hoạt theo từng lớp</p>
+        </div>
+        <div>
+          <button class="btn btn-warning" onclick="window.openClassEmulation(window._selectedConductClassId || '')" style="font-weight: 700; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);">
+            <i class="fa-solid fa-trophy"></i> Sổ Thi Đua & Bảng Vinh Danh
+          </button>
         </div>
       </div>
 
