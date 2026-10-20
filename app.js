@@ -802,12 +802,19 @@
       renderParticles();
     }
 
-    // 2. Interactive Divine Cross Click Ripple Effect
+    // 2. Interactive Divine Cross Click Ripple Effect & Backdrop Dismiss
     const modal = document.getElementById('google-auth-modal');
-    if (modal) {
+    if (modal && !modal._hasBackdropListener) {
+      modal._hasBackdropListener = true;
       modal.addEventListener('click', (e) => {
+        // If logged in and clicked outside .auth-modal, dismiss the auth modal
+        if (currentUser && !e.target.closest('.auth-modal')) {
+          window.closeAuthModal();
+          return;
+        }
+
         const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : '';
-        if (tag === 'input' || tag === 'select' || tag === 'textarea') return;
+        if (tag === 'input' || tag === 'select' || tag === 'textarea' || tag === 'button' || e.target.closest('button')) return;
 
         const ripple = document.createElement('div');
         ripple.className = 'sacred-click-ripple';
@@ -825,6 +832,18 @@
         }, 800);
       });
     }
+
+    if (!window._hasAuthEscapeListener) {
+      window._hasAuthEscapeListener = true;
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && currentUser) {
+          const m = document.getElementById('google-auth-modal');
+          if (m && m.style.display !== 'none' && !m.hasAttribute('hidden')) {
+            window.closeAuthModal();
+          }
+        }
+      });
+    }
   }
 
   // Auth Gate Control (Show Login Screen vs Main App)
@@ -833,17 +852,23 @@
     const modalEl = document.getElementById('google-auth-modal');
     const closeBtn = document.getElementById('auth-modal-close-btn');
 
-    if (!isSwitchMode) {
+    const canClose = Boolean(isSwitchMode || currentUser);
+
+    if (!canClose) {
       document.body.classList.add('auth-gate-active');
       if (appEl) appEl.style.display = 'none';
-      if (closeBtn) closeBtn.style.display = 'none';
+      if (closeBtn) closeBtn.style.setProperty('display', 'none', 'important');
     } else {
       document.body.classList.remove('auth-gate-active');
       if (appEl) appEl.style.display = 'flex';
-      if (closeBtn) closeBtn.style.display = 'flex';
+      if (closeBtn) closeBtn.style.setProperty('display', 'flex', 'important');
     }
 
-    if (modalEl) modalEl.style.display = 'flex';
+    if (modalEl) {
+      modalEl.removeAttribute('hidden');
+      modalEl.classList.add('show');
+      modalEl.style.setProperty('display', 'flex', 'important');
+    }
     initSacredAuthEffects();
     renderSavedAccounts();
     if (typeof window.switchAuthTab === 'function') window.switchAuthTab('login');
@@ -853,7 +878,11 @@
     document.body.classList.remove('auth-gate-active');
     const appEl = document.getElementById('app');
     const modalEl = document.getElementById('google-auth-modal');
-    if (modalEl) modalEl.style.display = 'none';
+    if (modalEl) {
+      modalEl.classList.remove('show');
+      modalEl.setAttribute('hidden', 'true');
+      modalEl.style.setProperty('display', 'none', 'important');
+    }
     if (appEl) appEl.style.display = 'flex';
   }
 
