@@ -2311,8 +2311,94 @@
     return suffix;
   }
 
+  // Helper: Synchronize catechists from system notifications & Cloud
+  function syncCatechistsFromNotifications() {
+    if (!appData || !Array.isArray(appData.notifications)) return;
+    if (!Array.isArray(appData.catechists)) appData.catechists = [];
+
+    let changed = false;
+
+    appData.notifications.forEach(n => {
+      if (!n || !n.content) return;
+      const content = n.content;
+      // Match email inside parentheses
+      const emailMatch = content.match(/\(([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})\)/);
+      if (!emailMatch) return;
+      const email = emailMatch[1].toLowerCase().trim();
+      if (email === 'philthienhao@gmail.com') return;
+
+      // Extract parish: "thuộc Giáo xứ ... vừa đăng nhập" or "thuộc Giáo Xứ ... vừa đăng nhập"
+      const parishMatch = content.match(/thuộc\s+(.+?)\s+vừa đăng nhập/i);
+      const parish = parishMatch ? parishMatch[1].trim() : 'Giáo Xứ Hoà Khánh';
+
+      // Extract name & holyName: "Giáo lý viên (.*) \("
+      const nameMatch = content.match(/Giáo lý viên\s+(.+?)\s*\(/i);
+      let holyName = 'T. Giuse';
+      let fullName = email.split('@')[0];
+
+      if (nameMatch) {
+        let rawName = nameMatch[1].trim();
+        const holyPrefixes = ['JB', 'J.B', 'T. Giuse', 'Thánh Giuse', 'Giuse', 'Maria', 'Têrêsa', 'Teresa', 'Phêrô', 'Phaolô', 'Anrê', 'Mácta', 'Anna', 'Inhaxiô', 'Đaminh', 'Phanxicô'];
+        for (const p of holyPrefixes) {
+          if (rawName.startsWith(p + ' ')) {
+            holyName = p;
+            rawName = rawName.substring(p.length).trim();
+            break;
+          }
+        }
+        fullName = rawName || fullName;
+      }
+
+      // Check if already in appData.catechists
+      const existingCat = appData.catechists.find(c => c.email && c.email.toLowerCase() === email);
+      if (!existingCat) {
+        appData.catechists.push({
+          id: 'cat_notif_' + email.replace(/[^a-z0-9]/g, '_'),
+          fullName: fullName,
+          holyName: holyName,
+          role: 'Giáo lý viên',
+          phone: '',
+          email: email,
+          parish: parish,
+          assignedClass: 'Chưa phân công'
+        });
+        changed = true;
+      }
+
+      // Also ensure present in accountsList
+      const existingAcc = accountsList.find(a => a.email && a.email.toLowerCase() === email);
+      if (!existingAcc) {
+        accountsList.push({
+          id: 'acc_notif_' + email.replace(/[^a-z0-9]/g, '_'),
+          email: email,
+          password: '123',
+          name: fullName,
+          holyName: holyName,
+          phone: '',
+          parish: parish,
+          role: 'Giáo lý viên',
+          avatar: 'admin_avatar.png',
+          status: 'active',
+          lastLogin: n.date || 'Gần đây',
+          loginCount: 1,
+          classes: [],
+          students: []
+        });
+        changed = true;
+      }
+    });
+
+    if (changed) {
+      saveUserData();
+      saveAccounts();
+    }
+  }
+
   // Helper: Multi-tenant Global Data Aggregation for Admin
   function getParishGlobalData() {
+    if (typeof syncCatechistsFromNotifications === 'function') {
+      syncCatechistsFromNotifications();
+    }
     const isParish = isParishAdmin(currentUser);
     const myParish = getUserManagedParish(currentUser);
 
@@ -2963,6 +3049,9 @@
 
   // PAGE 4: QUẢN LÝ GIÁO LÝ VIÊN (CATECHISTS)
   function renderCatechists(container) {
+    if (typeof syncCatechistsFromNotifications === 'function') {
+      syncCatechistsFromNotifications();
+    }
     const isAdmin = hasAdminAccess(currentUser);
     const globalData = isAdmin ? getParishGlobalData() : null;
     const catechists = (isAdmin && globalData) ? (globalData.catechists || []) : ((appData && appData.catechists) || []);
@@ -6005,15 +6094,34 @@
       date: new Date().toLocaleDateString('vi-VN') + ' ' + new Date().toLocaleTimeString('vi-VN')
     };
 
+    const newCatItem = {
+      id: user.id || ('cat_' + Date.now()),
+      fullName: user.name,
+      holyName: user.holyName || 'T. Giuse',
+      role: user.role || 'Giáo lý viên',
+      phone: user.phone || '',
+      email: user.email,
+      parish: user.parish || 'Giáo Xứ Hoà Khánh',
+      assignedClass: 'Chưa phân công'
+    };
+
     // If current session is already admin (local)
     if (currentUser && currentUser.email.toLowerCase() === 'philthienhao@gmail.com') {
-      if (appData && Array.isArray(appData.notifications)) {
+      if (appData) {
+        if (!Array.isArray(appData.notifications)) appData.notifications = [];
         appData.notifications.unshift(notifItem);
+        if (!Array.isArray(appData.catechists)) appData.catechists = [];
+        const cIdx = appData.catechists.findIndex(c => c.email && c.email.toLowerCase() === user.email.toLowerCase());
+        if (cIdx >= 0) {
+          appData.catechists[cIdx] = { ...appData.catechists[cIdx], ...newCatItem };
+        } else {
+          appData.catechists.push(newCatItem);
+        }
         saveUserData();
       }
     }
 
-    // Sync notification to Supabase Cloud for Admin Master (philthienhao@gmail.com)
+    // Sync notification & catechist to Supabase Cloud for Admin Master (philthienhao@gmail.com)
     if (window.supabaseClient) {
       try {
         const { data: adminRow } = await window.supabaseClient
@@ -6024,18 +6132,28 @@
 
         let adminData = (adminRow && adminRow.data) ? adminRow.data : {};
         if (!Array.isArray(adminData.notifications)) adminData.notifications = [];
+        if (!Array.isArray(adminData.catechists)) adminData.catechists = [];
+
+        // Ingest catechist directly into adminData.catechists on Cloud
+        const catIdx = adminData.catechists.findIndex(c => c.email && c.email.toLowerCase() === user.email.toLowerCase());
+        if (catIdx >= 0) {
+          adminData.catechists[catIdx] = { ...adminData.catechists[catIdx], ...newCatItem };
+        } else {
+          adminData.catechists.push(newCatItem);
+        }
         
         // Prevent flood of duplicate notifs for same user within 5 mins
         const isRecent = adminData.notifications.some(n => n.content && n.content.includes(user.email) && (Date.now() - parseInt(n.id.replace('notif_login_', ''))) < 300000);
         if (!isRecent) {
           adminData.notifications.unshift(notifItem);
-          await window.supabaseClient.from('user_data').upsert({
-            email: 'philthienhao@gmail.com',
-            data: adminData,
-            updated_at: new Date().toISOString()
-          });
-          console.log('✅ Đã tự động báo thông tin tài khoản giáo viên về Admin Master:', user.email);
         }
+
+        await window.supabaseClient.from('user_data').upsert({
+          email: 'philthienhao@gmail.com',
+          data: adminData,
+          updated_at: new Date().toISOString()
+        });
+        console.log('✅ Đã tự động báo thông tin tài khoản giáo viên về Admin Master & lưu vào danh sách:', user.email);
       } catch (err) {
         console.warn('Lỗi khi gửi thông báo về admin master:', err);
       }
