@@ -262,6 +262,38 @@ Hệ thống tính điểm được thiết kế minh bạch với các chế đ
 
 ---
 
+### ⚡ Sự cố 12: Xử lý triệt để lỗi Ô Nhiễm CSS Toàn Cục (Unscoped CSS Leakage) làm tối đen Slogan Sidebar & Cơ chế giải phóng Cache PWA
+
+* **Hiện tượng**:
+  - Đoạn trích dẫn của *Chân Phước Anrê Phú Yên* trên thanh Sidebar (`.sidebar-slogan-box`) bị đổi chữ thành màu xanh đen đậm `#1e293b`.
+  - Trên nền Sidebar xanh đen tối (`#0f172a`), chữ gần như trùng màu với nền khiến người dùng không đọc được nội dung, chỉ thấy icon trích dẫn và tên tác giả.
+  - Khi sửa CSS lần đầu, màn hình người dùng vẫn chưa cập nhật do dính bộ nhớ tạm của Service Worker PWA (`sw.js`) và chưa push code lên remote Vercel.
+
+* **Phân tích nguyên nhân gốc rễ (Root Cause Analysis)**:
+  1. **Unscoped Class Selector**: Khi thiết kế giao diện thẻ trích dẫn trong Modal Đăng nhập (vốn có nền vàng kem sáng), mã CSS đã viết selector chung không có tiền tố cha:
+     ```css
+     .slogan-text { color: #1e293b; font-size: 11px; ... }
+     ```
+  2. **Hiệu ứng đè xếp tầng (CSS Cascade Override)**: Đoạn CSS trên nằm ở phía cuối file `styles.css`, nên nó tự động đè lên class `.slogan-text` ở Sidebar phía trên.
+  3. **PWA Service Worker Cache**: File `sw.js` cache cứng `styles.css` theo tên URL. Khi không nâng version query `?v=...` và không tăng `CACHE_NAME`, trình duyệt ưu tiên đọc từ cache cũ.
+
+* **Các giải pháp đã khắc phục triệt để**:
+  1. **Cô lập triệt để phạm vi selector (Strict Scoping)**:
+     - Giới hạn selector modal: `.slogan-card-auth .slogan-text` và `.slogan-card-auth .slogan-text b`.
+     - Chỉ định rõ ràng và ưu tiên cao cho Sidebar: `.sidebar-slogan-box p, .sidebar-slogan-box .slogan-text { color: #f1f5f9 !important; }`.
+  2. **Gắn Inline Style phòng thủ trực tiếp**: Bổ sung `style="color: #f1f5f9 !important;"` trực tiếp vào thẻ HTML trong `index.html`.
+  3. **Quy trình 3 bước giải phóng Cache PWA**:
+     - Nâng link gọi stylesheet: `styles.css?v=20261021_v6901`.
+     - Nâng cache Service Worker lên `magnificatedu-cache-v31` trong cả `sw.js` và `pwa.js`.
+     - Tạo commit và push lên nhánh `main` GitHub để Vercel Production triển khai đồng bộ.
+
+* **QUY TẮC BẤT DI BẤT DỊCH (NEVER REPEAT)**:
+  - **Quy tắc 1 - Luôn Scope CSS theo Component Cha**: Tuyệt đối KHÔNG BAO GIỜ viết các selector class phổ biến (`.slogan-text`, `.title`, `.desc`, `.author`, `.card`...) đứng một mình ở cấp độ toàn cục. Bắt buộc phải có tiền tố class cha (ví dụ: `.slogan-card-auth .slogan-text`).
+  - **Quy tắc 2 - Bảo vệ vùng giao diện nền tối cố định**: Bất kỳ text nào nằm trong container tối (Dark Sidebar, Header, Modal Backdrop) phải được khai báo màu sáng rõ ràng kèm class cha để không bị ghi đè ngẫu nhiên.
+  - **Quy tắc 3 - Luôn đồng bộ 3 điểm khi cập nhật CSS cốt lõi**: `styles.css` $\rightarrow$ `index.html` (bump `?v=`) $\rightarrow$ `sw.js` / `pwa.js` (bump cache version) $\rightarrow$ `git push` để Vercel cập nhật.
+
+---
+
 ## 🚀 4. Hướng Dẫn Cập Nhật & Deploy Dự Án Chuẩn 4 Bước
 
 Khi có thay đổi mã nguồn, thực hiện đúng quy trình sau:
