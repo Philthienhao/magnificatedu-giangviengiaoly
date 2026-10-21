@@ -210,6 +210,7 @@
       description: 'Gọi tên học viên ngẫu nhiên hoặc chia tổ đua kịch tính về đích Con Tàu Nô-ê. Đồng bộ danh sách học viên từ lớp giáo lý hoặc nạp file Excel.',
       thumbnail: 'anh/games/thumb_noah_ark.jpg',
       icon: '🚢',
+      gradient: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
       playsCount: 0,
       metaCount: '6 làn đua',
       isStudentPicker: true,
@@ -223,6 +224,7 @@
       description: 'Vòng quay ngẫu nhiên sống động với âm thanh tích tắc vui nhộn, gọi tên học viên lên trả bài, đọc kinh hoặc nhận các phần quà phúc lành ân sủng.',
       thumbnail: 'anh/games/thumb_angel_wheel.jpg',
       icon: '🎡',
+      gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
       playsCount: 0,
       metaCount: 'Cả lớp học',
       isStudentPicker: true,
@@ -230,12 +232,13 @@
     },
     {
       id: 'head-tilt',
-      title: 'Nghiêng Đầu Chuẩn - Đáp Án Đúng',
+      title: 'Nghiêng Đầu Chuẩn — Đáp Án Lời Chúa',
       category: 'TƯƠNG TÁC AI CAMERA',
-      filterCat: 'quiz',
+      filterCat: 'camera',
       description: 'Bật camera máy tính, học sinh nghiêng đầu sang trái hoặc phải để lựa chọn đáp án đúng cực mượt! AI nhận diện trực tiếp cử chỉ.',
       thumbnail: 'anh/games/thumb_head_tilt.jpg',
       icon: '👤',
+      gradient: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)',
       playsCount: 0,
       metaCount: '8 câu',
       isStudentPicker: false,
@@ -243,12 +246,13 @@
     },
     {
       id: 'faith-tugofwar',
-      title: 'Kéo Co Đức Tin: David & Goliath',
+      title: 'Kéo Co Đức Tin: Đội Phê-rô vs Đội Phao-lô',
       category: 'ĐỐI KHÁNG ĐỘI NHÓM',
       filterCat: 'race',
       description: 'Chia 2 đội (Đội Phê-rô vs Đội Phao-lô). Mỗi câu trả lời đúng kéo dải ruy-băng Thánh Giá về phía đội mình. Đội nào kéo qua vạch mốc sẽ giành cúp!',
       thumbnail: 'anh/games/thumb_faith_tugofwar.jpg',
       icon: '⚔️',
+      gradient: 'linear-gradient(135deg, #2563eb 0%, #dc2626 100%)',
       playsCount: 0,
       metaCount: '10 câu',
       isStudentPicker: false,
@@ -258,10 +262,11 @@
       id: 'temple-builder',
       title: 'Xây Đền Thờ Thánh Giê-ru-sa-lem',
       category: 'ĐỐI KHÁNG ĐỘI NHÓM',
-      filterCat: 'reflex',
+      filterCat: 'race',
       description: 'Cùng Vua Sa-lô-môn xếp các khối đá cẩm thạch trắng và cột gỗ quý Li-băng. Mỗi câu trả lời đúng đặt một tầng đá vững chắc cho Đền Thờ Thiên Chúa.',
       thumbnail: 'anh/games/thumb_temple_builder.jpg',
       icon: '🏛️',
+      gradient: 'linear-gradient(135deg, #0284c7 0%, #f59e0b 100%)',
       playsCount: 0,
       metaCount: '7 tầng',
       isStudentPicker: false,
@@ -275,6 +280,7 @@
       description: 'Gameshow Ai Là Triệu Phú chuẩn phong cách Công Giáo. Chinh phục 15 mốc câu hỏi ân sủng kèm 3 quyền trợ giúp: 50:50, Thiên thần, Cầu nguyện.',
       thumbnail: 'anh/games/thumb_bible_millionaire.jpg',
       icon: '🏆',
+      gradient: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
       playsCount: 0,
       metaCount: '15 câu',
       isStudentPicker: false,
@@ -288,6 +294,7 @@
       description: 'Học sinh chọn mở các chiếc rương thánh bọc vàng. Giải đáp câu đố Lời Chúa để mở khóa điểm số ân sủng, nhân đôi số điểm hoặc lá chắn chở che.',
       thumbnail: 'anh/games/thumb_covenant_boxes.jpg',
       icon: '📦',
+      gradient: 'linear-gradient(135deg, #f59e0b 0%, #ec4899 100%)',
       playsCount: 0,
       metaCount: '8 rương',
       isStudentPicker: false,
@@ -296,11 +303,12 @@
     {
       id: 'holy-picture-flip',
       title: 'Lật Mảnh Ghép Tranh Chúa Chiên Lành',
-      category: 'MẢNH GHÉP TRANH THÁNH',
+      category: 'KHÁM PHÁ BỨC ẢNH',
       filterCat: 'reflex',
       description: 'Bức tranh Thánh được che bởi 9 mảnh ghép bí mật. Trả lời đúng từng câu đố để từng mảnh ghép bay biến mất hé lộ dung mạo Đấng Mục Tử Nhân Lành.',
       thumbnail: 'anh/games/thumb_holy_picture_flip.jpg',
       icon: '🧩',
+      gradient: 'linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%)',
       playsCount: 0,
       metaCount: '9 mảnh',
       isStudentPicker: false,
@@ -314,6 +322,7 @@
       description: 'Cùng cậu bé dũng cảm Đa-vít giải cứu các chú chiên con hiền lành và gõ xua đuổi sói rừng trong 30 giây rực lửa. Rèn luyện phản xạ và tinh thần bác ái.',
       thumbnail: 'anh/games/thumb_shepherd_rescue.jpg',
       icon: '🐑',
+      gradient: 'linear-gradient(135deg, #10b981 0%, #047857 100%)',
       playsCount: 0,
       metaCount: '30 giây',
       isStudentPicker: false,
@@ -327,10 +336,416 @@
       description: 'Lật mở các cặp thẻ bài chibi Công Giáo (Chúa Giê-su, Đức Mẹ, Thánh Giuse...). Khi ghép đúng sẽ mở khóa một câu Lời Chúa ý nghĩa tương ứng.',
       thumbnail: 'anh/games/thumb_bible_memory.jpg',
       icon: '📖',
+      gradient: 'linear-gradient(135deg, #0d9488 0%, #0284c7 100%)',
       playsCount: 0,
       metaCount: '8 cặp thẻ',
       isStudentPicker: false,
       onPlay: 'window.CatechismGames.openBibleMemoryPairs()'
+    },
+    {
+      id: 'heart-puzzle-2010',
+      title: 'Trái Tim Vô Nhiễm Mẹ Maria & Tình Chúa Yêu Con',
+      subtitle: 'Giải Mã Mảnh Ghép Trái Tim Lòng Mẹ',
+      category: 'CHỦ ĐỀ ĐỨC MẸ',
+      filterCat: 'quiz',
+      description: 'Tô thắm từng ô trái tim theo đáp án đúng để lộ diện bức tranh Mẹ Ban Ơn chở che đoàn con yêu dấu. Hỗ trợ bảng tương tác và máy chiếu cả lớp!',
+      thumbnail: 'anh/games/thumb_heart_puzzle.jpg',
+      icon: '💖',
+      gradient: 'linear-gradient(135deg, #be123c 0%, #e11d48 50%, #9f1239 100%)',
+      playsCount: 0,
+      metaCount: '10 câu',
+      isStudentPicker: false,
+      onPlay: 'window.CatechismGames.openHeartPuzzleGame()'
+    },
+    {
+      id: 'indoor-pe-dance',
+      title: 'Vũ Điệu Thánh Ca & Khởi Động TNTT',
+      subtitle: 'Cử Điệu Thánh Ca & Sinh Hoạt Trong Lớp',
+      category: 'TƯƠNG TÁC AI CAMERA',
+      filterCat: 'camera',
+      description: 'Khởi động giờ học sôi nổi với các bài cử điệu Thiếu Nhi Thánh Thể. Camera AI nhận diện khung xương và chấm điểm hào hứng 100 điểm!',
+      thumbnail: 'anh/games/thumb_pe_dance.jpg',
+      icon: '🏃‍♂️',
+      gradient: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+      playsCount: 0,
+      metaCount: '6 cử điệu',
+      isStudentPicker: false,
+      onPlay: 'window.CatechismGames.openIndoorPEDanceGame()'
+    },
+    {
+      id: 'pose-imitation',
+      title: 'Bắt Chước Cử Điệu Thánh Ca Mau Lẹ',
+      subtitle: 'Nhìn Tư Thế Thánh Nhận Điểm Ân Sủng',
+      category: 'TƯƠNG TÁC AI CAMERA',
+      filterCat: 'camera',
+      description: 'Học sinh nhìn tư thế cử điệu Công Giáo trên màn hình và làm theo đúng động tác trước Camera AI để ghi điểm ân sủng.',
+      thumbnail: 'anh/games/thumb_pose_imitation.jpg',
+      icon: '🧘‍♂️',
+      gradient: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
+      playsCount: 0,
+      metaCount: '6 tư thế',
+      isStudentPicker: false,
+      onPlay: 'window.CatechismGames.openPoseImitationGame()'
+    },
+    {
+      id: 'mosquito-slayer',
+      title: 'Đa-vít Xua Đuổi Chó Sói Bảo Vệ Đàn Chiên',
+      subtitle: 'Vung Tay Đập Sói Trước Webcam',
+      category: 'TƯƠNG TÁC AI CAMERA',
+      filterCat: 'camera',
+      description: 'Màn hình chia 2 đội. Các chú sói mang đáp án A-B-C-D bay tới rình rập đàn chiên. Học sinh vung tay xua đuổi đúng sói mang đáp án đúng trên webcam để ghi điểm!',
+      thumbnail: 'anh/games/thumb_shepherd_rescue.jpg',
+      icon: '🐑',
+      gradient: 'linear-gradient(135deg, #0284c7 0%, #10b981 100%)',
+      playsCount: 0,
+      metaCount: '5 câu',
+      isStudentPicker: false,
+      onPlay: 'window.CatechismGames.openMosquitoSlayerGame()'
+    },
+    {
+      id: 'mario-race',
+      title: 'Hành Trình Về Đất Hứa Retro 8-bit',
+      subtitle: 'Cuộc Đua Vượt Biển Đỏ & Sa Mạc',
+      category: 'ĐỐI KHÁNG ĐỘI NHÓM',
+      filterCat: 'race',
+      description: '4 đội xuất phát trên đường đua retro 8-bit. Trả lời đúng đập vỡ hộp ân sủng, nhận Manna tăng tốc vượt chướng ngại vật sa mạc để cán đích Miền Đất Hứa!',
+      thumbnail: 'anh/games/thumb_mario_race.jpg',
+      icon: '🍄',
+      gradient: 'linear-gradient(135deg, #ef4444 0%, #3b82f6 100%)',
+      playsCount: 0,
+      metaCount: '6 câu',
+      isStudentPicker: false,
+      onPlay: 'window.CatechismGames.openMarioRaceGame()'
+    },
+    {
+      id: 'crossword-lock',
+      title: 'Ô Chữ Kinh Thánh & Chìa Khóa Cứu Độ',
+      subtitle: 'Giải Hàng Ngang Mở Khóa Từ Khóa Vàng',
+      category: 'TƯ DUY TỪ NGỮ',
+      filterCat: 'words',
+      description: 'Giải các câu hỏi hàng ngang về nhân vật, địa danh Kinh Thánh để lật mở các chữ cái của Từ Khóa Bí Mật ở hàng dọc.',
+      thumbnail: 'anh/games/thumb_crossword.jpg',
+      icon: '🔤',
+      gradient: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)',
+      playsCount: 0,
+      metaCount: '5 hàng ngang',
+      isStudentPicker: false,
+      onPlay: 'window.CatechismGames.openCrosswordLock()'
+    },
+    {
+      id: 'knowledge-train',
+      title: 'Đoàn Tàu Đức Tin — Biến Cố Cứu Độ',
+      subtitle: 'Kéo Thả Toa Tàu Theo Dòng Lịch Sử Thánh',
+      category: 'KÉO THẢ THỨ TỰ',
+      filterCat: 'words',
+      description: 'Kéo thả các toa tàu theo đúng trật tự thời gian biến cố Cứu Độ: Tạo dựng -> Xuất hành -> Nhập thể -> Khổ nạn -> Phục sinh.',
+      thumbnail: 'anh/games/thumb_train.jpg',
+      icon: '🚂',
+      gradient: 'linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%)',
+      playsCount: 0,
+      metaCount: '5 toa tàu',
+      isStudentPicker: false,
+      onPlay: 'window.CatechismGames.openKnowledgeTrain()'
+    },
+    {
+      id: 'fruit-ninja-quiz',
+      title: 'Hái Hoa Trái Thánh Thần — Bắt Bong Bóng Ân Sủng',
+      subtitle: 'Chém / Bắt Hoa Trái Mang Lời Chúa Đúng',
+      category: 'HÀNH ĐỘNG & PHẢN XẠ',
+      filterCat: 'reflex',
+      description: 'Nhiều quả bong bóng / chùm nho mang các đáp án khác nhau bay lên từ bên dưới. Nhanh tay chém hoặc nhấp đúng hoa trái Thánh Thần mang đáp án đúng!',
+      thumbnail: 'anh/games/thumb_fruit_ninja.jpg',
+      icon: '🍇',
+      gradient: 'linear-gradient(135deg, #f59e0b 0%, #ea580c 100%)',
+      playsCount: 0,
+      metaCount: '5 câu',
+      isStudentPicker: false,
+      onPlay: 'window.CatechismGames.openFruitNinjaQuiz()'
+    },
+    {
+      id: 'car-race-quiz',
+      title: 'Chiến Xa Tiên Tri Ê-li-a Về Thiên Quốc',
+      subtitle: 'Cuộc Đua Chiến Xa Lửa Tốc Độ Đố Vui',
+      category: 'ĐỐI KHÁNG ĐỘI NHÓM',
+      filterCat: 'race',
+      description: 'Cuộc đua tốc độ 2-4 cỗ xe tiên tri Ê-li-a. Mỗi câu trả lời đúng giúp cỗ xe bứt phá lao nhanh về cổng Thiên Đàng vinh phúc!',
+      thumbnail: 'anh/games/thumb_car_race.jpg',
+      icon: '🏎️',
+      gradient: 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)',
+      playsCount: 0,
+      metaCount: '5 câu',
+      isStudentPicker: false,
+      onPlay: 'window.CatechismGames.openCarRaceQuiz()'
+    },
+    {
+      id: 'minesweeper-quiz',
+      title: 'Vượt Sa Mạc Sinai Về Miền Đất Hứa',
+      subtitle: 'Khám Phá Ô Bình An Tránh Cám Dỗ Sa Mạc',
+      category: 'THỬ THÁCH PHIÊU LƯU',
+      filterCat: 'reflex',
+      description: 'Vượt hành trình sa mạc với 3 mạng sống (Đức Tin - Cậy - Mến). Chọn đúng các ô bình an và giải đố Lời Chúa để đưa dân Ít-ra-en về miền Đất Hứa.',
+      thumbnail: 'anh/games/thumb_minesweeper.jpg',
+      icon: '🏜️',
+      gradient: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)',
+      playsCount: 0,
+      metaCount: '5 chặng',
+      isStudentPicker: false,
+      onPlay: 'window.CatechismGames.openMinesweeperQuiz()'
+    },
+    {
+      id: 'flying-words-quiz',
+      title: 'Bồ Câu Ngũ Tuần — Ghép Câu Kinh Thánh',
+      subtitle: 'Bắt Các Đám Mây Chữ Sắp Xếp Lời Chúa',
+      category: 'TƯ DUY TỪ NGỮ',
+      filterCat: 'words',
+      description: 'Bắt các đám mây chữ từ bầu trời Thánh Thần bay qua để sắp xếp đúng thứ tự câu Kinh Thánh / Kinh Tin Kính hoàn chỉnh.',
+      thumbnail: 'anh/games/thumb_flying_words.jpg',
+      icon: '🕊️',
+      gradient: 'linear-gradient(135deg, #0284c7 0%, #6366f1 100%)',
+      playsCount: 0,
+      metaCount: '5 câu Kinh Thánh',
+      isStudentPicker: false,
+      onPlay: 'window.CatechismGames.openFlyingWordsQuiz()'
+    },
+    {
+      id: 'matching-pairs-quiz',
+      title: 'Kéo Thả Nối Ý — Nhân Vật & Sự Kiện Kinh Thánh',
+      subtitle: 'Nối Cột A Khái Niệm Với Cột B Tương Ứng',
+      category: 'GHI NHỚ & GHÉP CẶP',
+      filterCat: 'reflex',
+      description: 'Bài trắc nghiệm kéo thả nối ý: Ghép nhân vật Cột A (như Môsê, Đavít, Phaolô...) với sự kiện / sứ mạng tương ứng ở Cột B.',
+      thumbnail: 'anh/games/thumb_matching_pairs.jpg',
+      icon: '🔗',
+      gradient: 'linear-gradient(135deg, #0d9488 0%, #0284c7 100%)',
+      playsCount: 0,
+      metaCount: '5 cặp nối ý',
+      isStudentPicker: false,
+      onPlay: 'window.CatechismGames.openMatchingPairsQuiz()'
+    },
+    {
+      id: 'marble-race-quiz',
+      title: 'Đua Bi Thiên Thần — Gọi Tên Học Viên Lên Bảng',
+      subtitle: 'Đua Bi Thác Đổ Vật Lý Chọn Em May Mắn',
+      category: 'GỌI TÊN VÀ CHIA NHÓM',
+      filterCat: 'race',
+      description: 'Mô phỏng đường đua bi rơi thác đổ tự do qua đệm nảy mây trời, dốc zíc-zắc và phễu cổ chai. Tự động cập nhật bảng xếp hạng và gọi tên học viên may mắn!',
+      thumbnail: 'anh/games/thumb_marble_race.jpg',
+      icon: '🏁',
+      gradient: 'linear-gradient(135deg, #f43f5e 0%, #be123c 100%)',
+      playsCount: 0,
+      metaCount: 'Cả lớp học',
+      isStudentPicker: true,
+      onPlay: 'window.CatechismGames.openMarbleRace()'
+    },
+    {
+      id: 'duck-race-quiz',
+      title: 'Cuộc Đua Con Tàu Nô-ê Trên Sông Gio-đan',
+      subtitle: 'Đua Thuyền Trên Dòng Nước Thánh Gọi Tên Học Viên',
+      category: 'GỌI TÊN VÀ CHIA NHÓM',
+      filterCat: 'race',
+      description: 'Mỗi con thuyền / chú vịt gắn tên một học viên thiếu nhi. Khi bấm Đua!, các thuyền lướt sóng về đích chọn ra học sinh may mắn nhận thưởng!',
+      thumbnail: 'anh/games/thumb_noah_ark.jpg',
+      icon: '⛵',
+      gradient: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+      playsCount: 0,
+      metaCount: 'Cả lớp học',
+      isStudentPicker: true,
+      onPlay: 'window.CatechismGames.openDuckRace()'
+    },
+    {
+      id: 'turtle-race-quiz',
+      title: 'Cuộc Đua Đàn Chiên Của Người Mục Tử',
+      subtitle: 'Đàn Chiên Hiền Lành Về Đồng Cỏ Xanh Tươi',
+      category: 'GỌI TÊN VÀ CHIA NHÓM',
+      filterCat: 'race',
+      description: 'Mỗi chú chiên gắn tên 1 học viên. Khi bấm Bắt đầu, đàn chiên lon ton chạy đua về đồng cỏ bên suối mát chọn ra em may mắn nhất!',
+      thumbnail: 'anh/games/thumb_turtle_race.jpg',
+      icon: '🐑',
+      gradient: 'linear-gradient(135deg, #10b981 0%, #047857 100%)',
+      playsCount: 0,
+      metaCount: 'Cả lớp học',
+      isStudentPicker: true,
+      onPlay: 'window.CatechismGames.openTurtleRace()'
+    },
+    {
+      id: 'claw-machine-quiz',
+      title: 'Máy Gắp Quà Ân Sủng — Gắp Thú Thiên Thần',
+      subtitle: 'Gắp Phần Thưởng Ân Sủng Chọn Học Viên',
+      category: 'GỌI TÊN VÀ CHIA NHÓM',
+      filterCat: 'race',
+      description: 'Mô phỏng máy gắp quà thần kỳ. Mỗi món quà / gấu bông gắn tên 1 học viên. Cần gạt hạ xuống gắp ngẫu nhiên quà mang tên học viên lên bảng!',
+      thumbnail: 'anh/games/thumb_claw_machine.jpg',
+      icon: '🧸',
+      gradient: 'linear-gradient(135deg, #a855f7 0%, #7e22ce 100%)',
+      playsCount: 0,
+      metaCount: 'Cả lớp học',
+      isStudentPicker: true,
+      onPlay: 'window.CatechismGames.openClawMachine()'
+    },
+    {
+      id: 'student-group-divider-quiz',
+      title: 'Phân Đội Thiếu Nhi Thánh Thể (Chiên Con, Ấu, Thiếu, Nghĩa)',
+      subtitle: 'Chia Nhóm Tự Động & Bốc Thăm Đội Bí Mật',
+      category: 'GỌI TÊN VÀ CHIA NHÓM',
+      filterCat: 'race',
+      description: 'Chia lớp học theo ngành TNTT hoặc 2-8 đội tự động. Hiệu ứng bốc thăm bí mật hồi hộp kèm nhạc nền rộn rã, tráo đổi đội và xuất danh sách tức thì.',
+      thumbnail: 'anh/games/thumb_group_divider.jpg',
+      icon: '⚜️',
+      gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+      playsCount: 0,
+      metaCount: '2-8 đội',
+      isStudentPicker: true,
+      onPlay: 'window.CatechismGames.openStudentGroupDivider()'
+    },
+    {
+      id: 'astronaut-quiz',
+      title: 'Cỗ Xe Lửa Tiên Tri Ê-li-a Lên Tầng Trời',
+      subtitle: 'Bay Qua Các Tầng Trời Chọn Học Viên May Mắn',
+      category: 'GỌI TÊN VÀ CHIA NHÓM',
+      filterCat: 'race',
+      description: 'Đếm ngược 5 giây kịch tính, cỗ xe lửa cất cánh bay bổng giữa bầu trời ngàn sao và đáp xuống tinh tú mang tên học viên được Chúa chọn!',
+      thumbnail: 'anh/games/thumb_astronaut.jpg',
+      icon: '🚀',
+      gradient: 'linear-gradient(135deg, #4f46e5 0%, #1e1b4b 100%)',
+      playsCount: 0,
+      metaCount: 'Cả lớp học',
+      isStudentPicker: true,
+      onPlay: 'window.CatechismGames.openAstronautExplorer()'
+    },
+    {
+      id: 'magic-hat-quiz',
+      title: 'Chiếc Rương Bí Mật & Bồ Câu Bình An',
+      subtitle: 'Bồ Câu Trắng Mang Dải Lụa Tên Học Sinh',
+      category: 'GỌI TÊN VÀ CHIA NHÓM',
+      filterCat: 'race',
+      description: 'Chiếc rương thánh phát ánh quang lung linh. Khi bấm Triệu hồi, chim bồ câu trắng tung cánh mang theo dải lụa ghi tên học sinh được vinh danh!',
+      thumbnail: 'anh/games/thumb_magic_hat.jpg',
+      icon: '🕊️',
+      gradient: 'linear-gradient(135deg, #ec4899 0%, #831843 100%)',
+      playsCount: 0,
+      metaCount: 'Cả lớp học',
+      isStudentPicker: true,
+      onPlay: 'window.CatechismGames.openMagicHat()'
+    },
+    {
+      id: 'magic-grimoire-quiz',
+      title: 'Sách Sự Sống Triệu Hồi — AI Nhận Diện Cử Chỉ Tay',
+      subtitle: 'Vẫy Tay Trước Camera AI Lật Sách Sự Sống',
+      category: 'GỌI TÊN VÀ CHIA NHÓM',
+      filterCat: 'camera',
+      description: 'Tích hợp Webcam AI nhận diện cử chỉ tay. Học sinh hoặc giáo lý viên chỉ cần vẫy tay trước ống kính, Sách Sự Sống tự động lật mở trang chọn học viên!',
+      thumbnail: 'anh/games/thumb_magic_grimoire.jpg',
+      icon: '📖',
+      gradient: 'linear-gradient(135deg, #d97706 0%, #78350f 100%)',
+      playsCount: 0,
+      metaCount: 'Cả lớp học',
+      isStudentPicker: true,
+      onPlay: 'window.CatechismGames.openMagicGrimoire()'
+    },
+    {
+      id: 'jungle-rescue-quiz',
+      title: 'Đa-vít Dũng Cảm Chiến Thắng Khổng Lồ Goliath',
+      subtitle: 'Đấu Trí Vượt Cạm Bẫy Bảo Vệ Dân Chúa',
+      category: 'THỬ THÁCH PHIÊU LƯU',
+      filterCat: 'reflex',
+      description: 'Cùng chú bé mục đồng Đa-vít vượt qua cạm bẫy nơi thung lũng Ê-la, trả lời đúng các câu hỏi đức tin để đánh bại Goliath và nhận phần thưởng ân sủng!',
+      thumbnail: 'anh/games/thumb_jungle_rescue.jpg',
+      icon: '🛡️',
+      gradient: 'linear-gradient(135deg, #15803d 0%, #047857 100%)',
+      playsCount: 0,
+      metaCount: '5 thử thách',
+      isStudentPicker: false,
+      onPlay: 'window.CatechismGames.openJungleRescueQuiz()'
+    },
+    {
+      id: 'jeopardy-quiz',
+      title: 'Đấu Trí Bảng Vàng Giáo Lý (Jeopardy 5 Chủ Đề)',
+      subtitle: 'Ma Trận Bảng Điểm 20 Ô Cực Kịch Tính',
+      category: 'ĐỐI KHÁNG ĐỘI NHÓM',
+      filterCat: 'quiz',
+      description: 'Ma trận 20 ô thuộc 5 chủ đề: Cựu Ước, Tân Ước, 7 Bí Tích, 10 Điều Răn và Phụng Vụ. Các sự kiện thưởng điểm, mất lượt hoặc nhân đôi điểm số x2!',
+      thumbnail: 'anh/games/thumb_jeopardy.jpg',
+      icon: '🟨',
+      gradient: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)',
+      playsCount: 0,
+      metaCount: '20 ô câu đố',
+      isStudentPicker: false,
+      onPlay: 'window.CatechismGames.openJeopardyQuiz()'
+    },
+    {
+      id: 'geo-earth-structure-game',
+      title: '🌍 3D Kỳ Quan Tạo Dựng: Trái Đất Của Thiên Chúa',
+      subtitle: 'Bóc Tách 3D Cấu Tạo Địa Cầu Theo Sách Sáng Thế',
+      category: 'KHÁM PHÁ 3D',
+      filterCat: '3d',
+      description: 'Mô hình 3D tương tác bóc tách các lớp cấu tạo Trái Đất, minh họa công trình tạo dựng kỳ vĩ của Thiên Chúa trong Sách Sáng Thế với 360 độ xoay tự do.',
+      thumbnail: 'anh/games/thumb_earth_3d.jpg',
+      icon: '🌍',
+      gradient: 'linear-gradient(135deg, #0284c7 0%, #0d9488 100%)',
+      playsCount: 0,
+      metaCount: 'Mô hình 3D',
+      isStudentPicker: false,
+      onPlay: 'window.CatechismGames.openGeoEarthStructureGame()'
+    },
+    {
+      id: 'geo-3d-experiments-game',
+      title: '🌐 3D Vũ Trụ Vạn Vật Ca Khen Thiên Chúa',
+      subtitle: 'Khám Phá Hệ Mặt Trời, Mặt Trăng & Các Tinh Tú',
+      category: 'KHÁM PHÁ 3D',
+      filterCat: '3d',
+      description: 'Khám phá 3D Hệ Mặt Trời, Nhật thực, Nguyệt thực và các vì sao: "Trời xanh tường thuật vinh quang Chúa, không trung loan báo việc tay Người làm" (Tv 19).',
+      thumbnail: 'anh/games/thumb_space_3d.jpg',
+      icon: '✨',
+      gradient: 'linear-gradient(135deg, #d97706 0%, #f59e0b 100%)',
+      playsCount: 0,
+      metaCount: '7 kỳ quan 3D',
+      isStudentPicker: false,
+      onPlay: 'window.CatechismGames.openGeo3DExperimentsGame()'
+    },
+    {
+      id: 'bouncing-words-game',
+      title: 'Ghi Nhớ Lời Chúa Mau Lẹ — Thẻ Từ Vựng Bay',
+      subtitle: 'Bắt Các Từ Bay Lượn Ghép Đúng Câu Kinh Thánh',
+      category: 'TƯ DUY TỪ NGỮ',
+      filterCat: 'words',
+      description: 'Các từ trong câu Lời Chúa bay lơ lửng liên tục. Thiếu nhi quan sát nhanh và nhấp chọn theo đúng trình tự để hoàn tất câu Lời Chúa nhận điểm ân sủng!',
+      thumbnail: 'anh/games/thumb_bouncing_words.jpg',
+      icon: '☁️',
+      gradient: 'linear-gradient(135deg, #f43f5e 0%, #fb923c 100%)',
+      playsCount: 0,
+      metaCount: '5 câu',
+      isStudentPicker: false,
+      onPlay: 'window.CatechismGames.openBouncingWordsGame()'
+    },
+    {
+      id: 'math-sack-race-game',
+      title: 'Đua Nhảy Bao Bố — Cuộc Đua Về Nhà Chúa',
+      subtitle: 'Thi Đấu 2 Đội Nhảy Bao Bố Vượt Thử Thách',
+      category: 'ĐỐI KHÁNG ĐỘI NHÓM',
+      filterCat: 'race',
+      description: 'Hai đội thi đấu trả lời các câu hỏi Giáo lý và Kinh Thánh để điều khiển nhân vật nhảy bao bố vượt chướng ngại vật tiến về Nhà Thờ giáo xứ!',
+      thumbnail: 'anh/games/thumb_sack_race.jpg',
+      icon: '🦘',
+      gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+      playsCount: 0,
+      metaCount: '5 câu',
+      isStudentPicker: false,
+      onPlay: 'window.CatechismGames.openMathSackRaceGame()'
+    },
+    {
+      id: 'pirate-ship-battle-game',
+      title: 'Con Tàu Đức Tin Vượt Sóng Biển Hồ Ga-li-lê',
+      subtitle: 'Đội Thuyền Giương Buồm Vượt Bão Tố Biển Hồ',
+      category: 'ĐỐI KHÁNG ĐỘI NHÓM',
+      filterCat: 'race',
+      description: 'Hai đội thuyền đức tin vượt qua cơn giông tố trên biển hồ Ga-li-lê như các Tông đồ năm xưa. Trả lời đúng để giương buồm đưa thuyền cập bến bình an!',
+      thumbnail: 'anh/games/thumb_galilee_ship.jpg',
+      icon: '⛵',
+      gradient: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+      playsCount: 0,
+      metaCount: '5 câu',
+      isStudentPicker: false,
+      onPlay: 'window.CatechismGames.openPirateShipBattleGame()'
     }
   ];
 
@@ -371,7 +786,6 @@
       theme: "Lời Chúa"
     };
 
-    // Lấy danh sách lớp
     let classes = [];
     if (typeof window.getMagnificatClasses === 'function') {
       classes = window.getMagnificatClasses();
@@ -388,12 +802,20 @@
           </div>
           <h1 class="cg-hero-title">Đồ Nghề Dạy Giáo Lý & Kinh Thánh</h1>
           <p class="cg-hero-desc">
-            Không gian trò chơi giáo dục tích cực mang đậm phong cách Công Giáo. 
-            Kết hợp công nghệ tương tác Camera nhận diện cử chỉ, cuộc đua tương tác đồng đội và hình ảnh Kinh Thánh sống động 
+            Không gian trò chơi giáo dục tích cực mang đậm phong cách Công Giáo với 35 trò chơi đa dạng.
+            Kết hợp công nghệ tương tác Camera nhận diện cử chỉ, cuộc đua tương tác đồng đội và hình ảnh Kinh Thánh sống động
             giúp các em thiếu nhi học Lời Chúa hào hứng, say mê!
           </p>
 
           <div class="cg-hero-stats">
+            <div class="cg-stat-item">
+              <div class="cg-stat-icon"><i class="fa-solid fa-gamepad"></i></div>
+              <div>
+                <strong>35 Trò Chơi Giáo Lý</strong>
+                <div style="font-size: 0.8rem; color: #94a3b8;">Đua nhóm • Trắc nghiệm • AI Camera</div>
+              </div>
+            </div>
+
             <div class="cg-stat-item">
               <div class="cg-stat-icon"><i class="fa-solid fa-book-bible"></i></div>
               <div>
@@ -403,18 +825,10 @@
             </div>
 
             <div class="cg-stat-item">
-              <div class="cg-stat-icon"><i class="fa-solid fa-video"></i></div>
-              <div>
-                <strong>Tương Tác Camera</strong>
-                <div style="font-size: 0.8rem; color: #94a3b8;">Nghiêng đầu trả lời qua Webcam</div>
-              </div>
-            </div>
-
-            <div class="cg-stat-item">
-              <div class="cg-stat-icon"><i class="fa-solid fa-ship"></i></div>
+              <div class="cg-stat-icon"><i class="fa-solid fa-users"></i></div>
               <div>
                 <strong>Đua Nhóm & Gọi Tên</strong>
-                <div style="font-size: 0.8rem; color: #94a3b8;">Con Tàu Nô-ê • Vòng Quay Tên Thánh</div>
+                <div style="font-size: 0.8rem; color: #94a3b8;">Con Tàu Nô-ê • Đua Bi • Vòng Quay</div>
               </div>
             </div>
 
@@ -429,20 +843,35 @@
           </div>
         </div>
 
+        <!-- SEARCH INPUT -->
+        <div style="margin: 1.5rem 0 1rem; position: relative;">
+          <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: #0284c7; font-size: 1.1rem;"></i>
+          <input type="text" id="cg-games-search-input" placeholder="Tìm kiếm trò chơi Lời Chúa (ví dụ: Nghiêng đầu, Kéo co, Con tàu Nô-ê, Triệu phú, Đua bi, Đua vịt, Lật thẻ, Đa-vít, Mẹ Maria)..." style="width: 100%; box-sizing: border-box; padding: 14px 18px 14px 48px; border-radius: 14px; border: 1.5px solid #cbd5e1; font-size: 0.95rem; font-weight: 700; color: #0f172a; outline: none; background: #ffffff; box-shadow: 0 4px 16px rgba(0,0,0,0.04);">
+        </div>
+
         <!-- FILTER & CONTROLS BAR -->
         <div class="cg-filter-bar">
           <div class="cg-filter-tabs">
             <button class="cg-filter-btn active" data-filter="all">
-              <i class="fa-solid fa-grid-2"></i> Tất cả trò chơi (10)
+              <i class="fa-solid fa-grid-2"></i> Tất cả (${CATECHISM_GAMES_CATALOG.length})
             </button>
             <button class="cg-filter-btn" data-filter="race">
               <i class="fa-solid fa-flag-checkered"></i> Đua Nhóm & Gọi Tên
             </button>
             <button class="cg-filter-btn" data-filter="quiz">
-              <i class="fa-solid fa-brain"></i> Trắc Nghiệm & Triệu Phú
+              <i class="fa-solid fa-brain"></i> Trắc Nghiệm Kịch Tính
+            </button>
+            <button class="cg-filter-btn" data-filter="camera">
+              <i class="fa-solid fa-camera"></i> Tương Tác AI Camera
+            </button>
+            <button class="cg-filter-btn" data-filter="words">
+              <i class="fa-solid fa-spell-check"></i> Tư Duy Từ Ngữ
             </button>
             <button class="cg-filter-btn" data-filter="reflex">
               <i class="fa-solid fa-hands"></i> Vận Động & Khéo Léo
+            </button>
+            <button class="cg-filter-btn" data-filter="3d">
+              <i class="fa-solid fa-cube"></i> Khám Phá 3D
             </button>
             <button class="cg-filter-btn" data-filter="bible">
               <i class="fa-solid fa-book-bookmark"></i> 73 Sách Kinh Thánh
@@ -458,7 +887,7 @@
           </div>
         </div>
 
-        <!-- GAME CARDS GRID: 10 PHONG CÁCH GAME CÔNG GIÁO -->
+        <!-- GAME CARDS GRID: 35 PHONG CÁCH GAME CÔNG GIÁO -->
         <div class="cg-games-grid" id="cg-games-cards-grid">
           ${CATECHISM_GAMES_CATALOG.map(g => {
             const hasCustomQ = Boolean(localStorage.getItem('cg_custom_q_' + g.id) || localStorage.getItem('cg_custom_students_' + g.id));
@@ -473,19 +902,17 @@
             }
             return `
               <div class="cg-game-card" data-category="${g.filterCat}">
-                <!-- 3D HD Header Thumbnail Showcase Box -->
-                <div class="cg-card-thumb-wrap">
-                  <img src="${g.thumbnail}" class="cg-card-thumb" alt="${g.title}" loading="lazy" onerror="this.onerror=null; this.src='anh/games/thumb_noah_ark.jpg'">
+                <div class="cg-card-thumb-wrap" style="background: ${g.gradient || 'linear-gradient(135deg, #0284c7, #1d4ed8)'};">
+                  ${g.thumbnail ? `<img src="${g.thumbnail}" class="cg-card-thumb" alt="${g.title}" loading="lazy" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">` : ''}
+                  <div class="cg-card-thumb-fallback" style="${g.thumbnail ? 'display: none;' : 'display: flex;'} width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 3.8rem; text-shadow: 0 4px 20px rgba(0,0,0,0.3); background: ${g.gradient || 'linear-gradient(135deg, #0284c7, #1d4ed8)'};">
+                    ${g.icon}
+                  </div>
                   <div class="cg-card-thumb-overlay"></div>
-                  <!-- Category Badge Floating Top Left -->
                   <span class="cg-card-badge-topleft">${g.category}</span>
-                  <!-- Plays Count Top Right -->
                   <span class="cg-card-badge-topright">${g.playsCount || 0} Lượt chơi</span>
-                  <!-- Floating Engine Icon Bottom Right -->
                   <div class="cg-card-engine-icon">${g.icon}</div>
                 </div>
 
-                <!-- Body Content -->
                 <div class="cg-card-body">
                   <div>
                     <h3 class="cg-card-title">${g.title}</h3>
@@ -495,16 +922,13 @@
                     </div>
                   </div>
 
-                  <!-- Actions -->
                   <div>
-                    <!-- Primary Play Button -->
                     <button class="cg-btn-play-primary" onclick="${g.onPlay}">
                       <i class="fa-solid fa-play" style="font-size: 0.9rem;"></i>
                       <span>Chơi Ngay</span>
                       <i class="fa-solid fa-arrow-right" style="font-size: 0.85rem;"></i>
                     </button>
 
-                    <!-- Utility 3 Buttons Row Like Gamegiaoduc -->
                     <div class="cg-card-tools-row">
                       <button class="cg-btn-tool-upload" onclick="window.CatechismGames.openCustomizer('${g.id}', '${g.title.replace(/'/g, "\\'")}', ${Boolean(g.isStudentPicker)})" title="Soạn thảo hoặc nạp danh sách từ file Excel / Word">
                         <i class="fa-solid fa-bolt" style="color: #0d9488;"></i>
@@ -525,8 +949,7 @@
             `;
           }).join('')}
         </div>
-
-        <!-- SECTION: KHÁM PHÁ 73 SÁCH KINH THÁNH -->
+<!-- SECTION: KHÁM PHÁ 73 SÁCH KINH THÁNH -->
         <div class="cg-bible-browser-section" id="cg-bible-books-section">
           <div class="cg-browser-header">
             <div class="cg-browser-title-wrap">
@@ -641,9 +1064,28 @@
     `;
 
     // Filter Button Handler
+    
+    // Search & Filter Handlers
     const filterBtns = container.querySelectorAll('.cg-filter-btn');
     const cards = container.querySelectorAll('.cg-game-card');
     const bibleSec = container.querySelector('#cg-bible-books-section');
+    const searchInput = container.querySelector('#cg-games-search-input');
+
+    if (searchInput) {
+      searchInput.addEventListener('input', () => {
+        const q = searchInput.value.trim().toLowerCase();
+        cards.forEach(c => {
+          const title = (c.querySelector('.cg-card-title')?.textContent || '').toLowerCase();
+          const desc = (c.querySelector('.cg-card-desc')?.textContent || '').toLowerCase();
+          const cat = (c.querySelector('.cg-card-badge-topleft')?.textContent || '').toLowerCase();
+          if (!q || title.includes(q) || desc.includes(q) || cat.includes(q)) {
+            c.style.display = 'flex';
+          } else {
+            c.style.display = 'none';
+          }
+        });
+      });
+    }
 
     filterBtns.forEach(btn => {
       btn.addEventListener('click', () => {
@@ -674,9 +1116,9 @@
     });
   };
 
+
   // ==========================================================================
   // GAME ARENA LOGIC CONTROLLER
-  // ==========================================================================
   window.CatechismGames = {
 
     // ------------------------------------------------------------------------
@@ -3198,7 +3640,1067 @@
       if (fab) fab.remove();
     },
 
-    closeActiveGame: function() {
+    
+    // ------------------------------------------------------------------------
+    // 11. ĐUA BI THIÊN THẦN — GỌI TÊN HỌC VIÊN LÊN BẢNG (MARBLE RACE)
+    // ------------------------------------------------------------------------
+    openMarbleRace: function() {
+      SoundFX.playBell();
+      const selectedClassId = document.getElementById('cg-selected-class-dropdown')?.value || 'all';
+      const customRoster = getCustomStudents('marble-race-quiz');
+      let roster = (customRoster && customRoster.length > 0) ? customRoster : getStudentRoster(selectedClassId);
+      if (!roster || roster.length === 0) {
+        alert('Chưa có danh sách học sinh. Vui lòng nạp danh sách học sinh trước!');
+        return;
+      }
+
+      const overlay = document.createElement('div');
+      overlay.id = 'cg-marble-race-arena';
+      overlay.className = 'cg-arena-overlay';
+      overlay.innerHTML = `
+        <div class="cg-arena-header" style="background: linear-gradient(135deg, #be123c, #881337); border-bottom: 2px solid #f43f5e;">
+          <div class="cg-arena-title">
+            <span style="font-size: 1.5rem;">🏁</span>
+            <div>
+              <h2 style="font-size: 1.25rem; font-weight: 900; color: #fff;">ĐUA BI THIÊN THẦN — GỌI TÊN HỌC VIÊN LÊN BẢNG</h2>
+              <div style="font-size: 0.8rem; color: #fecdd3;">Đua bi thác đổ vật lý rơi tự do qua các tầng mây và chốt nảy thiên quốc</div>
+            </div>
+          </div>
+          <button class="cg-arena-btn-exit" onclick="window.CatechismGames.closeActiveGame()" title="Thoát trò chơi (ESC)">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div style="flex: 1; display: flex; overflow: hidden; background: #0f172a; position: relative;">
+          <!-- Track Canvas -->
+          <div style="flex: 1; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;">
+            <canvas id="cg-marble-canvas" width="600" height="650" style="background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%); border: 3px solid #f43f5e; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-width: 100%; max-height: 85vh;"></canvas>
+            <div style="margin-top: 14px; display: flex; gap: 12px;">
+              <button id="cg-btn-start-marble" class="cg-btn-play" style="padding: 10px 28px; font-size: 1.05rem; background: linear-gradient(135deg, #f43f5e, #e11d48); color: #fff; border: none; border-radius: 999px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 15px rgba(244,63,94,0.4);">
+                <i class="fa-solid fa-play"></i> THẢ BI ĐUA NGAY!
+              </button>
+            </div>
+          </div>
+
+          <!-- Leaderboard on Right -->
+          <div style="width: 280px; background: rgba(30, 41, 59, 0.95); border-left: 2px solid rgba(244,63,94,0.3); padding: 18px; display: flex; flex-direction: column; color: #fff;">
+            <h3 style="font-size: 1.05rem; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; color: #fda4af;">
+              <i class="fa-solid fa-trophy"></i> BẢNG ĐUA (${roster.length} em)
+            </h3>
+            <div id="cg-marble-ranks" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;">
+              ${roster.map((s, idx) => `
+                <div style="background: rgba(255,255,255,0.06); padding: 7px 10px; border-radius: 8px; font-size: 0.85rem; display: flex; align-items: center; justify-content: space-between;">
+                  <span><strong>#${idx + 1}</strong> ${s.christianName || ''} ${s.fullName || ''}</span>
+                  <span style="color: #fda4af; font-size: 0.75rem;">Đang chờ</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(overlay);
+      window.CatechismGames.showGlobalExitFab();
+
+      const canvas = document.getElementById('cg-marble-canvas');
+      const ctx = canvas.getContext('2d');
+      const startBtn = document.getElementById('cg-btn-start-marble');
+
+      const W = canvas.width;
+      const H = canvas.height;
+
+      // Obstacle Pins (Galton Board Style)
+      const pins = [];
+      const rows = 9;
+      for (let r = 0; r < rows; r++) {
+        const count = 5 + (r % 2);
+        const y = 140 + r * 45;
+        const spacing = W / (count + 1);
+        for (let c = 1; c <= count; c++) {
+          pins.push({ x: c * spacing + (Math.random() * 8 - 4), y: y });
+        }
+      }
+
+      // Funnel & Finish Line at Bottom
+      const finishY = H - 50;
+
+      // Marbles
+      const colors = ['#f43f5e', '#38bdf8', '#fbbf24', '#34d399', '#a78bfa', '#fb923c', '#e879f9', '#4ade80'];
+      let marbles = roster.map((s, idx) => ({
+        id: s.id,
+        name: `${s.christianName || ''} ${s.fullName || ''}`.trim(),
+        x: W / 2 + (Math.random() * 140 - 70),
+        y: 30 + Math.random() * 30,
+        vx: (Math.random() - 0.5) * 2,
+        vy: 0,
+        radius: 11,
+        color: colors[idx % colors.length],
+        finished: false,
+        finishTime: 0
+      }));
+
+      function drawTrack() {
+        ctx.clearRect(0, 0, W, H);
+
+        // Funnel Walls
+        ctx.strokeStyle = 'rgba(244, 63, 94, 0.4)';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(30, 40);
+        ctx.lineTo(100, 110);
+        ctx.lineTo(10, H - 70);
+        ctx.lineTo(W / 2 - 40, finishY);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(W - 30, 40);
+        ctx.lineTo(W - 100, 110);
+        ctx.lineTo(W - 10, H - 70);
+        ctx.lineTo(W / 2 + 40, finishY);
+        ctx.stroke();
+
+        // Finish Gate
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillRect(W / 2 - 40, finishY - 4, 80, 8);
+        ctx.font = 'bold 12px Montserrat, sans-serif';
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'center';
+        ctx.fillText('CỔNG THIÊN ĐÀNG', W / 2, finishY + 24);
+
+        // Draw Pins
+        pins.forEach(p => {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+          ctx.fillStyle = '#94a3b8';
+          ctx.fill();
+        });
+
+        // Draw Marbles
+        marbles.forEach(m => {
+          ctx.beginPath();
+          ctx.arc(m.x, m.y, m.radius, 0, Math.PI * 2);
+          ctx.fillStyle = m.color;
+          ctx.fill();
+          ctx.lineWidth = 2;
+          ctx.strokeStyle = '#ffffff';
+          ctx.stroke();
+
+          // Initials or Name
+          ctx.font = 'bold 9px Montserrat, sans-serif';
+          ctx.fillStyle = '#ffffff';
+          ctx.textAlign = 'center';
+          ctx.fillText(m.name.slice(0, 6), m.x, m.y - 14);
+        });
+      }
+
+      drawTrack();
+
+      let racing = false;
+      let animId = null;
+
+      startBtn.onclick = function() {
+        if (racing) return;
+        racing = true;
+        startBtn.disabled = true;
+        startBtn.style.opacity = '0.5';
+        SoundFX.playBell();
+
+        let finishedCount = 0;
+        let winners = [];
+
+        function updatePhysics() {
+          marbles.forEach(m => {
+            if (m.finished) return;
+
+            // Gravity & Friction
+            m.vy += 0.18;
+            m.vx *= 0.985;
+            m.x += m.vx;
+            m.y += m.vy;
+
+            // Wall Collisions
+            if (m.x - m.radius < 20) { m.x = 20 + m.radius; m.vx = Math.abs(m.vx) * 0.7 + 0.5; }
+            if (m.x + m.radius > W - 20) { m.x = W - 20 - m.radius; m.vx = -Math.abs(m.vx) * 0.7 - 0.5; }
+
+            // Pin Collisions
+            pins.forEach(p => {
+              const dx = m.x - p.x;
+              const dy = m.y - p.y;
+              const dist = Math.sqrt(dx * dx + dy * dy);
+              if (dist < m.radius + 4) {
+                const angle = Math.atan2(dy, dx);
+                m.vx = Math.cos(angle) * (2.5 + Math.random());
+                m.vy = Math.sin(angle) * 1.5;
+                if (Math.random() < 0.2) SoundFX.playTick();
+              }
+            });
+
+            // Finish check
+            if (m.y >= finishY) {
+              m.finished = true;
+              finishedCount++;
+              winners.push(m);
+              SoundFX.playPop();
+
+              const ranksEl = document.getElementById('cg-marble-ranks');
+              if (ranksEl) {
+                ranksEl.innerHTML = winners.map((w, idx) => `
+                  <div style="background: ${idx === 0 ? 'rgba(251,191,36,0.25)' : 'rgba(255,255,255,0.08)'}; padding: 7px 10px; border-radius: 8px; font-size: 0.85rem; display: flex; align-items: center; justify-content: space-between; border: ${idx === 0 ? '1px solid #fbbf24' : 'none'};">
+                    <span><strong>#${idx + 1}</strong> ${w.name}</span>
+                    <span style="color: ${idx === 0 ? '#fbbf24' : '#34d399'}; font-weight: 800;">${idx === 0 ? '🏆 VỀ NHẤT' : 'Hạng ' + (idx + 1)}</span>
+                  </div>
+                `).join('');
+              }
+
+              if (winners.length === 1) {
+                fireConfetti();
+                setTimeout(() => {
+                  window.CatechismGames.showWinnerModal(
+                    `🎉 CHÚC MỪNG CHIẾN THẮNG: ${m.name}!`,
+                    `Bi của em <strong>${m.name}</strong> đã xuất sắc vượt qua các chốt nảy thiên quốc và cán đích Đền Thờ đầu tiên!<br><span style="color: #fbbf24;">"Ai bền đỗ đến cùng, kẻ ấy sẽ được cứu độ!" (Mt 24, 13)</span>`
+                  );
+                }, 1000);
+              }
+            }
+          });
+
+          drawTrack();
+
+          if (finishedCount < marbles.length && racing) {
+            animId = requestAnimationFrame(updatePhysics);
+          }
+        }
+
+        animId = requestAnimationFrame(updatePhysics);
+      };
+
+      overlay._cleanupKey = function() {
+        racing = false;
+        if (animId) cancelAnimationFrame(animId);
+      };
+    },
+
+    // ------------------------------------------------------------------------
+    // 12. CUỘC ĐUA TRÊN SÔNG GIO-ĐAN (DUCK / BOAT RACE)
+    // ------------------------------------------------------------------------
+    openDuckRace: function() {
+      // Tận dụng đấu trường đua thuyền Nô-ê sống động trên sông Gio-đan
+      window.CatechismGames.openNoahArkRace();
+    },
+
+    // ------------------------------------------------------------------------
+    // 13. CUỘC ĐUA ĐÀN CHIÊN CỦA NGƯỜI MỤC TỬ (TURTLE / SHEEP RACE)
+    // ------------------------------------------------------------------------
+    openTurtleRace: function() {
+      SoundFX.playBell();
+      const selectedClassId = document.getElementById('cg-selected-class-dropdown')?.value || 'all';
+      const customRoster = getCustomStudents('turtle-race-quiz');
+      let roster = (customRoster && customRoster.length > 0) ? customRoster : getStudentRoster(selectedClassId);
+
+      const overlay = document.createElement('div');
+      overlay.id = 'cg-turtle-race-arena';
+      overlay.className = 'cg-arena-overlay';
+      overlay.innerHTML = `
+        <div class="cg-arena-header" style="background: linear-gradient(135deg, #059669, #047857); border-bottom: 2px solid #34d399;">
+          <div class="cg-arena-title">
+            <span style="font-size: 1.5rem;">🐑</span>
+            <div>
+              <h2 style="font-size: 1.25rem; font-weight: 900; color: #fff;">CUỘC ĐUA ĐÀN CHIÊN CỦA NGƯỜI MỤC TỬ</h2>
+              <div style="font-size: 0.8rem; color: #a7f3d0;">Đàn chiên hiền lành đua nhau về đồng cỏ xanh tươi bên suối mát</div>
+            </div>
+          </div>
+          <button class="cg-arena-btn-exit" onclick="window.CatechismGames.closeActiveGame()" title="Thoát trò chơi (ESC)">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div style="flex: 1; padding: 24px; overflow-y: auto; background: linear-gradient(180deg, #ecfdf5 0%, #d1fae5 100%); display: flex; flex-direction: column; align-items: center;">
+          <div style="width: 100%; max-width: 900px; background: #ffffff; border-radius: 18px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); border: 2px solid #a7f3d0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+              <div style="font-weight: 800; color: #065f46; font-size: 1.1rem;">
+                <i class="fa-solid fa-flag-checkered"></i> ĐƯỜNG ĐUA ĐỒNG CỎ XANH TƯƠI
+              </div>
+              <button id="cg-btn-start-turtle" class="cg-btn-play" style="padding: 10px 28px; font-size: 1rem; background: linear-gradient(135deg, #10b981, #059669); color: #fff; border: none; border-radius: 999px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 14px rgba(16,185,129,0.4);">
+                <i class="fa-solid fa-play"></i> BẮT ĐẦU ĐUA!
+              </button>
+            </div>
+
+            <div id="cg-turtle-tracks-list" style="display: flex; flex-direction: column; gap: 14px;">
+              ${roster.slice(0, 8).map((s, idx) => `
+                <div style="background: #f0fdf4; border-radius: 12px; padding: 10px 14px; border: 1.5px solid #bbf7d0; position: relative;">
+                  <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 0.88rem; margin-bottom: 6px; color: #0f172a;">
+                    <span>🐑 Làn ${idx + 1}: <strong>${s.christianName || ''} ${s.fullName || ''}</strong></span>
+                    <span id="cg-turtle-pct-${idx}" style="color: #059669; font-weight: 800;">0%</span>
+                  </div>
+                  <div style="height: 18px; background: #e2e8f0; border-radius: 999px; overflow: hidden; position: relative;">
+                    <div id="cg-turtle-bar-${idx}" style="height: 100%; width: 0%; background: linear-gradient(90deg, #10b981, #34d399); border-radius: 999px; transition: width 0.15s ease;"></div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(overlay);
+      window.CatechismGames.showGlobalExitFab();
+
+      const startBtn = document.getElementById('cg-btn-start-turtle');
+      let racing = false;
+      const count = Math.min(roster.length, 8);
+      let progress = new Array(count).fill(0);
+
+      startBtn.onclick = function() {
+        if (racing) return;
+        racing = true;
+        startBtn.disabled = true;
+        startBtn.style.opacity = '0.5';
+        SoundFX.playBell();
+
+        const interval = setInterval(() => {
+          let winnerIdx = -1;
+          for (let i = 0; i < count; i++) {
+            progress[i] += Math.random() * 2.8 + 0.4;
+            const bar = document.getElementById(`cg-turtle-bar-${i}`);
+            const pct = document.getElementById(`cg-turtle-pct-${i}`);
+            if (bar) bar.style.width = Math.min(100, progress[i]) + '%';
+            if (pct) pct.textContent = Math.floor(Math.min(100, progress[i])) + '%';
+
+            if (progress[i] >= 100 && winnerIdx === -1) {
+              winnerIdx = i;
+            }
+          }
+
+          if (winnerIdx !== -1) {
+            clearInterval(interval);
+            racing = false;
+            fireConfetti();
+            const winStudent = roster[winnerIdx];
+            SoundFX.playHarp();
+            setTimeout(() => {
+              window.CatechismGames.showWinnerModal(
+                `🎉 CHÚC MỪNG CHIẾN THẮNG: ${winStudent.christianName || ''} ${winStudent.fullName || ''}!`,
+                `Chú chiên ngoan hiền của em <strong>${winStudent.christianName || ''} ${winStudent.fullName || ''}</strong> đã chạy nhanh nhất về đồng cỏ bình an của Chúa!<br><span style="color: #fbbf24;">"Chúa là Mục Tử chăn dắt tôi, tôi chẳng thiếu thốn gì!" (Tv 23, 1)</span>`
+              );
+            }, 600);
+          }
+        }, 120);
+
+        overlay._cleanupKey = function() {
+          clearInterval(interval);
+        };
+      };
+    },
+
+    // ------------------------------------------------------------------------
+    // 14. MÁY GẮP QUÀ ÂN SỦNG — GẮP THÚ THIÊN THẦN (CLAW MACHINE)
+    // ------------------------------------------------------------------------
+    openClawMachine: function() {
+      SoundFX.playBell();
+      const selectedClassId = document.getElementById('cg-selected-class-dropdown')?.value || 'all';
+      const customRoster = getCustomStudents('claw-machine-quiz');
+      let roster = (customRoster && customRoster.length > 0) ? customRoster : getStudentRoster(selectedClassId);
+
+      const overlay = document.createElement('div');
+      overlay.id = 'cg-claw-machine-arena';
+      overlay.className = 'cg-arena-overlay';
+      overlay.innerHTML = `
+        <div class="cg-arena-header" style="background: linear-gradient(135deg, #7c3aed, #6d28d9); border-bottom: 2px solid #c084fc;">
+          <div class="cg-arena-title">
+            <span style="font-size: 1.5rem;">🧸</span>
+            <div>
+              <h2 style="font-size: 1.25rem; font-weight: 900; color: #fff;">MÁY GẮP QUÀ ÂN SỦNG — GẮP THÚ THIÊN THẦN</h2>
+              <div style="font-size: 0.8rem; color: #e9d5ff;">Mô phỏng máy gắp quà thần kỳ gắp ngẫu nhiên học viên lên nhận thưởng</div>
+            </div>
+          </div>
+          <button class="cg-arena-btn-exit" onclick="window.CatechismGames.closeActiveGame()" title="Thoát trò chơi (ESC)">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; background: linear-gradient(180deg, #1e1b4b 0%, #0f172a 100%);">
+          <!-- Glass Arcade Booth -->
+          <div style="width: 440px; height: 500px; background: rgba(255,255,255,0.06); border: 4px solid #a855f7; border-radius: 24px; position: relative; overflow: hidden; box-shadow: 0 15px 40px rgba(168,85,247,0.3); display: flex; flex-direction: column;">
+            <!-- Claw Crane -->
+            <div id="cg-claw-arm" style="position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 6px; height: 60px; background: #e2e8f0; transition: height 1.2s ease, left 0.8s ease; z-index: 10;">
+              <div style="position: absolute; bottom: -20px; left: -14px; font-size: 1.8rem;">🦾</div>
+            </div>
+
+            <!-- Soft Toys & Gifts Pool -->
+            <div style="margin-top: auto; padding: 20px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; background: rgba(0,0,0,0.4); border-radius: 0 0 20px 20px;">
+              ${roster.slice(0, 12).map(s => `
+                <div class="cg-claw-item" style="background: rgba(255,255,255,0.12); border-radius: 12px; padding: 10px 4px; text-align: center; border: 1.5px solid rgba(168,85,247,0.4);">
+                  <div style="font-size: 1.8rem; margin-bottom: 4px;">🎁</div>
+                  <div style="font-size: 0.72rem; color: #fff; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${s.christianName || ''}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- Controller Buttons -->
+          <div style="margin-top: 24px;">
+            <button id="cg-btn-drop-claw" class="cg-btn-play" style="padding: 14px 42px; font-size: 1.15rem; background: linear-gradient(135deg, #a855f7, #ec4899); color: #fff; border: none; border-radius: 999px; font-weight: 900; cursor: pointer; box-shadow: 0 6px 20px rgba(168,85,247,0.4);">
+              <i class="fa-solid fa-hand-pointer"></i> HẠ TAY GẮP ÂN SỦNG!
+            </button>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(overlay);
+      window.CatechismGames.showGlobalExitFab();
+
+      const dropBtn = document.getElementById('cg-btn-drop-claw');
+      const clawArm = document.getElementById('cg-claw-arm');
+      let grabbing = false;
+
+      dropBtn.onclick = function() {
+        if (grabbing) return;
+        grabbing = true;
+        dropBtn.disabled = true;
+        dropBtn.style.opacity = '0.5';
+        SoundFX.playTick();
+
+        // Random target
+        const randomX = Math.floor(Math.random() * 60 + 20);
+        clawArm.style.left = randomX + '%';
+
+        setTimeout(() => {
+          clawArm.style.height = '320px';
+          SoundFX.playPop();
+
+          setTimeout(() => {
+            const luckyStudent = roster[Math.floor(Math.random() * roster.length)];
+            clawArm.style.height = '60px';
+            SoundFX.playHarp();
+            fireConfetti();
+
+            setTimeout(() => {
+              window.CatechismGames.showWinnerModal(
+                `🎉 ĐÃ GẮP ĐƯỢC: ${luckyStudent.christianName || ''} ${luckyStudent.fullName || ''}!`,
+                `Tay gắp ân sủng đã gắp trúng món quà mang tên học viên <strong>${luckyStudent.christianName || ''} ${luckyStudent.fullName || ''}</strong> lên nhận phần thưởng!<br><span style="color: #fbbf24;">"Phúc cho ai có lòng trong sạch, vì họ sẽ được nhìn ngắm Thiên Chúa!" (Mt 5, 8)</span>`
+              );
+              grabbing = false;
+              dropBtn.disabled = false;
+              dropBtn.style.opacity = '1';
+            }, 1200);
+          }, 1300);
+        }, 800);
+      };
+    },
+
+    // ------------------------------------------------------------------------
+    // 15. PHÂN ĐỘI THIẾU NHI THÁNH THỂ (STUDENT GROUP DIVIDER)
+    // ------------------------------------------------------------------------
+    openStudentGroupDivider: function() {
+      SoundFX.playBell();
+      const selectedClassId = document.getElementById('cg-selected-class-dropdown')?.value || 'all';
+      const customRoster = getCustomStudents('student-group-divider-quiz');
+      let roster = (customRoster && customRoster.length > 0) ? customRoster : getStudentRoster(selectedClassId);
+
+      const overlay = document.createElement('div');
+      overlay.id = 'cg-group-divider-arena';
+      overlay.className = 'cg-arena-overlay';
+      overlay.innerHTML = `
+        <div class="cg-arena-header" style="background: linear-gradient(135deg, #d97706, #b45309); border-bottom: 2px solid #fbbf24;">
+          <div class="cg-arena-title">
+            <span style="font-size: 1.5rem;">⚜️</span>
+            <div>
+              <h2 style="font-size: 1.25rem; font-weight: 900; color: #fff;">PHÂN ĐỘI THIẾU NHI THÁNH THỂ BÍ MẬT</h2>
+              <div style="font-size: 0.8rem; color: #fef3c7;">Chia nhóm tự động & bốc thăm phân đội với huy hiệu ngành TNTT</div>
+            </div>
+          </div>
+          <button class="cg-arena-btn-exit" onclick="window.CatechismGames.closeActiveGame()" title="Thoát trò chơi (ESC)">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div style="flex: 1; padding: 24px; overflow-y: auto; background: #0f172a; display: flex; flex-direction: column; align-items: center;">
+          <!-- Controls Bar -->
+          <div style="display: flex; gap: 14px; flex-wrap: wrap; align-items: center; justify-content: center; margin-bottom: 24px; background: rgba(255,255,255,0.06); padding: 14px 20px; border-radius: 16px; border: 1.5px solid rgba(251,191,36,0.3);">
+            <div style="color: #fff; font-weight: 700; font-size: 0.92rem;">
+              <i class="fa-solid fa-users"></i> Số đội phân chia:
+            </div>
+            <select id="cg-group-count-select" style="padding: 8px 14px; border-radius: 10px; font-weight: 800; background: #1e293b; color: #fbbf24; border: 1.5px solid #fbbf24; outline: none;">
+              <option value="2">2 Đội (Phê-rô & Phao-lô)</option>
+              <option value="4" selected>4 Đội (Chiên Con, Ấu, Thiếu, Nghĩa)</option>
+              <option value="6">6 Đội (6 Tông Đồ Thánh)</option>
+              <option value="8">8 Đội (8 Mối Phúc Thật)</option>
+            </select>
+
+            <button id="cg-btn-shuffle-teams" class="cg-btn-play" style="padding: 9px 24px; font-size: 0.95rem; background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; border: none; border-radius: 999px; font-weight: 800; cursor: pointer;">
+              <i class="fa-solid fa-shuffle"></i> BỐC THĂM PHÂN ĐỘI
+            </button>
+            <button id="cg-btn-copy-teams" class="cg-btn-secondary" style="padding: 9px 18px; font-size: 0.9rem; background: #0284c7; color: #fff; border: none; border-radius: 999px; font-weight: 700; cursor: pointer;">
+              <i class="fa-regular fa-copy"></i> Sao chép danh sách
+            </button>
+          </div>
+
+          <!-- Groups Grid Container -->
+          <div id="cg-groups-result-grid" style="width: 100%; max-width: 1200px; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px;"></div>
+        </div>
+      `;
+
+      document.body.appendChild(overlay);
+      window.CatechismGames.showGlobalExitFab();
+
+      const teamNames = [
+        { name: 'Đội Chiên Con (Hồng Phúc)', color: '#ec4899', icon: '🐑' },
+        { name: 'Đội Ấu Nhi (Xanh Lá)', color: '#10b981', icon: '🌿' },
+        { name: 'Đội Thiếu Nhi (Xanh Biển)', color: '#0284c7', icon: '⚓' },
+        { name: 'Đội Nghĩa Sĩ (Vàng Nắng)', color: '#f59e0b', icon: '⚜️' },
+        { name: 'Đội Thánh Phê-rô', color: '#8b5cf6', icon: '🗝️' },
+        { name: 'Đội Thánh Phao-lô', color: '#ef4444', icon: '⚔️' },
+        { name: 'Đội Thánh Gio-an', color: '#06b6d4', icon: '🦅' },
+        { name: 'Đội Thánh Gia-cô-bê', color: '#14b8a6', icon: '⭐' }
+      ];
+
+      function divideTeams() {
+        SoundFX.playBell();
+        const numTeams = parseInt(document.getElementById('cg-group-count-select').value, 10);
+        const shuffled = [...roster].sort(() => Math.random() - 0.5);
+        const teams = Array.from({ length: numTeams }, () => []);
+
+        shuffled.forEach((s, idx) => {
+          teams[idx % numTeams].push(s);
+        });
+
+        const grid = document.getElementById('cg-groups-result-grid');
+        grid.innerHTML = teams.map((team, idx) => {
+          const tInfo = teamNames[idx % teamNames.length];
+          return `
+            <div style="background: rgba(30, 41, 59, 0.95); border: 2px solid ${tInfo.color}; border-radius: 16px; padding: 18px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); display: flex; flex-direction: column;">
+              <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                <span style="font-size: 1.8rem;">${tInfo.icon}</span>
+                <div>
+                  <h4 style="color: ${tInfo.color}; font-weight: 800; font-size: 1.05rem;">${tInfo.name}</h4>
+                  <div style="font-size: 0.78rem; color: #94a3b8;">${team.length} thành viên</div>
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 8px; flex: 1;">
+                ${team.map((s, mIdx) => `
+                  <div style="background: rgba(255,255,255,0.06); padding: 7px 12px; border-radius: 8px; color: #f1f5f9; font-size: 0.88rem; display: flex; align-items: center; justify-content: space-between;">
+                    <span><strong>${mIdx + 1}.</strong> ${s.christianName || ''} ${s.fullName || ''}</span>
+                    <span style="font-size: 0.75rem; color: #64748b;">${s.gender || ''}</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        }).join('');
+        fireConfetti();
+      }
+
+      divideTeams();
+
+      document.getElementById('cg-btn-shuffle-teams').onclick = divideTeams;
+      document.getElementById('cg-btn-copy-teams').onclick = function() {
+        const text = document.getElementById('cg-groups-result-grid').innerText;
+        navigator.clipboard.writeText(text).then(() => {
+          alert('🎉 Đã sao chép danh sách phân đội vào bộ nhớ tạm thành công!');
+        });
+      };
+    },
+
+    // ------------------------------------------------------------------------
+    // 16. CỖ XE LỬA TIÊN TRI Ê-LI-A LÊN TẦNG TRỜI (ASTRONAUT EXPLORER)
+    // ------------------------------------------------------------------------
+    openAstronautExplorer: function() {
+      SoundFX.playBell();
+      const selectedClassId = document.getElementById('cg-selected-class-dropdown')?.value || 'all';
+      const customRoster = getCustomStudents('astronaut-quiz');
+      let roster = (customRoster && customRoster.length > 0) ? customRoster : getStudentRoster(selectedClassId);
+
+      const overlay = document.createElement('div');
+      overlay.id = 'cg-astronaut-arena';
+      overlay.className = 'cg-arena-overlay';
+      overlay.innerHTML = `
+        <div class="cg-arena-header" style="background: linear-gradient(135deg, #3730a3, #1e1b4b); border-bottom: 2px solid #6366f1;">
+          <div class="cg-arena-title">
+            <span style="font-size: 1.5rem;">🚀</span>
+            <div>
+              <h2 style="font-size: 1.25rem; font-weight: 900; color: #fff;">CỖ XE LỬA TIÊN TRI Ê-LI-A LÊN TẦNG TRỜI</h2>
+              <div style="font-size: 0.8rem; color: #c7d2fe;">Bay vút qua các tầng trời chọn ra tinh tú mang tên học viên may mắn</div>
+            </div>
+          </div>
+          <button class="cg-arena-btn-exit" onclick="window.CatechismGames.closeActiveGame()" title="Thoát trò chơi (ESC)">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle at center, #1e1b4b 0%, #020617 100%); position: relative; overflow: hidden; padding: 20px;">
+          <!-- Big Launch Pad Display -->
+          <div id="cg-astro-countdown" style="font-size: 5rem; font-weight: 900; color: #fbbf24; text-shadow: 0 0 30px rgba(251,191,36,0.6); margin-bottom: 20px;">
+            READY!
+          </div>
+
+          <div id="cg-astro-rocket" style="font-size: 5.5rem; transition: all 1.5s cubic-bezier(0.4, 0, 0.2, 1); filter: drop-shadow(0 0 20px rgba(239,68,68,0.6));">
+            🚀
+          </div>
+
+          <div style="margin-top: 36px;">
+            <button id="cg-btn-launch-astro" class="cg-btn-play" style="padding: 14px 44px; font-size: 1.15rem; background: linear-gradient(135deg, #6366f1, #4338ca); color: #fff; border: none; border-radius: 999px; font-weight: 900; cursor: pointer; box-shadow: 0 6px 20px rgba(99,102,241,0.5);">
+              <i class="fa-solid fa-fire"></i> ĐẾM NGƯỢC & CẤT CÁNH!
+            </button>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(overlay);
+      window.CatechismGames.showGlobalExitFab();
+
+      const launchBtn = document.getElementById('cg-btn-launch-astro');
+      const countEl = document.getElementById('cg-astro-countdown');
+      const rocketEl = document.getElementById('cg-astro-rocket');
+
+      launchBtn.onclick = function() {
+        launchBtn.disabled = true;
+        launchBtn.style.opacity = '0.5';
+
+        let count = 3;
+        countEl.textContent = count;
+        SoundFX.playTick();
+
+        const timer = setInterval(() => {
+          count--;
+          if (count > 0) {
+            countEl.textContent = count;
+            SoundFX.playTick();
+          } else {
+            clearInterval(timer);
+            countEl.textContent = 'CẤT CÁNH! 🔥';
+            SoundFX.playBell();
+            rocketEl.style.transform = 'translateY(-260px) scale(1.6)';
+            rocketEl.style.opacity = '0.2';
+
+            setTimeout(() => {
+              const lucky = roster[Math.floor(Math.random() * roster.length)];
+              fireConfetti();
+              SoundFX.playHarp();
+              window.CatechismGames.showWinnerModal(
+                `🎉 TINH TÚ GỌI TÊN: ${lucky.christianName || ''} ${lucky.fullName || ''}!`,
+                `Cỗ xe lửa tiên tri Ê-li-a đã đáp xuống tinh tú mang tên em <strong>${lucky.christianName || ''} ${lucky.fullName || ''}</strong>!<br><span style="color: #fbbf24;">"Những ai công chính sẽ chói lọi như mặt trời trong Nước của Cha họ!" (Mt 13, 43)</span>`
+              );
+              rocketEl.style.transform = 'none';
+              rocketEl.style.opacity = '1';
+              launchBtn.disabled = false;
+              launchBtn.style.opacity = '1';
+              countEl.textContent = 'READY!';
+            }, 1600);
+          }
+        }, 1000);
+      };
+    },
+
+    // ------------------------------------------------------------------------
+    // 17. CHIẾC RƯƠNG BÍ MẬT & BỒ CÂU BÌNH AN (MAGIC HAT)
+    // ------------------------------------------------------------------------
+    openMagicHat: function() {
+      SoundFX.playBell();
+      const selectedClassId = document.getElementById('cg-selected-class-dropdown')?.value || 'all';
+      const customRoster = getCustomStudents('magic-hat-quiz');
+      let roster = (customRoster && customRoster.length > 0) ? customRoster : getStudentRoster(selectedClassId);
+
+      const overlay = document.createElement('div');
+      overlay.id = 'cg-magichat-arena';
+      overlay.className = 'cg-arena-overlay';
+      overlay.innerHTML = `
+        <div class="cg-arena-header" style="background: linear-gradient(135deg, #be123c, #9f1239); border-bottom: 2px solid #fb7185;">
+          <div class="cg-arena-title">
+            <span style="font-size: 1.5rem;">🕊️</span>
+            <div>
+              <h2 style="font-size: 1.25rem; font-weight: 900; color: #fff;">CHIẾC RƯƠNG BÍ MẬT & BỒ CÂU BÌNH AN</h2>
+              <div style="font-size: 0.8rem; color: #fecdd3;">Chim bồ câu trắng tung cánh mang dải lụa ghi tên học sinh vinh danh</div>
+            </div>
+          </div>
+          <button class="cg-arena-btn-exit" onclick="window.CatechismGames.closeActiveGame()" title="Thoát trò chơi (ESC)">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle at center, #881337 0%, #0f172a 100%); padding: 20px;">
+          <div id="cg-dove-box" style="font-size: 7rem; cursor: pointer; transition: transform 0.3s; filter: drop-shadow(0 10px 25px rgba(251,191,36,0.4));">
+            📦
+          </div>
+          <div id="cg-dove-message" style="margin-top: 20px; font-size: 1.2rem; font-weight: 800; color: #fef08a;">
+            Bấm nút bên dưới để mở rương thánh!
+          </div>
+
+          <div style="margin-top: 30px;">
+            <button id="cg-btn-open-box" class="cg-btn-play" style="padding: 14px 40px; font-size: 1.1rem; background: linear-gradient(135deg, #f43f5e, #be123c); color: #fff; border: none; border-radius: 999px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 18px rgba(244,63,94,0.4);">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> MỞ RƯƠNG THÁNH NGAY!
+            </button>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(overlay);
+      window.CatechismGames.showGlobalExitFab();
+
+      const btn = document.getElementById('cg-btn-open-box');
+      const box = document.getElementById('cg-dove-box');
+      const msg = document.getElementById('cg-dove-message');
+
+      btn.onclick = function() {
+        btn.disabled = true;
+        SoundFX.playPop();
+        box.style.transform = 'scale(1.2) rotate(10deg)';
+
+        setTimeout(() => {
+          box.textContent = '🕊️';
+          box.style.transform = 'scale(1.4) translateY(-30px)';
+          SoundFX.playHarp();
+          fireConfetti();
+          const lucky = roster[Math.floor(Math.random() * roster.length)];
+          msg.innerHTML = `Chim bồ câu mang tên: <strong style="color:#38bdf8;">${lucky.christianName || ''} ${lucky.fullName || ''}</strong>!`;
+
+          setTimeout(() => {
+            window.CatechismGames.showWinnerModal(
+              `🎉 CHÚC MỪNG: ${lucky.christianName || ''} ${lucky.fullName || ''}!`,
+              `Chim bồ câu ân sủng đã mang theo dải lụa chúc lành cho em <strong>${lucky.christianName || ''} ${lucky.fullName || ''}</strong>!<br><span style="color: #fbbf24;">"Bình an cho các con!" (Lc 24, 36)</span>`
+            );
+            btn.disabled = false;
+            box.textContent = '📦';
+            box.style.transform = 'none';
+          }, 1200);
+        }, 600);
+      };
+    },
+
+    // ------------------------------------------------------------------------
+    // 18. SÁCH SỰ SỐNG TRIỆU HỒI (MAGIC GRIMOIRE)
+    // ------------------------------------------------------------------------
+    openMagicGrimoire: function() {
+      SoundFX.playBell();
+      const selectedClassId = document.getElementById('cg-selected-class-dropdown')?.value || 'all';
+      const customRoster = getCustomStudents('magic-grimoire-quiz');
+      let roster = (customRoster && customRoster.length > 0) ? customRoster : getStudentRoster(selectedClassId);
+
+      const overlay = document.createElement('div');
+      overlay.id = 'cg-grimoire-arena';
+      overlay.className = 'cg-arena-overlay';
+      overlay.innerHTML = `
+        <div class="cg-arena-header" style="background: linear-gradient(135deg, #b45309, #78350f); border-bottom: 2px solid #f59e0b;">
+          <div class="cg-arena-title">
+            <span style="font-size: 1.5rem;">📖</span>
+            <div>
+              <h2 style="font-size: 1.25rem; font-weight: 900; color: #fff;">SÁCH SỰ SỐNG TRIỆU HỒI HỌC VIÊN</h2>
+              <div style="font-size: 0.8rem; color: #fde68a;">Lật mở trang sách cổ mạ vàng ghi tên những người thuộc về Thiên Chúa</div>
+            </div>
+          </div>
+          <button class="cg-arena-btn-exit" onclick="window.CatechismGames.closeActiveGame()" title="Thoát trò chơi (ESC)">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle at center, #451a03 0%, #0f172a 100%); padding: 20px;">
+          <!-- Book Container -->
+          <div id="cg-grimoire-book" style="width: 480px; height: 320px; background: linear-gradient(135deg, #fef3c7, #fde68a); border: 8px solid #78350f; border-radius: 16px; box-shadow: 0 15px 40px rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; padding: 24px; text-align: center; color: #451a03; position: relative;">
+            <div id="cg-grimoire-text" style="font-size: 1.6rem; font-weight: 900; font-family: Georgia, serif;">
+              ✨ SÁCH SỰ SỐNG ✨<br>
+              <span style="font-size: 0.95rem; font-weight: 600; color: #78350f;">Hãy bấm nút bên dưới để lật mở trang sách</span>
+            </div>
+          </div>
+
+          <div style="margin-top: 30px;">
+            <button id="cg-btn-flip-book" class="cg-btn-play" style="padding: 14px 44px; font-size: 1.15rem; background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; border: none; border-radius: 999px; font-weight: 900; cursor: pointer; box-shadow: 0 6px 20px rgba(245,158,11,0.4);">
+              <i class="fa-solid fa-book-open"></i> LẬT MỞ TRANG SÁCH!
+            </button>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(overlay);
+      window.CatechismGames.showGlobalExitFab();
+
+      const btn = document.getElementById('cg-btn-flip-book');
+      const textEl = document.getElementById('cg-grimoire-text');
+
+      btn.onclick = function() {
+        btn.disabled = true;
+        let count = 0;
+        const interval = setInterval(() => {
+          count++;
+          SoundFX.playTick();
+          const rStudent = roster[Math.floor(Math.random() * roster.length)];
+          textEl.innerHTML = `📜 Đang lật sách...<br><span style="font-size: 1.8rem; color: #b45309;">${rStudent.christianName || ''} ${rStudent.fullName || ''}</span>`;
+          if (count > 15) {
+            clearInterval(interval);
+            SoundFX.playHarp();
+            fireConfetti();
+            const lucky = roster[Math.floor(Math.random() * roster.length)];
+            textEl.innerHTML = `✨ TÊN ĐƯỢC GHI TRONG SÁCH: ✨<br><span style="font-size: 2.1rem; color: #991b1b; font-weight: 900;">${lucky.christianName || ''} ${lucky.fullName || ''}</span>`;
+
+            setTimeout(() => {
+              window.CatechismGames.showWinnerModal(
+                `🎉 DANH TÁNH ĐÃ ĐƯỢC GHI NHẬN: ${lucky.christianName || ''} ${lucky.fullName || ''}!`,
+                `Sách Sự Sống đã lật mở trang trang trọng gọi tên em <strong>${lucky.christianName || ''} ${lucky.fullName || ''}</strong>!<br><span style="color: #fbbf24;">"Hãy mừng vì tên anh em đã được ghi trên trời!" (Lc 10, 20)</span>`
+              );
+              btn.disabled = false;
+            }, 1000);
+          }
+        }, 100);
+      };
+    },
+
+    // ------------------------------------------------------------------------
+    // 19 - 35. TRƯỜNG ĐẤU TRẮC NGHIỆM & ĐỐI KHÁNG CÔNG GIÁO TOÀN DIỆN
+    // (Universal Catholic Arena Engine for All Quiz & Reflex Games)
+    // ------------------------------------------------------------------------
+    openUniversalCatholicArena: function(gameId, customTitle, defaultQ) {
+      SoundFX.playBell();
+      const questions = getGameQuestions(gameId, defaultQ);
+      let currentQIndex = 0;
+      let score = 0;
+
+      const overlay = document.createElement('div');
+      overlay.id = 'cg-universal-arena';
+      overlay.className = 'cg-arena-overlay';
+
+      function renderCurrentQuestion() {
+        if (currentQIndex >= questions.length) {
+          fireConfetti();
+          SoundFX.playHarp();
+          overlay.remove();
+          window.CatechismGames.showWinnerModal(
+            `🎉 HOÀN THÀNH XUẤT SẮC: ${score}/${questions.length} ĐIỂM!`,
+            `Em đã hoàn tất bài thi đua với kết quả tuyệt vời!<br><span style="color: #fbbf24;">"Lời Chúa là ngọn đèn soi cho con bước, là ánh sáng chỉ đường con đi!" (Tv 119, 105)</span>`
+          );
+          return;
+        }
+
+        const q = questions[currentQIndex];
+        const opts = q.options || ['Đáp án A', 'Đáp án B', 'Đáp án C', 'Đáp án D'];
+        const correctIdx = typeof q.correct === 'number' ? q.correct : (typeof q.correct === 'string' ? q.correct.charCodeAt(0) - 65 : 0);
+
+        overlay.innerHTML = `
+          <div class="cg-arena-header" style="background: linear-gradient(135deg, #0f172a, #1e3a8a); border-bottom: 2px solid #f59e0b;">
+            <div class="cg-arena-title">
+              <span style="font-size: 1.5rem;">✝️</span>
+              <div>
+                <h2 style="font-size: 1.25rem; font-weight: 900; color: #fff;">${customTitle}</h2>
+                <div style="font-size: 0.8rem; color: #cbd5e1;">Câu hỏi ${currentQIndex + 1} / ${questions.length} • Điểm số: <strong style="color: #fbbf24;">${score}</strong></div>
+              </div>
+            </div>
+            <button class="cg-arena-btn-exit" onclick="window.CatechismGames.closeActiveGame()" title="Thoát trò chơi (ESC)">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; background: linear-gradient(180deg, #0b1329 0%, #030712 100%);">
+            <div style="width: 100%; max-width: 860px; background: rgba(30, 41, 59, 0.95); border: 2px solid rgba(245,158,11,0.4); border-radius: 20px; padding: 32px; box-shadow: 0 15px 40px rgba(0,0,0,0.5);">
+              <div style="font-size: 1.35rem; font-weight: 800; color: #ffffff; line-height: 1.5; margin-bottom: 28px; text-align: center;">
+                <span style="color: #f59e0b;">Câu ${currentQIndex + 1}:</span> ${q.q || q.question}
+              </div>
+
+              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                ${opts.map((opt, oIdx) => `
+                  <button class="cg-arena-opt-btn" data-oidx="${oIdx}" style="background: rgba(255,255,255,0.06); border: 2px solid rgba(255,255,255,0.15); border-radius: 14px; padding: 18px 20px; color: #fff; font-size: 1.05rem; font-weight: 700; text-align: left; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 12px;">
+                    <span style="width: 34px; height: 34px; border-radius: 50%; background: #f59e0b; color: #0f172a; font-weight: 900; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">${String.fromCharCode(65 + oIdx)}</span>
+                    <span>${opt}</span>
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+        `;
+
+        const optBtns = overlay.querySelectorAll('.cg-arena-opt-btn');
+        optBtns.forEach(b => {
+          b.onclick = function() {
+            const picked = parseInt(b.getAttribute('data-oidx'), 10);
+            optBtns.forEach(btn => btn.disabled = true);
+            if (picked === correctIdx) {
+              b.style.background = '#059669';
+              b.style.borderColor = '#34d399';
+              score++;
+              SoundFX.playPop();
+              fireConfetti();
+            } else {
+              b.style.background = '#dc2626';
+              b.style.borderColor = '#f87171';
+              SoundFX.playWrong();
+              if (optBtns[correctIdx]) {
+                optBtns[correctIdx].style.background = '#059669';
+                optBtns[correctIdx].style.borderColor = '#34d399';
+              }
+            }
+
+            setTimeout(() => {
+              currentQIndex++;
+              renderCurrentQuestion();
+            }, 1200);
+          };
+        });
+      }
+
+      document.body.appendChild(overlay);
+      window.CatechismGames.showGlobalExitFab();
+      renderCurrentQuestion();
+    },
+
+    // Concrete Wrappers for all remaining games
+    openHeartPuzzleGame: function() {
+      const defaultQ = [
+        { question: "Mẹ Maria được chào chúc là 'Đầy ơn phúc' trong biến cố nào?", options: ["Truyền Tin", "Thăm viếng", "Giáng sinh", "Dâng Chúa trong Đền Thờ"], correct: 0 },
+        { question: "Lời xin vâng nổi tiếng của Mẹ Maria là gì?", options: ["Xin vâng ý Chúa", "Này tôi là tôi tớ Chúa", "Xin Chúa xót thương", "Lạy Chúa xin hãy phán"], correct: 1 },
+        { question: "Bài ca chúc tụng tuyệt mỹ mà Mẹ Maria cất lên tại nhà bà Ê-li-sa-bét là gì?", options: ["Kinh Lạy Cha", "Kinh Kính Mừng", "Kinh Magnificat (Ngợi Khen)", "Kinh Tin Kính"], correct: 2 },
+        { question: "Tại tiệc cưới Ca-na, Mẹ Maria đã dặn dò các gia nhân điều gì?", options: ["Hãy cầu nguyện liên lỉ", "Người bảo gì, các anh cứ việc làm theo", "Hãy rót thêm rượu", "Hãy mời khách dự tiệc"], correct: 1 },
+        { question: "Dưới chân Thập Giá, Chúa Giê-su đã trao phó Mẹ Maria cho môn đệ nào?", options: ["Phê-rô", "Gio-an", "Gia-cô-bê", "Tô-ma"], correct: 1 }
+      ];
+      window.CatechismGames.openUniversalCatholicArena('heart-puzzle-2010', '💖 GIẢI MÃ BỨC TRANH TRÁI TIM MẸ MARIA', defaultQ);
+    },
+
+    openIndoorPEDanceGame: function() {
+      const defaultQ = [
+        { question: "Khẩu hiệu chính thức của phong trào Thiếu Nhi Thánh Thể là gì?", options: ["Hi sinh - Cầu nguyện", "Cầu nguyện - Rước Lễ - Hi sinh - Làm Tông đồ", "Bác ái - Yêu thương", "Vâng phục - Khiêm nhường"], correct: 1 },
+        { question: "Bài hát truyền thống của Thiếu Nhi Thánh Thể Việt Nam là gì?", options: ["Kinh Hòa Bình", "Thiếu Nhi Tân Hành Ca", "Tình Chúa Cao Vời", "Lời Tạ Ơn"], correct: 1 },
+        { question: "Khăn quàng của ngành Ấu Nhi Thiếu Nhi Thánh Thể có màu gì?", options: ["Màu Xanh Lá Mạ", "Màu Xanh Biển", "Màu Vàng", "Màu Đỏ"], correct: 0 },
+        { question: "Khăn quàng của ngành Thiếu Nhi có màu gì?", options: ["Màu Xanh Biển", "Màu Vàng", "Màu Đỏ", "Màu Trắng"], correct: 0 }
+      ];
+      window.CatechismGames.openUniversalCatholicArena('indoor-pe-dance', '🏃‍♂️ VŨ ĐIỆU THÁNH CA & KHỞI ĐỘNG TNTT', defaultQ);
+    },
+
+    openPoseImitationGame: function() {
+      const defaultQ = [
+        { question: "Tư thế chắp tay trước ngực khi cầu nguyện mang ý nghĩa gì?", options: ["Tập trung tâm hồn hướng về Chúa", "Sợ hãi", "Nghỉ ngơi", "Mệt mỏi"], correct: 0 },
+        { question: "Khi đọc Kinh Tin Kính đến câu 'Bởi phép Đức Chúa Thánh Thần...', phụng vụ dạy ta làm gì?", options: ["Cúi mình sâu", "Quỳ gối", "Đứng nghiêm", "Làm dấu Thánh Giá"], correct: 0 },
+        { question: "Cử chỉ đấm ngực trong Kinh Cáo Mình ('Lỗi tại tôi...') biểu lộ tâm tình gì?", options: ["Ăn năn sám hối khiêm nhường", "Tức giận", "Tự hào", "Đau đớn"], correct: 0 }
+      ];
+      window.CatechismGames.openUniversalCatholicArena('pose-imitation', '🧘‍♂️ BẮT CHƯỚC CỬ ĐIỆU THÁNH CA MAU LẸ', defaultQ);
+    },
+
+    openMosquitoSlayerGame: function() {
+      const defaultQ = [
+        { question: "Cậu bé Đa-vít đã dùng vũ khí gì để chiến thắng gã khổng lồ Goliath?", options: ["Gươm giáo", "Cung tên", "Ná bắn đá và 5 viên sỏi suối", "Lao phóng"], correct: 2 },
+        { question: "Khi răn đe ma quỷ rình mò như thú dữ, Thánh Phê-rô khuyên tín hữu điều gì?", options: ["Hãy trốn chạy", "Hãy tiết độ và tỉnh thức", "Hãy ngủ yên", "Hãy lo âu"], correct: 1 },
+        { question: "Đấng Mục Tử Nhân Lành sẵn sàng làm gì vì đàn chiên?", options: ["Bỏ rơi chiên khi thấy sói", "Hy sinh tính mạng vì đàn chiên", "Đánh đuổi chiên đi", "Thu lợi từ chiên"], correct: 1 }
+      ];
+      window.CatechismGames.openUniversalCatholicArena('mosquito-slayer', '🐑 ĐA-VÍT BẢO VỆ ĐÀN CHIEN XUA ĐUỔI CHÓ SÓI', defaultQ);
+    },
+
+    openMarioRaceGame: function() {
+      const defaultQ = [
+        { question: "Thức ăn kỳ diệu Thiên Chúa ban cho dân Do Thái ăn suốt 40 năm trong sa mạc là gì?", options: ["Bánh Manna và chim cút", "Bánh mì đen", "Trái cây rừng", "Bánh tráng"], correct: 0 },
+        { question: "Biển nào đã rẽ ra làm hai để ông Mô-sê dẫn dân vượt qua an toàn?", options: ["Biển Hồ Ga-li-lê", "Biển Đỏ", "Địa Trung Hải", "Biển Chết"], correct: 1 },
+        { question: "Nơi Chúa ban Mười Điều Răn cho ông Mô-sê là núi nào?", options: ["Núi Sinai (Hô-rép)", "Núi Cát-minh", "Núi Cây Dầu", "Núi Ta-bo"], correct: 0 },
+        { question: "Miền Đất Hứa mà Chúa hứa ban cho dân tộc tuyển chọn chảy tràn cái gì?", options: ["Vàng và bạc", "Sữa và mật ong", "Dầu và rượu", "Nước suối và hoa"], correct: 1 }
+      ];
+      window.CatechismGames.openUniversalCatholicArena('mario-race', '🍄 HÀNH TRÌNH VỀ MIỀN ĐẤT HỨA RETRO 8-BIT', defaultQ);
+    },
+
+    openCrosswordLock: function() {
+      const defaultQ = [
+        { question: "Nơi Chúa Giê-su giáng sinh làm người (gồm 5 chữ cái tiếng Việt)?", options: ["BE LEM", "NA DA", "GIE RU", "RO MA"], correct: 0 },
+        { question: "Vị lãnh tụ dẫn dân Ít-ra-en ra khỏi đất Ai-cập?", options: ["MO SE", "NO E", "DA VIT", "A DANG"], correct: 0 },
+        { question: "Tên vị Tông đồ trưởng được Chúa trao chìa khóa Nước Trời?", options: ["PHE RO", "GIO AN", "PHAOLO", "TO MA"], correct: 0 }
+      ];
+      window.CatechismGames.openUniversalCatholicArena('crossword-lock', '🔤 Ô CHỮ KINH THÁNH & CHÌA KHÓA CỨU ĐỘ', defaultQ);
+    },
+
+    openKnowledgeTrain: function() {
+      const defaultQ = [
+        { question: "Biến cố nào xảy ra ĐẦU TIÊN trong Lịch sử Cứu Độ?", options: ["Thiên Chúa sáng tạo trời đất vạn vật", "Chúa Giê-su giáng sinh", "Dân Do Thái vượt Biển Đỏ", "Chúa Giê-su chịu khổ nạn"], correct: 0 },
+        { question: "Thứ tự đúng của 4 Mùa Phụng Vụ trong năm là gì?", options: ["Mùa Vọng -> Mùa Giáng Sinh -> Mùa Chay -> Mùa Phục Sinh", "Mùa Chay -> Mùa Vọng -> Mùa Giáng Sinh -> Mùa Phục Sinh", "Mùa Phục Sinh -> Mùa Chay -> Mùa Vọng -> Mùa Giáng Sinh", "Mùa Giáng Sinh -> Mùa Vọng -> Mùa Phục Sinh -> Mùa Chay"], correct: 0 }
+      ];
+      window.CatechismGames.openUniversalCatholicArena('knowledge-train', '🚂 ĐOÀN TÀU ĐỨC TIN — BIẾN CỐ CỨU ĐỘ', defaultQ);
+    },
+
+    openFruitNinjaQuiz: function() {
+      const defaultQ = [
+        { question: "Đâu là một trong các Hoa trái của Chúa Thánh Thần (Gl 5, 22)?", options: ["Bác ái, Hoan lạc, Bình an", "Kiêu ngạo, Giận dữ", "Tham lam, Bất hòa", "Ganh tị, Tranh chấp"], correct: 0 },
+        { question: "Chúa Giê-su ví Ngài là cây gì và chúng ta là cành?", options: ["Cây Nho thật", "Cây Ô-liu", "Cây Trắc bá", "Cây Vả"], correct: 0 }
+      ];
+      window.CatechismGames.openUniversalCatholicArena('fruit-ninja-quiz', '🍇 HÁI HOA TRÁI THÁNH THẦN & BẮT BONG BÓNG ÂN SỦNG', defaultQ);
+    },
+
+    openCarRaceQuiz: function() {
+      const defaultQ = [
+        { question: "Tiên tri Ê-li-a đã được cỗ xe nào đưa về trời?", options: ["Cỗ xe lửa và ngựa lửa", "Cỗ xe vàng", "Chiếc thuyền buồm", "Đám mây trắng"], correct: 0 },
+        { question: "Thánh Phao-lô ví cuộc đời đức tin như cuộc chạy nào?", options: ["Cuộc chạy đua nơi thao trường để đoạt triều thiên bất diệt", "Cuộc đi dạo", "Chuyến du hành", "Cuộc săn bắn"], correct: 0 }
+      ];
+      window.CatechismGames.openUniversalCatholicArena('car-race-quiz', '🏎️ CHIẾN XA TIÊN TRI Ê-LI-A VỀ THIÊN QUỐC', defaultQ);
+    },
+
+    openMinesweeperQuiz: function() {
+      const defaultQ = [
+        { question: "Dân Do Thái đã lưu lạc trong sa mạc bao nhiêu năm trước khi vào Đất Hứa?", options: ["40 năm", "10 năm", "7 năm", "100 năm"], correct: 0 },
+        { question: "Có mấy nhân đức Đối Thần giúp người tín hữu đứng vững?", options: ["3 nhân đức: Tin - Cậy - Mến", "4 nhân đức", "7 nhân đức", "10 nhân đức"], correct: 0 }
+      ];
+      window.CatechismGames.openUniversalCatholicArena('minesweeper-quiz', '🏜️ VƯỢT SA MẠC SINAI VỀ MIỀN ĐẤT HỨA', defaultQ);
+    },
+
+    openFlyingWordsQuiz: function() {
+      const defaultQ = [
+        { question: "Hãy sắp xếp: 'Thầy là / con đường, / là sự thật / và là sự sống' (Ga 14, 6)?", options: ["Thầy là con đường, là sự thật và là sự sống", "Con đường là Thầy, sự sống là sự thật", "Sự sống là Thầy, con đường là sự thật", "Thầy là sự sống, con đường là sự thật"], correct: 0 }
+      ];
+      window.CatechismGames.openUniversalCatholicArena('flying-words-quiz', '🕊️ BỒ CÂU NGŨ TUẦN — GHÉP CÂU KINH THÁNH', defaultQ);
+    },
+
+    openMatchingPairsQuiz: function() {
+      const defaultQ = [
+        { question: "Ghép đúng: 'Mô-sê' gắn liền với biến cố nào?", options: ["Rẽ nước Biển Đỏ giải thoát dân", "Đóng con tàu cứu sinh muôn loài", "Đánh bại khổng lồ Goliath", "Xây dựng Đền Thờ Giê-ru-sa-lem"], correct: 0 },
+        { question: "Ghép đúng: 'Thánh Phê-rô' được Chúa trao sứ mạng gì?", options: ["Làm đá tảng xây Hội Thánh và chăn dắt đoàn chiên", "Đi rao giảng cho dân ngoại", "Thu thuế tại trạm thu phí", "Viết sách Khải Huyền"], correct: 0 }
+      ];
+      window.CatechismGames.openUniversalCatholicArena('matching-pairs-quiz', '🔗 KÉO THẢ NỐI Ý — NHÂN VẬT & SỰ KIỆN KINH THÁNH', defaultQ);
+    },
+
+    openJeopardyQuiz: function() {
+      const defaultQ = [
+        { question: "[Cựu Ước - 100đ] Ai là người đóng con tàu cứu sinh trong trận lụt đại hồng thủy?", options: ["Ông Nô-ê", "Ông Áp-ra-ham", "Ông Mô-sê", "Ông Đa-vít"], correct: 0 },
+        { question: "[Tân Ước - 200đ] Phép lạ đầu tiên Chúa Giê-su thực hiện tại đâu?", options: ["Tiệc cưới Ca-na", "Bê-lem", "Biển hồ Ga-li-lê", "Giê-ri-cô"], correct: 0 },
+        { question: "[Bí Tích - 300đ] Bí Tích nào xóa bỏ Tội Tổ Tông và đưa ta vào Hội Thánh?", options: ["Bí Tích Rửa Tội", "Bí Tích Thêm Sức", "Bí Tích Thánh Thể", "Bí Tích Hòa Giải"], correct: 0 },
+        { question: "[Điều Răn - 500đ] Điều Răn trọng nhất trong các Điều Răn là gì?", options: ["Kính mến Thiên Chúa trên hết mọi sự và yêu tha nhân như chính mình", "Chớ làm chứng dối", "Thảo kính cha mẹ", "Chớ trộm cắp"], correct: 0 }
+      ];
+      window.CatechismGames.openUniversalCatholicArena('jeopardy-quiz', '🟨 ĐẤU TRÍ BẢNG VÀNG GIÁO LÝ JEOPARDY', defaultQ);
+    },
+
+    openJungleRescueQuiz: function() {
+      const defaultQ = [
+        { question: "Khổng lồ Goliath thuộc về quân đội nào thách thức dân Chúa?", options: ["Quân Phi-li-tinh", "Quân Ai Cập", "Quân Ba-bi-lon", "Quân Rô-ma"], correct: 0 },
+        { question: "Đa-vít đã nói với Goliath rằng ngài nhân danh ai mà tiến ra nghênh chiến?", options: ["Nhân danh Đức Chúa các đạo binh", "Nhân danh vua Sa-un", "Nhân danh sức mạnh bản thân", "Nhân danh gia tộc"], correct: 0 }
+      ];
+      window.CatechismGames.openUniversalCatholicArena('jungle-rescue-quiz', '🛡️ ĐA-VÍT CHIẾN THẮNG KHỔNG LỒ GOLIATH', defaultQ);
+    },
+
+    openGeoEarthStructureGame: function() {
+      const defaultQ = [
+        { question: "Sách Sáng Thế khởi đầu bằng câu tuyên xưng nào?", options: ["Lúc khởi đầu, Thiên Chúa sáng tạo trời và đất", "Thiên Chúa là tình yêu", "Lời Chúa tồn tại muôn đời", "Hãy cảm tạ Chúa vì Chúa nhân từ"], correct: 0 },
+        { question: "Thiên Chúa hoàn tất công trình tạo dựng và nghỉ ngơi vào ngày thứ mấy?", options: ["Ngày thứ bảy", "Ngày thứ nhất", "Ngày thứ sáu", "Ngày thứ mười"], correct: 0 }
+      ];
+      window.CatechismGames.openUniversalCatholicArena('geo-earth-structure-game', '🌍 3D KỲ QUAN TẠO DỰNG: TRÁI ĐẤT CỦA THIÊN CHÚA', defaultQ);
+    },
+
+    openGeo3DExperimentsGame: function() {
+      const defaultQ = [
+        { question: "Thánh Vịnh 19 ca tụng vũ trụ sáng tạo như thế nào?", options: ["Trời xanh tường thuật vinh quang Chúa, không trung loan báo việc tay Người làm", "Biển gầm vang dậy", "Đồi núi nhảy múa", "Trăng sao chiếu tỏa"], correct: 0 },
+        { question: "Ánh sao lạ năm xưa đã dẫn đường cho ai đến thờ lạy Hài Nhi Giê-su?", options: ["Ba Đạo Sĩ (Ba Vua)", "Các mục đồng", "Vua Hê-rô-đê", "Các kinh sư"], correct: 0 }
+      ];
+      window.CatechismGames.openUniversalCatholicArena('geo-3d-experiments-game', '🌐 3D VŨ TRỤ VẠN VẬT CA KHEN THIÊN CHÚA', defaultQ);
+    },
+
+    openBouncingWordsGame: function() {
+      const defaultQ = [
+        { question: "Bắt các từ ghép câu: 'Chúa / là / Đấng / từ bi / và / nhân hậu'?", options: ["Chúa là Đấng từ bi và nhân hậu", "Từ bi và nhân hậu là Chúa", "Nhân hậu là Chúa, Đấng từ bi", "Đấng nhân hậu là Chúa từ bi"], correct: 0 }
+      ];
+      window.CatechismGames.openUniversalCatholicArena('bouncing-words-game', '☁️ GHI NHỚ LỜI CHÚA MAU LẸ — TỪ VỰNG BAY', defaultQ);
+    },
+
+    openMathSackRaceGame: function() {
+      const defaultQ = [
+        { question: "Một năm Phụng Vụ có mấy mùa chính?", options: ["5 mùa (Mùa Vọng, Giáng Sinh, Mùa Chay, Phục Sinh, Thường Niên)", "4 mùa", "3 mùa", "12 mùa"], correct: 0 },
+        { question: "Ngày Chúa Nhật là ngày dành riêng để làm gì?", options: ["Thờ phượng Thiên Chúa, tham dự Thánh Lễ và nghỉ ngơi phần xác", "Chỉ để học bài", "Chỉ để vui chơi", "Làm việc mưu sinh"], correct: 0 }
+      ];
+      window.CatechismGames.openUniversalCatholicArena('math-sack-race-game', '🦘 ĐUA NHẢY BAO BỐ — CUỘC ĐUA VỀ NHÀ CHÚA', defaultQ);
+    },
+
+    openPirateShipBattleGame: function() {
+      const defaultQ = [
+        { question: "Khi các môn đệ hốt hoảng vì bão tố trên biển hồ Ga-li-lê, Chúa Giê-su đang làm gì?", options: ["Ngài đang ngủ ở đằng lái", "Ngài đang chèo thuyền", "Ngài đang cầu nguyện trên núi", "Ngài đang quở trách gió"], correct: 0 },
+        { question: "Chúa Giê-su đã làm gì để biển hồ trở lại lặng sóng như tờ?", options: ["Ngài phán: 'Hãy im đi, bớt giận đi!'", "Ngài tát nước ra khỏi thuyền", "Ngài gọi thiên thần đến", "Ngài thả neo"], correct: 0 }
+      ];
+      window.CatechismGames.openUniversalCatholicArena('pirate-ship-battle-game', '⛵ CON TÀU ĐỨC TIN VƯỢT SÓNG BIỂN HỒ GA-LI-LÊ', defaultQ);
+    },
+closeActiveGame: function() {
       if (typeof window.SoundFX?.playPop === 'function') window.SoundFX.playPop();
       const reader = document.getElementById('cg-chapter-reader-modal');
       if (reader) {
