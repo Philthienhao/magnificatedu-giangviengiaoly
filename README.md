@@ -294,6 +294,32 @@ Hệ thống tính điểm được thiết kế minh bạch với các chế đ
 
 ---
 
+### ⚡ Sự cố 13: Xử lý triệt để lỗi Đứt gãy Dữ liệu: GLV Mới Đăng Ký Có Thông Báo Nhưng Không Xuất Hiện Trong Danh Sách Quản Lý
+
+* **Hiện tượng**:
+  - Có 2 Giáo lý viên mới (`JB Hồ Nguyên Bảo` - Giáo xứ Thanh Bình và `T. Giuse HONGYEN NDN` - Giáo xứ Hoà Khánh) đăng nhập/đăng ký vào hệ thống.
+  - Trên màn hình Admin hiển thị đầy đủ thông báo chuông và thông báo bảng chi tiết.
+  - Nhưng trong mục Quản lý **"Đội Ngũ Giáo Lý Viên"** (`#catechists`), danh sách vẫn chỉ có 3 người cũ, không có tên 2 GLV mới.
+
+* **Phân tích nguyên nhân gốc rễ (Root Cause Analysis)**:
+  1. **Tách rời giữa Event Log và Entity Data**: Khi giáo viên đăng nhập trên máy của họ, hàm `notifyAdminMasterOfLogin` chỉ tạo chuỗi thông báo lưu vào `adminData.notifications` của Admin trên Cloud Supabase mà không tự động ghi nhận họ vào `adminData.catechists`.
+  2. **Trang Quản lý không đọc từ bảng thông báo**: Giao diện "Đội Ngũ Giáo Lý Viên" truy vấn danh sách từ `appData.catechists`, dẫn đến việc giáo viên dù đã báo danh nhưng không có mặt trong danh sách quản trị.
+
+* **Các giải pháp đã khắc phục triệt để**:
+  1. **Cơ chế Tự phục hồi & Nạp tự động từ Thông báo (`syncCatechistsFromNotifications`)**:
+     - Bổ sung logic quét tự động toàn bộ thông báo hệ thống của Admin.
+     - Sử dụng Regex bóc tách chuẩn xác: Email, Họ tên, Tên Thánh, Giáo xứ từ nội dung thông báo và tự động nạp thẳng vào `appData.catechists` và `accountsList`.
+     - Tự động kích hoạt mỗi khi truy cập trang Giáo lý viên hoặc khi Admin tải dữ liệu.
+  2. **Đồng bộ thực thể hai chiều ngay khi có Event (`notifyAdminMasterOfLogin`)**:
+     - Cập nhật hàm thông báo để từ nay về sau, khi có bất kỳ GLV mới nào tham gia, hệ thống vừa ghi thông báo vừa lập tức nạp hồ sơ GLV vào `adminData.catechists` trên Cloud Supabase.
+  3. **Đồng bộ song song**: Áp dụng nhất quán trên cả `app_v2.js` và `app.js`, nâng cache buster lên `v=20261021_v6902` và Service Worker `v32`.
+
+* **QUY TẮC BẤT DI BẤT DỊCH (NEVER REPEAT)**:
+  - **Quy tắc 1 - Luôn đồng bộ Thực thể kèm theo Sự kiện (Entity Materialization)**: Bất kỳ khi nào một hành động của người dùng (Đăng ký, Đăng nhập, Nộp bài...) gửi thông báo về cho Admin, BẮT BUỘC phải đồng thời lưu thực thể tương ứng (Hồ sơ GLV, Tài khoản, Điểm số) vào Database của Admin. Tuyệt đối không để sự kiện chỉ là một dòng chữ đơn thuần.
+  - **Quy tắc 2 - Cơ chế Tự phục hồi dữ liệu (Self-Healing Fallback)**: Mọi hàm hiển thị danh sách quản lý phải có bước kiểm tra chéo với nhật ký sự kiện/thông báo để tự động bù đắp nếu bản ghi thực thể bị thất lạc giữa các thiết bị.
+
+---
+
 ## 🚀 4. Hướng Dẫn Cập Nhật & Deploy Dự Án Chuẩn 4 Bước
 
 Khi có thay đổi mã nguồn, thực hiện đúng quy trình sau:
