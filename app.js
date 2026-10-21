@@ -2005,6 +2005,98 @@
      5. PAGE RENDERING LOGIC
      -------------------------------------------------------------------------- */
 
+  /* --------------------------------------------------------------------------
+     SYSTEM FEATURE ANNOUNCEMENTS (Tự động biến mất sau đúng 1 tuần - 7 ngày)
+     -------------------------------------------------------------------------- */
+  const SYSTEM_FEATURE_ANNOUNCEMENTS = [
+    {
+      id: 'feat_catechism_games',
+      title: 'Kho Game Giáo Lý & Kinh Thánh Tương Tác',
+      emoji: '🎮',
+      badge: 'MỚI',
+      desc: 'Cuộc đua Con Tàu Nô-ê • Camera Nghiêng đầu • Bảo vệ đàn chiên • Lật thẻ Chibi Công Giáo',
+      iconClass: 'fa-solid fa-gamepad',
+      iconGradient: 'linear-gradient(135deg, #f59e0b, #d97706)',
+      btnText: 'VÀO CHƠI NGAY',
+      btnAction: "window.appNavigate('catechism-games')",
+      startDate: '2026-10-17T00:00:00+07:00', // Ngày ra mắt tính năng
+      durationDays: 7 // Hiển thị trong vòng 7 ngày rồi tự động xóa bỏ hoàn toàn
+    }
+  ];
+
+  function renderFeatureAnnouncements() {
+    const now = Date.now();
+    const activeAnnouncements = SYSTEM_FEATURE_ANNOUNCEMENTS.filter(item => {
+      // 1. Kiểm tra nếu người dùng đã chủ động bấm ẩn
+      if (localStorage.getItem('feat_dismissed_' + item.id) === 'true') {
+        return false;
+      }
+
+      const durationMs = (item.durationDays || 7) * 24 * 60 * 60 * 1000;
+
+      // 2. Kiểm tra thời hạn 7 ngày theo ngày ra mắt toàn hệ thống (startDate)
+      if (item.startDate) {
+        const startTime = new Date(item.startDate).getTime();
+        // Chưa tới ngày ra mắt hoặc đã quá 7 ngày kể từ ngày ra mắt -> Tự động xoá/ẩn
+        if (now < startTime || now >= startTime + durationMs) {
+          return false;
+        }
+      }
+
+      // 3. Kiểm tra thời hạn 7 ngày kể từ lần đầu tiên thiết bị người dùng nhìn thấy
+      const firstSeenKey = 'feat_first_seen_' + item.id;
+      let firstSeen = parseInt(localStorage.getItem(firstSeenKey) || '0', 10);
+      if (!firstSeen) {
+        firstSeen = now;
+        try { localStorage.setItem(firstSeenKey, String(firstSeen)); } catch(e) {}
+      }
+      if (now - firstSeen >= durationMs) {
+        return false; // Đã xuất hiện đủ 1 tuần trên thiết bị này -> Tự động xoá/ẩn
+      }
+
+      return true;
+    });
+
+    if (activeAnnouncements.length === 0) return '';
+
+    return activeAnnouncements.map(item => `
+      <!-- QUICK LAUNCH GAME BANNER (TỰ ĐỘNG BIẾN MẤT SAU ĐỦ 1 TUẦN) -->
+      <div id="feature-banner-${item.id}" class="new-feature-announcement-banner" style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 58, 138, 0.85)); border: 2px solid rgba(245, 158, 11, 0.45); border-radius: 16px; padding: 1.2rem 1.8rem; margin: 1.5rem 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); position: relative;">
+        <button type="button" onclick="window.dismissFeatureAnnouncement('${item.id}')" title="Ẩn thông báo này" style="position: absolute; top: 10px; right: 12px; background: rgba(255,255,255,0.12); border: none; color: #cbd5e1; width: 26px; height: 26px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 13px; transition: all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.3)';this.style.color='#fff';" onmouseout="this.style.background='rgba(255,255,255,0.12)';this.style.color='#cbd5e1';">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+        <div style="display: flex; align-items: center; gap: 16px; padding-right: 20px;">
+          <div style="width: 52px; height: 52px; border-radius: 14px; background: ${item.iconGradient || 'linear-gradient(135deg, #f59e0b, #d97706)'}; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; color: #0f172a; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4); flex-shrink: 0;">
+            <i class="${item.iconClass || 'fa-solid fa-gamepad'}"></i>
+          </div>
+          <div>
+            <div style="font-weight: 800; font-size: 1.15rem; color: #fff; display: flex; align-items: center; gap: 8px;">
+              ${item.emoji ? item.emoji + ' ' : ''}${item.title}
+              ${item.badge ? `<span style="background: #ef4444; color: #fff; font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 999px;">${item.badge}</span>` : ''}
+            </div>
+            <div style="font-size: 0.88rem; color: #cbd5e1; margin-top: 3px;">${item.desc}</div>
+          </div>
+        </div>
+        <button class="btn btn-warning" onclick="${item.btnAction}" style="background: ${item.iconGradient || 'linear-gradient(135deg, #f59e0b, #d97706)'}; color: #0f172a; font-weight: 800; border: none; padding: 10px 24px; border-radius: 10px; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35); cursor: pointer;">
+          <i class="fa-solid fa-play"></i> ${item.btnText || 'VÀO CHƠI NGAY'}
+        </button>
+      </div>
+    `).join('');
+  }
+
+  window.dismissFeatureAnnouncement = function(featId) {
+    try {
+      localStorage.setItem('feat_dismissed_' + featId, 'true');
+    } catch (e) {}
+    const banner = document.getElementById('feature-banner-' + featId);
+    if (banner) {
+      banner.style.transition = 'all 0.3s ease';
+      banner.style.opacity = '0';
+      banner.style.transform = 'translateY(-10px)';
+      setTimeout(() => banner.remove(), 300);
+    }
+  };
+
   // PAGE 1: TỔNG QUAN (DASHBOARD)
   function renderOverview(container) {
     const isAdmin = hasAdminAccess(currentUser);
@@ -2105,24 +2197,8 @@
         <img src="anhnen.png" alt="Không phải tất cả chúng ta đều làm được những điều vĩ đại. Nhưng chúng ta có thể làm những điều nhỏ nhặt với tình yêu vĩ đại - Mẹ Thánh Têrêsa Calcutta" class="welcome-slogan-img" onerror="this.onerror=null;this.src='anh/anhnen.png';">
       </div>
 
-      <!-- QUICK LAUNCH GAME BANNER (NGAY TRÊN ĐẦU TRANG) -->
-      <div style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 58, 138, 0.85)); border: 2px solid rgba(245, 158, 11, 0.45); border-radius: 16px; padding: 1.2rem 1.8rem; margin: 1.5rem 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
-        <div style="display: flex; align-items: center; gap: 16px;">
-          <div style="width: 52px; height: 52px; border-radius: 14px; background: linear-gradient(135deg, #f59e0b, #d97706); display: flex; align-items: center; justify-content: center; font-size: 1.6rem; color: #0f172a; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);">
-            <i class="fa-solid fa-gamepad"></i>
-          </div>
-          <div>
-            <div style="font-weight: 800; font-size: 1.15rem; color: #fff; display: flex; align-items: center; gap: 8px;">
-              🎮 Kho Game Giáo Lý & Kinh Thánh Tương Tác
-              <span style="background: #ef4444; color: #fff; font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 999px;">MỚI</span>
-            </div>
-            <div style="font-size: 0.88rem; color: #cbd5e1;">Cuộc đua Con Tàu Nô-ê • Camera Nghiêng đầu • Bảo vệ đàn chiên • Lật thẻ Chibi Công Giáo</div>
-          </div>
-        </div>
-        <button class="btn btn-warning" onclick="window.appNavigate('catechism-games')" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: #0f172a; font-weight: 800; border: none; padding: 10px 24px; border-radius: 10px; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35); cursor: pointer;">
-          <i class="fa-solid fa-play"></i> VÀO CHƠI NGAY
-        </button>
-      </div>
+      <!-- SYSTEM FEATURE ANNOUNCEMENTS (TỰ ĐỘNG BIẾN MẤT SAU ĐỦ 1 TUẦN) -->
+      ${renderFeatureAnnouncements()}
 
       <!-- KPI METRICS GRID -->
       <div class="kpi-grid">
