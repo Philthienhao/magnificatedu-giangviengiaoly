@@ -3,7 +3,7 @@
  * Version: 2026.10.16-v1
  */
 
-const CACHE_NAME = 'magnificatedu-cache-v34';
+const CACHE_NAME = 'magnificatedu-cache-v35';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -16,6 +16,9 @@ const STATIC_ASSETS = [
   './catechism_games.css',
   './catechism_games.js',
   './bible_data.js',
+  './daily_word.css',
+  './daily_word_data.js',
+  './daily_word.js',
   './anh/games/thumb_noah_ark.jpg',
   './anh/games/thumb_head_tilt.jpg',
   './anh/games/thumb_shepherd_rescue.jpg',

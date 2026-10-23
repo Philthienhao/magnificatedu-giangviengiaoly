@@ -48,6 +48,7 @@
   <link rel="stylesheet" href="activities_flipbook.css?v=20261017_v6400">
   <link rel="stylesheet" href="catechism_games.css?v=20261021_v7000">
   <link rel="stylesheet" href="class_emulation.css?v=20261017_v6400">
+  <link rel="stylesheet" href="daily_word.css?v=20261023_v1002">
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.4/dist/confetti.browser.min.js"></script>
 </head>
 <body>
@@ -94,6 +95,13 @@
         <a href="#catechism-games" class="nav-item" data-page="catechism-games" id="sidebar-catechism-games-item">
           <i class="fa-solid fa-gamepad"></i>
           <span>Trò chơi Giáo lý</span>
+        </a>
+
+        <!-- 5 Phút Lời Chúa mỗi ngày -->
+        <a href="#daily-word" class="nav-item" data-page="daily-word" id="sidebar-daily-word-item">
+          <i class="fa-solid fa-sun" style="color: #f59e0b;"></i>
+          <span>5 Phút Lời Chúa mỗi ngày</span>
+          <span class="badge badge-pill badge-warning" style="background: rgba(245,158,11,0.22); color: #f59e0b; font-size: 10px; margin-left: auto;">Mới</span>
         </a>
 
         <!-- Training Management Dropdown -->
@@ -1842,7 +1850,7 @@
   <div id="toast-container" class="toast-container"></div>
 
   <!-- PWA Manager & Service Worker Registration -->
-  <script src="pwa.js?v=20261021_v6902"></script>
+  <script src="pwa.js?v=20261023_v7200"></script>
 
   <!-- Activities Library & 3D Flipbook Core -->
   <script src="activities_data.js?v=20261017_v6100"></script>
@@ -1855,7 +1863,11 @@
   <!-- Class Emulation & Biblical Hall of Fame Engine -->
   <script src="class_emulation.js?v=20261017_v6400"></script>
 
+  <!-- 5 Phút Lời Chúa Mỗi Ngày Module -->
+  <script src="daily_word_data.js?v=20261023_v1002"></script>
+  <script src="daily_word.js?v=20261023_v1002"></script>
+
   <!-- Application JS Code -->
-  <script src="app_v2.js?v=20261021_v6903"></script>
+  <script src="app_v2.js?v=20261023_v7200"></script>
 </body>
 </html>

@@ -1,0 +1,1244 @@
+/* ==========================================================================
+   5 PHÚT LỜI CHÚA MỖI NGÀY - STYLESHEET
+   MagnificatEdu - Nền Tảng Giáo Viên Giáo Lý
+   Design Theme: Catholic Biblical Flipbook with Dynamic Themes & Font Scaling
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. PAGE ROOT & CSS VARIABLES (THEMES)
+   -------------------------------------------------------------------------- */
+.daily-word-container {
+  --dw-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --dw-serif-family: "Georgia", "Palatino Linotype", "Book Antiqua", Palatino, serif;
+  
+  /* Default: Sepia Theme (Kinh Thánh Cổ Điển / Giấy Ngà Ấm Áp) */
+  --dw-bg: #f4ebd9;
+  --dw-surface: #fbf6ee;
+  --dw-surface-secondary: #f3e9d8;
+  --dw-surface-card: #ffffff;
+  --dw-border: #e3d3b7;
+  --dw-border-gold: #c89d4e;
+  --dw-text-primary: #3b2f21;
+  --dw-text-secondary: #6e5d47;
+  --dw-text-muted: #9c8a74;
+  --dw-gold: #b38634;
+  --dw-gold-light: #fbeccf;
+  --dw-gold-glow: rgba(179, 134, 52, 0.25);
+  --dw-red-liturgy: #b91c1c;
+  --dw-spine-shadow: linear-gradient(90deg, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.06) 12%, rgba(0,0,0,0.01) 40%, rgba(0,0,0,0.06) 88%, rgba(0,0,0,0.18) 100%);
+  --dw-page-shadow: 0 15px 35px -5px rgba(67, 52, 34, 0.25), 0 0 0 1px rgba(179, 134, 52, 0.15);
+  
+  /* Font size scaling */
+  --dw-base-font: 15.5px;
+  --dw-title-font: 22px;
+  --dw-quote-font: 16.5px;
+  --dw-heading-font: 17px;
+
+  position: relative;
+  width: 100%;
+  min-height: calc(100vh - 100px);
+  padding: 18px 24px 40px;
+  box-sizing: border-box;
+  animation: dwFadeIn 0.35s ease-out;
+  font-family: var(--dw-font-family);
+  color: var(--dw-text-primary);
+  background: var(--dw-bg);
+  border-radius: 16px;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* Light Theme (Trắng Thanh Nhã) */
+.daily-word-container[data-theme="light"] {
+  --dw-bg: #f8fafc;
+  --dw-surface: #ffffff;
+  --dw-surface-secondary: #f1f5f9;
+  --dw-surface-card: #f8fafc;
+  --dw-border: #e2e8f0;
+  --dw-border-gold: #e2a03f;
+  --dw-text-primary: #0f172a;
+  --dw-text-secondary: #475569;
+  --dw-text-muted: #64748b;
+  --dw-gold: #c27803;
+  --dw-gold-light: #fef3c7;
+  --dw-gold-glow: rgba(194, 120, 3, 0.2);
+  --dw-red-liturgy: #dc2626;
+  --dw-spine-shadow: linear-gradient(90deg, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.04) 15%, transparent 50%, rgba(0,0,0,0.04) 85%, rgba(0,0,0,0.12) 100%);
+  --dw-page-shadow: 0 15px 35px -5px rgba(15, 23, 42, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+/* Dark Theme (Đêm Thanh Tịnh / Chống Mỏi Mắt) */
+.daily-word-container[data-theme="dark"] {
+  --dw-bg: #0b1120;
+  --dw-surface: #151e34;
+  --dw-surface-secondary: #1e293b;
+  --dw-surface-card: #1c2742;
+  --dw-border: #334155;
+  --dw-border-gold: #f59e0b;
+  --dw-text-primary: #f8fafc;
+  --dw-text-secondary: #cbd5e1;
+  --dw-text-muted: #94a3b8;
+  --dw-gold: #fbbf24;
+  --dw-gold-light: rgba(251, 191, 36, 0.15);
+  --dw-gold-glow: rgba(251, 191, 36, 0.25);
+  --dw-red-liturgy: #f87171;
+  --dw-spine-shadow: linear-gradient(90deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.2) 15%, transparent 50%, rgba(0,0,0,0.2) 85%, rgba(0,0,0,0.6) 100%);
+  --dw-page-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+/* Navy Theme (Xanh Phụng Vụ Huyền Diệu) */
+.daily-word-container[data-theme="navy"] {
+  --dw-bg: #071527;
+  --dw-surface: #0e2442;
+  --dw-surface-secondary: #15335b;
+  --dw-surface-card: #122d52;
+  --dw-border: #1e497b;
+  --dw-border-gold: #f6c343;
+  --dw-text-primary: #f1f6fd;
+  --dw-text-secondary: #bfdbfe;
+  --dw-text-muted: #8bb6e8;
+  --dw-gold: #f6c343;
+  --dw-gold-light: rgba(246, 195, 67, 0.18);
+  --dw-gold-glow: rgba(246, 195, 67, 0.3);
+  --dw-red-liturgy: #fb7185;
+  --dw-spine-shadow: linear-gradient(90deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.25) 15%, transparent 50%, rgba(0,0,0,0.25) 85%, rgba(0,0,0,0.7) 100%);
+  --dw-page-shadow: 0 20px 40px -5px rgba(2, 6, 23, 0.7), 0 0 0 1px rgba(246, 195, 67, 0.2);
+}
+
+/* Font Size Modifiers */
+.daily-word-container[data-font-size="small"] {
+  --dw-base-font: 14px;
+  --dw-title-font: 19px;
+  --dw-quote-font: 14.5px;
+  --dw-heading-font: 15.5px;
+}
+.daily-word-container[data-font-size="normal"] {
+  --dw-base-font: 15.5px;
+  --dw-title-font: 22px;
+  --dw-quote-font: 16.5px;
+  --dw-heading-font: 17px;
+}
+.daily-word-container[data-font-size="large"] {
+  --dw-base-font: 17.5px;
+  --dw-title-font: 25px;
+  --dw-quote-font: 18.5px;
+  --dw-heading-font: 19.5px;
+}
+.daily-word-container[data-font-size="xlarge"] {
+  --dw-base-font: 20px;
+  --dw-title-font: 28px;
+  --dw-quote-font: 21px;
+  --dw-heading-font: 22px;
+}
+
+@keyframes dwFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --------------------------------------------------------------------------
+   2. HERO BANNER & LITURGY HEADING
+   -------------------------------------------------------------------------- */
+.dw-hero-header {
+  background: linear-gradient(135deg, #1e1b4b 0%, #31104b 45%, #1e3a8a 100%);
+  color: #ffffff;
+  border-radius: 16px;
+  padding: 24px 28px;
+  margin-bottom: 22px;
+  box-shadow: 0 10px 25px -5px rgba(30, 27, 75, 0.35);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.dw-hero-header::after {
+  content: "";
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 220px;
+  height: 220px;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.25) 0%, rgba(245, 158, 11, 0) 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.dw-hero-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.dw-badge-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(245, 158, 11, 0.22);
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  color: #fde68a;
+  padding: 5px 14px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.dw-hero-verse {
+  font-size: 13.5px;
+  color: #e0e7ff;
+  font-style: italic;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dw-hero-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.dw-hero-title-group {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.dw-hero-icon-box {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(217, 119, 6, 0.45);
+  flex-shrink: 0;
+}
+
+.dw-hero-title {
+  font-size: 24px;
+  font-weight: 800;
+  margin: 0;
+  line-height: 1.25;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dw-hero-subtitle {
+  font-size: 13px;
+  color: #cbd5e1;
+  margin: 4px 0 0 0;
+}
+
+/* --------------------------------------------------------------------------
+   3. ACTION TOOLBAR & CONTROL PANEL
+   -------------------------------------------------------------------------- */
+.dw-toolbar {
+  background: var(--dw-surface);
+  border: 1px solid var(--dw-border);
+  border-radius: 14px;
+  padding: 12px 18px;
+  margin-bottom: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.dw-nav-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dw-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--dw-border);
+  background: var(--dw-surface-secondary);
+  color: var(--dw-text-primary);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+}
+
+.dw-btn:hover {
+  background: var(--dw-surface-card);
+  border-color: var(--dw-border-gold);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+}
+
+.dw-btn:active {
+  transform: translateY(0);
+}
+
+.dw-btn-primary {
+  background: linear-gradient(135deg, #b45309, #d97706);
+  border-color: #f59e0b;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(217, 119, 6, 0.25);
+}
+
+.dw-btn-primary:hover {
+  background: linear-gradient(135deg, #d97706, #f59e0b);
+  color: #ffffff;
+  border-color: #fbbf24;
+}
+
+.dw-btn-icon-only {
+  width: 38px;
+  padding: 0;
+}
+
+/* Date Selector Dropdown */
+.dw-date-select-wrap {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.dw-date-select {
+  height: 38px;
+  padding: 0 32px 0 14px;
+  border-radius: 10px;
+  border: 1px solid var(--dw-border);
+  background: var(--dw-surface-secondary);
+  color: var(--dw-text-primary);
+  font-weight: 700;
+  font-size: 13.5px;
+  cursor: pointer;
+  outline: none;
+  appearance: none;
+  transition: all 0.2s ease;
+}
+
+.dw-date-select:hover,
+.dw-date-select:focus {
+  border-color: var(--dw-border-gold);
+  background: var(--dw-surface-card);
+}
+
+.dw-select-arrow {
+  position: absolute;
+  right: 12px;
+  pointer-events: none;
+  color: var(--dw-text-muted);
+  font-size: 12px;
+}
+
+/* Customizer Controls (Theme, Font, Mode) */
+.dw-controls-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dw-tool-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--dw-border);
+  margin: 0 4px;
+}
+
+/* Theme Picker Buttons */
+.dw-theme-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.2s, border-color 0.2s;
+  position: relative;
+}
+
+.dw-theme-btn:hover {
+  transform: scale(1.15);
+}
+
+.dw-theme-btn.active {
+  border-color: var(--dw-border-gold);
+  box-shadow: 0 0 0 2px var(--dw-surface), 0 0 8px var(--dw-gold-glow);
+}
+
+.dw-theme-btn[data-theme-choice="sepia"] { background: #fbf6ee; border: 2px solid #c89d4e; }
+.dw-theme-btn[data-theme-choice="light"] { background: #ffffff; border: 2px solid #cbd5e1; }
+.dw-theme-btn[data-theme-choice="dark"] { background: #0f172a; border: 2px solid #475569; }
+.dw-theme-btn[data-theme-choice="navy"] { background: #0e2442; border: 2px solid #1e497b; }
+
+/* --------------------------------------------------------------------------
+   4. 3D REALISTIC BOOK VIEW (FLIPBOOK STAGE)
+   -------------------------------------------------------------------------- */
+.dw-stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 2500px;
+  margin: 0 auto 28px;
+  min-height: 600px;
+  padding: 0 54px;
+}
+
+/* Large Left/Right Chevron Arrows */
+.dw-stage-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--dw-surface);
+  border: 1px solid var(--dw-border);
+  color: var(--dw-text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  cursor: pointer;
+  z-index: 50;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dw-stage-arrow:hover {
+  background: var(--dw-gold);
+  color: #ffffff;
+  border-color: var(--dw-gold);
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 6px 20px var(--dw-gold-glow);
+}
+
+.dw-stage-arrow.prev { left: 0; }
+.dw-stage-arrow.next { right: 0; }
+
+.dw-stage-arrow:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* The Book Container */
+.dw-book {
+  position: relative;
+  display: flex;
+  width: 100%;
+  max-width: 1060px;
+  min-height: 680px;
+  box-shadow: var(--dw-page-shadow);
+  border-radius: 12px;
+  background: var(--dw-surface);
+  transform-style: preserve-3d;
+  transition: box-shadow 0.3s ease;
+}
+
+/* Two-page vs Single-page mode */
+.dw-book.single-mode {
+  max-width: 650px;
+}
+
+/* 3D Spine in Center */
+.dw-spine {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 36px;
+  transform: translateX(-50%);
+  background: var(--dw-spine-shadow);
+  pointer-events: none;
+  z-index: 30;
+}
+
+.dw-book.single-mode .dw-spine {
+  display: none;
+}
+
+/* Red Liturgical Ribbon Bookmark */
+.dw-ribbon {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 18px;
+  height: 95px;
+  background: linear-gradient(135deg, #b91c1c, #dc2626);
+  border-radius: 0 0 4px 4px;
+  box-shadow: 0 4px 10px rgba(185, 28, 28, 0.4);
+  z-index: 35;
+  clip-path: polygon(0 0, 100% 0, 100% 85%, 50% 100%, 0 85%);
+  transition: transform 0.3s ease;
+}
+
+.dw-book.single-mode .dw-ribbon {
+  left: 40px;
+  transform: none;
+}
+
+/* Left & Right Page Sheets */
+.dw-page-sheet {
+  flex: 1;
+  position: relative;
+  background: var(--dw-surface);
+  padding: 38px 44px 40px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  max-height: 780px;
+  min-height: 680px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--dw-border) transparent;
+}
+
+.dw-page-sheet::-webkit-scrollbar {
+  width: 5px;
+}
+.dw-page-sheet::-webkit-scrollbar-thumb {
+  background: var(--dw-border);
+  border-radius: 4px;
+}
+
+.dw-sheet-left {
+  border-radius: 12px 0 0 12px;
+  border-right: 1px solid var(--dw-border);
+  padding-right: 36px;
+}
+
+.dw-sheet-right {
+  border-radius: 0 12px 12px 0;
+  padding-left: 36px;
+}
+
+.dw-book.single-mode .dw-sheet-right {
+  border-radius: 12px;
+  padding: 36px 40px;
+}
+
+/* Realistic Page Edge Gilding (Viền vàng son kinh thánh) */
+.dw-page-sheet::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  pointer-events: none;
+  background: linear-gradient(to bottom, #d4af37, #f3e5ab, #aa771c);
+  opacity: 0.65;
+}
+
+.dw-sheet-left::after { left: 0; border-radius: 12px 0 0 12px; }
+.dw-sheet-right::after { right: 0; border-radius: 0 12px 12px 0; }
+
+/* Page Corner Curl */
+.dw-page-curl {
+  position: absolute;
+  bottom: 0;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  z-index: 25;
+  transition: all 0.25s ease;
+}
+
+.dw-sheet-left .dw-page-curl {
+  left: 0;
+  background: linear-gradient(135deg, var(--dw-border) 0%, transparent 50%);
+  border-radius: 0 0 0 12px;
+}
+
+.dw-sheet-right .dw-page-curl {
+  right: 0;
+  background: linear-gradient(-135deg, var(--dw-border) 0%, transparent 50%);
+  border-radius: 0 0 12px 0;
+}
+
+.dw-page-curl:hover {
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(-135deg, var(--dw-gold) 0%, transparent 60%);
+  opacity: 0.9;
+}
+
+/* Page Turn Animation */
+@keyframes dwFlipLeft {
+  0% { transform: rotateY(0deg); opacity: 1; transform-origin: right center; }
+  50% { transform: rotateY(-45deg); opacity: 0.7; }
+  100% { transform: rotateY(0deg); opacity: 1; }
+}
+
+@keyframes dwFlipRight {
+  0% { transform: rotateY(0deg); opacity: 1; transform-origin: left center; }
+  50% { transform: rotateY(45deg); opacity: 0.7; }
+  100% { transform: rotateY(0deg); opacity: 1; }
+}
+
+.dw-flipping-next .dw-sheet-right {
+  animation: dwFlipRight 0.32s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.dw-flipping-prev .dw-sheet-left {
+  animation: dwFlipLeft 0.32s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* --------------------------------------------------------------------------
+   5. PAGE CONTENT ANATOMY & TYPOGRAPHY
+   -------------------------------------------------------------------------- */
+.dw-page-header {
+  border-bottom: 2px solid var(--dw-border);
+  padding-bottom: 14px;
+  margin-bottom: 18px;
+  text-align: center;
+  position: relative;
+}
+
+.dw-page-crest {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--dw-gold-light);
+  color: var(--dw-gold);
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.dw-liturgy-date-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.dw-date-pill {
+  background: var(--dw-gold);
+  color: #ffffff;
+  font-size: 11.5px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  letter-spacing: 0.5px;
+}
+
+.dw-liturgy-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--dw-red-liturgy);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dw-feast-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  color: var(--dw-text-secondary);
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.dw-feast-name {
+  color: var(--dw-text-secondary);
+}
+
+.dw-scripture-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--dw-surface-secondary);
+  border: 1px solid var(--dw-border);
+  color: var(--dw-gold);
+  font-size: 12px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+/* Reflection Title */
+.dw-article-title {
+  font-family: var(--dw-serif-family);
+  font-size: var(--dw-title-font);
+  font-weight: 800;
+  text-align: center;
+  color: var(--dw-text-primary);
+  margin: 14px 0 12px 0;
+  line-height: 1.35;
+  letter-spacing: 0.2px;
+}
+
+.dw-ornament-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 10px auto 18px;
+  color: var(--dw-gold);
+  font-size: 11px;
+}
+
+.dw-ornament-divider::before,
+.dw-ornament-divider::after {
+  content: "";
+  height: 1px;
+  width: 50px;
+  background: linear-gradient(to right, transparent, var(--dw-border-gold), transparent);
+}
+
+/* Key Biblical Quote Box */
+.dw-quote-box {
+  background: var(--dw-gold-light);
+  border-left: 4px solid var(--dw-gold);
+  border-radius: 0 10px 10px 0;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.dw-quote-box i.quote-icon {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  font-size: 26px;
+  color: var(--dw-gold);
+  opacity: 0.25;
+}
+
+.dw-quote-text {
+  font-family: var(--dw-serif-family);
+  font-size: var(--dw-quote-font);
+  font-style: italic;
+  font-weight: 700;
+  color: var(--dw-text-primary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Section Blocks */
+.dw-section-block {
+  margin-bottom: 20px;
+}
+
+.dw-section-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--dw-heading-font);
+  font-weight: 800;
+  color: var(--dw-gold);
+  margin-bottom: 8px;
+  font-family: var(--dw-serif-family);
+}
+
+.dw-section-label i {
+  font-size: 14px;
+}
+
+.dw-section-content {
+  font-size: var(--dw-base-font);
+  line-height: 1.75;
+  color: var(--dw-text-primary);
+  text-align: justify;
+  margin: 0;
+}
+
+/* Suy niệm (First paragraph drop cap) */
+.dw-suy-niem-content::first-letter {
+  float: left;
+  font-family: var(--dw-serif-family);
+  font-size: 42px;
+  line-height: 38px;
+  padding-top: 4px;
+  padding-right: 8px;
+  padding-bottom: 2px;
+  font-weight: 800;
+  color: var(--dw-gold);
+}
+
+/* Mời Bạn / Bạn thân mến Card */
+.dw-moi-ban-card {
+  background: var(--dw-surface-secondary);
+  border: 1px solid var(--dw-border);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-bottom: 18px;
+}
+
+.dw-moi-ban-card .dw-section-label {
+  color: #0284c7;
+}
+
+/* Sống Lời Chúa Card */
+.dw-action-card {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(217, 119, 6, 0.04));
+  border: 1px solid var(--dw-border-gold);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-bottom: 18px;
+}
+
+.dw-action-card .dw-section-label {
+  color: #b45309;
+}
+
+/* Cầu Nguyện (Prayer Box) */
+.dw-prayer-box {
+  background: var(--dw-surface-card);
+  border: 1.5px dashed var(--dw-border-gold);
+  border-radius: 12px;
+  padding: 18px 22px;
+  margin-bottom: 22px;
+  position: relative;
+  text-align: center;
+}
+
+.dw-prayer-box .dw-section-label {
+  justify-content: center;
+  color: var(--dw-gold);
+}
+
+.dw-prayer-text {
+  font-family: var(--dw-serif-family);
+  font-size: var(--dw-base-font);
+  font-style: italic;
+  line-height: 1.75;
+  color: var(--dw-text-primary);
+  margin: 8px 0;
+}
+
+.dw-amen-tag {
+  display: inline-block;
+  font-family: var(--dw-serif-family);
+  font-weight: 800;
+  color: var(--dw-gold);
+  margin-top: 6px;
+  font-size: 15px;
+}
+
+/* Page Footer Indicator */
+.dw-page-footer {
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 1px solid var(--dw-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11.5px;
+  color: var(--dw-text-muted);
+}
+
+.dw-footer-source {
+  font-weight: 600;
+}
+
+.dw-page-num {
+  font-weight: 700;
+  color: var(--dw-text-secondary);
+}
+
+/* --------------------------------------------------------------------------
+   6. 31-DAY CALENDAR GRID MODAL / DRAWER
+   -------------------------------------------------------------------------- */
+.dw-modal-backdrop {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: rgba(15, 23, 42, 0.75) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  z-index: 999999 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
+  animation: dwFadeIn 0.25s ease-out;
+}
+
+.dw-modal-card {
+  width: 100%;
+  max-width: 880px;
+  max-height: 88vh;
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 18px;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.15);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: #0f172a !important;
+}
+
+/* Dark and Navy theme support for Modal */
+.dw-modal-backdrop[data-theme="dark"] .dw-modal-card {
+  background: #1e293b !important;
+  border-color: #475569 !important;
+  color: #f8fafc !important;
+}
+.dw-modal-backdrop[data-theme="navy"] .dw-modal-card {
+  background: #0f2442 !important;
+  border-color: #1e497b !important;
+  color: #f1f6fd !important;
+}
+
+.dw-modal-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8fafc;
+}
+.dw-modal-backdrop[data-theme="dark"] .dw-modal-header {
+  background: #0f172a;
+  border-bottom-color: #334155;
+}
+.dw-modal-backdrop[data-theme="navy"] .dw-modal-header {
+  background: #08172c;
+  border-bottom-color: #1e497b;
+}
+
+.dw-modal-title {
+  font-size: 17px;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.dw-modal-backdrop[data-theme="dark"] .dw-modal-title,
+.dw-modal-backdrop[data-theme="navy"] .dw-modal-title {
+  color: #f8fafc;
+}
+
+.dw-modal-title i {
+  color: #d97706;
+}
+
+.dw-modal-close-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.dw-modal-backdrop[data-theme="dark"] .dw-modal-close-btn,
+.dw-modal-backdrop[data-theme="navy"] .dw-modal-close-btn {
+  background: #1e293b;
+  border-color: #475569;
+  color: #cbd5e1;
+}
+
+.dw-modal-close-btn:hover {
+  background: #ef4444 !important;
+  color: #ffffff !important;
+  border-color: #ef4444 !important;
+}
+
+.dw-modal-search-wrap {
+  padding: 14px 24px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #ffffff;
+}
+.dw-modal-backdrop[data-theme="dark"] .dw-modal-search-wrap {
+  background: #1e293b;
+  border-bottom-color: #334155;
+}
+.dw-modal-backdrop[data-theme="navy"] .dw-modal-search-wrap {
+  background: #0e2038;
+  border-bottom-color: #1e497b;
+}
+
+.dw-modal-search-input {
+  width: 100%;
+  height: 42px;
+  padding: 0 16px 0 42px;
+  border-radius: 12px;
+  border: 1.5px solid #cbd5e1;
+  background: #f8fafc;
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 500;
+  outline: none;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+.dw-modal-search-input:focus {
+  border-color: #d97706;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.15);
+}
+.dw-modal-backdrop[data-theme="dark"] .dw-modal-search-input {
+  background: #0f172a;
+  border-color: #475569;
+  color: #f8fafc;
+}
+.dw-modal-backdrop[data-theme="navy"] .dw-modal-search-input {
+  background: #061224;
+  border-color: #1e497b;
+  color: #f1f6fd;
+}
+
+.dw-modal-body {
+  padding: 22px 24px;
+  overflow-y: auto;
+  flex: 1;
+  background: #f1f5f9;
+}
+.dw-modal-backdrop[data-theme="dark"] .dw-modal-body {
+  background: #0b1120;
+}
+.dw-modal-backdrop[data-theme="navy"] .dw-modal-body {
+  background: #050e1c;
+}
+
+.dw-grid-31 {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 12px;
+}
+
+.dw-grid-day-card {
+  background: #ffffff !important;
+  border: 1.5px solid #cbd5e1 !important;
+  border-radius: 14px;
+  padding: 12px 10px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+.dw-modal-backdrop[data-theme="dark"] .dw-grid-day-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+.dw-modal-backdrop[data-theme="navy"] .dw-grid-day-card {
+  background: #0f2442 !important;
+  border-color: #1e497b !important;
+}
+
+.dw-grid-day-card:hover {
+  background: #ffffff !important;
+  border-color: #d97706 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(217, 119, 6, 0.2);
+}
+.dw-modal-backdrop[data-theme="dark"] .dw-grid-day-card:hover,
+.dw-modal-backdrop[data-theme="navy"] .dw-grid-day-card:hover {
+  border-color: #f59e0b !important;
+}
+
+/* Today Card Highlight */
+.dw-grid-day-card.is-today {
+  border: 2px solid #f59e0b !important;
+  background: linear-gradient(135deg, #fffbeb, #fef3c7) !important;
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.35);
+}
+.dw-modal-backdrop[data-theme="dark"] .dw-grid-day-card.is-today {
+  background: linear-gradient(135deg, #2b2313, #1e293b) !important;
+  border-color: #fbbf24 !important;
+}
+.dw-modal-backdrop[data-theme="navy"] .dw-grid-day-card.is-today {
+  background: linear-gradient(135deg, #2c2514, #0f2442) !important;
+  border-color: #f6c343 !important;
+}
+
+/* Active (Currently Selected) Card Highlight */
+.dw-grid-day-card.is-active {
+  border: 2px solid #2563eb !important;
+  background: #eff6ff !important;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.3);
+}
+.dw-modal-backdrop[data-theme="dark"] .dw-grid-day-card.is-active {
+  background: #142a4e !important;
+  border-color: #3b82f6 !important;
+}
+.dw-modal-backdrop[data-theme="navy"] .dw-grid-day-card.is-active {
+  background: #173868 !important;
+  border-color: #60a5fa !important;
+}
+
+.dw-today-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: #d97706;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 1px 7px;
+  border-radius: 9999px;
+  margin-bottom: 5px;
+  letter-spacing: 0.3px;
+  box-shadow: 0 1px 4px rgba(217, 119, 6, 0.3);
+}
+
+.dw-active-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: #2563eb;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 1px 7px;
+  border-radius: 9999px;
+  margin-bottom: 5px;
+  letter-spacing: 0.3px;
+  box-shadow: 0 1px 4px rgba(37, 99, 235, 0.3);
+}
+
+.dw-grid-day-num {
+  font-size: 24px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.dw-modal-backdrop[data-theme="dark"] .dw-grid-day-num,
+.dw-modal-backdrop[data-theme="navy"] .dw-grid-day-num {
+  color: #f8fafc;
+}
+.dw-grid-day-card.is-today .dw-grid-day-num {
+  color: #b45309;
+}
+.dw-grid-day-card.is-active .dw-grid-day-num {
+  color: #1d4ed8;
+}
+
+.dw-grid-day-liturgy {
+  font-size: 11px;
+  font-weight: 700;
+  color: #b91c1c;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.dw-modal-backdrop[data-theme="dark"] .dw-grid-day-liturgy,
+.dw-modal-backdrop[data-theme="navy"] .dw-grid-day-liturgy {
+  color: #f87171;
+}
+
+.dw-grid-day-title {
+  font-size: 11px;
+  color: #475569;
+  font-weight: 600;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-width: 100%;
+}
+.dw-modal-backdrop[data-theme="dark"] .dw-grid-day-title,
+.dw-modal-backdrop[data-theme="navy"] .dw-grid-day-title {
+  color: #cbd5e1;
+}
+
+.dw-grid-feast-pill {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #f59e0b;
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.6);
+}
+
+/* --------------------------------------------------------------------------
+   7. CONTINUOUS SCROLL READING VIEW (ALTERNATIVE VIEW MODE)
+   -------------------------------------------------------------------------- */
+.dw-scroll-view {
+  max-width: 780px;
+  margin: 0 auto;
+  background: var(--dw-surface);
+  border: 1px solid var(--dw-border);
+  border-radius: 16px;
+  padding: 36px 42px;
+  box-shadow: var(--dw-page-shadow);
+}
+
+/* --------------------------------------------------------------------------
+   8. RESPONSIVE DESIGN (MOBILE & TABLET)
+   -------------------------------------------------------------------------- */
+@media (max-width: 900px) {
+  .daily-word-container {
+    padding: 12px 14px 30px;
+  }
+  .dw-hero-header {
+    padding: 18px 20px;
+  }
+  .dw-stage {
+    padding: 0;
+  }
+  .dw-stage-arrow {
+    display: none; /* Mobile uses bottom/toolbar arrows and swipe */
+  }
+  .dw-book {
+    min-height: auto;
+  }
+  .dw-page-sheet {
+    padding: 24px 20px 28px;
+    max-height: none;
+    min-height: 520px;
+  }
+  .dw-sheet-left {
+    display: none !important; /* Force 1-page mode on small screens */
+  }
+  .dw-sheet-right {
+    border-radius: 12px !important;
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+  }
+  .dw-grid-31 {
+    grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
+    gap: 8px;
+  }
+  .dw-grid-day-num {
+    font-size: 18px;
+  }
+}

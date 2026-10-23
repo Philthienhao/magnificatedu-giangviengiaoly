@@ -1788,6 +1788,15 @@
             renderLibrary(container);
           }
           break;
+        case 'daily-word':
+        case 'loichua':
+        case '5phutloichua':
+          if (typeof window.renderDailyWordPage === 'function') {
+            window.renderDailyWordPage(container);
+          } else {
+            renderOverview(container);
+          }
+          break;
         case 'catechism-games':
         case 'games':
         case 'bible-games':
