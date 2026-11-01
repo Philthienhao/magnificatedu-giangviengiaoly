@@ -21,20 +21,38 @@
     audioCtx: null
   };
 
-  // Determine real calendar today's day of October (1..31)
+  // Determine real calendar today's day relative to active month
   function getSystemTodayDay() {
     const now = new Date();
-    // In October (month index 9), day is clamped to 1..31
-    if (now.getMonth() === 9) {
-      return Math.min(31, Math.max(1, now.getDate()));
+    const data = window.DAILY_WORD_DATA || {};
+    const curMonth = data.month || 11;
+    const curYear = data.year || 2026;
+    const totalDays = data.totalDays || 30;
+    if (now.getMonth() + 1 === curMonth && now.getFullYear() === curYear) {
+      return Math.min(totalDays, Math.max(1, now.getDate()));
     }
-    // Outside October, fallback to current day or clamped 1..31
-    return Math.min(31, Math.max(1, now.getDate()));
+    return 1;
   }
 
   // Real today day number
-  const REAL_TODAY_DAY = getSystemTodayDay();
-  state.currentDay = REAL_TODAY_DAY;
+  state.currentDay = getSystemTodayDay();
+
+  // --- Change Month Function ---
+  window.changeDailyWordMonth = function(monthKey) {
+    if (!window.DAILY_WORD_ALL_MONTHS || !window.DAILY_WORD_ALL_MONTHS[monthKey]) return;
+    window.DAILY_WORD_CURRENT_KEY = monthKey;
+    localStorage.setItem('daily_word_selected_month', monthKey);
+    window.DAILY_WORD_DATA = window.DAILY_WORD_ALL_MONTHS[monthKey];
+    state.currentDay = getSystemTodayDay();
+    if (state.isSpeaking) {
+      window.stopDailyWordSpeech();
+    }
+    const container = document.getElementById('content-area');
+    window.renderDailyWordPage(container);
+    if (typeof showToast === 'function') {
+      showToast(`Đã chuyển sang ${window.DAILY_WORD_DATA.title || ('Tháng ' + window.DAILY_WORD_DATA.month)}`, 'success');
+    }
+  };
 
   // --- Web Audio Synthetic Paper Turn Sound ---
   function playPaperTurnSound() {
@@ -109,6 +127,14 @@
     if (!container) return;
 
     state.isTwoPageMode = window.innerWidth > 900;
+    const activeData = window.DAILY_WORD_DATA || {};
+    const curMonth = activeData.month || 11;
+    const curYear = activeData.year || 2026;
+    const totalDays = activeData.totalDays || 30;
+    const curKey = window.DAILY_WORD_CURRENT_KEY || '2026-11';
+    const allMonths = window.DAILY_WORD_ALL_MONTHS || { '2026-11': activeData };
+    const realToday = getSystemTodayDay();
+
     const allDays = getAllDays();
     const currentData = getDayData(state.currentDay) || (allDays[0] || {});
 
@@ -134,7 +160,12 @@
               <div>
                 <h1 class="dw-hero-title">
                   Suy Niệm Lời Chúa Hằng Ngày
-                  <span class="badge badge-pill badge-warning" style="font-size: 13px; font-weight: 700; background: rgba(245,158,11,0.25); color: #fde68a;">Tháng 10/2026</span>
+                  <select class="dw-month-select" id="dw-month-select" onchange="window.changeDailyWordMonth(this.value)" title="Chọn tháng phụng vụ">
+                    ${Object.keys(allMonths).sort().reverse().map(k => {
+                      const m = allMonths[k];
+                      return `<option value="${k}" ${k === curKey ? 'selected' : ''}>Tháng ${m.month}/${m.year} ${k === '2026-11' ? '(Mới)' : ''}</option>`;
+                    }).join('')}
+                  </select>
                 </h1>
                 <p class="dw-hero-subtitle">
                   Dành 5 phút mỗi ngày đọc, gẫm và sống Lời Chúa để nuôi dưỡng đời sống đức tin Kitô hữu và tâm hồn phục vụ của người Giáo Lý Viên.
@@ -145,9 +176,9 @@
             <!-- Quick Action Buttons -->
             <div class="dw-nav-group">
               <button type="button" class="dw-btn dw-btn-primary" onclick="window.dailyWordToday()" title="Nhảy về bài Lời Chúa hôm nay">
-                <i class="fa-solid fa-calendar-day"></i> Hôm Nay (${String(REAL_TODAY_DAY).padStart(2, '0')}/10)
+                <i class="fa-solid fa-calendar-day"></i> Hôm Nay (${String(realToday).padStart(2, '0')}/${String(curMonth).padStart(2, '0')})
               </button>
-              <button type="button" class="dw-btn" onclick="window.toggleDailyWordCalendarModal(true)" title="Xem lịch chọn 31 ngày trong tháng">
+              <button type="button" class="dw-btn" onclick="window.toggleDailyWordCalendarModal(true)" title="Xem lịch chọn ${totalDays} ngày trong tháng">
                 <i class="fa-solid fa-calendar-days text-warning"></i> Chọn Ngày Trong Tháng
               </button>
             </div>
@@ -168,14 +199,14 @@
               <select class="dw-date-select" id="dw-date-select" onchange="window.dailyWordGoToDay(this.value)" title="Chọn ngày trong tháng">
                 ${allDays.map(d => `
                   <option value="${d.day}" ${d.day === state.currentDay ? 'selected' : ''}>
-                    Ngày ${String(d.day).padStart(2, '0')}/10 - ${escapeHtml(d.title)}
+                    Ngày ${String(d.day).padStart(2, '0')}/${String(curMonth).padStart(2, '0')} - ${escapeHtml(d.title)}
                   </option>
                 `).join('')}
               </select>
               <i class="fa-solid fa-chevron-down dw-select-arrow"></i>
             </div>
 
-            <button type="button" class="dw-btn" onclick="window.dailyWordNextDay()" ${state.currentDay >= 31 ? 'disabled' : ''} title="Đọc ngày sau (Phím →)">
+            <button type="button" class="dw-btn" onclick="window.dailyWordNextDay()" ${state.currentDay >= totalDays ? 'disabled' : ''} title="Đọc ngày sau (Phím →)">
               <span class="d-none d-sm-inline">Ngày sau</span> <i class="fa-solid fa-chevron-right"></i>
             </button>
           </div>
@@ -238,13 +269,13 @@
 
       </div>
 
-      <!-- 31-Day Calendar Grid Modal -->
+      <!-- Calendar Grid Modal -->
       <div id="dw-calendar-modal" class="dw-modal-backdrop" style="display: none;" onclick="if(event.target === this) window.toggleDailyWordCalendarModal(false)">
         <div class="dw-modal-card">
           <div class="dw-modal-header">
             <h3 class="dw-modal-title">
               <i class="fa-solid fa-calendar-check"></i>
-              Chọn Ngày Trong Tháng 10/2026 (31 Ngày)
+              Chọn Ngày Trong Tháng ${curMonth}/${curYear} (${totalDays} Ngày)
             </h3>
             <button type="button" class="dw-modal-close-btn" onclick="window.toggleDailyWordCalendarModal(false)" title="Đóng">
               <i class="fa-solid fa-xmark"></i>
@@ -347,7 +378,7 @@
         </div>
 
         <!-- Big Right Navigation Chevron -->
-        <button type="button" class="dw-stage-arrow next" onclick="window.dailyWordNextDay()" ${state.currentDay >= 31 ? 'disabled' : ''} title="Trang sau (Phím →)">
+        <button type="button" class="dw-stage-arrow next" onclick="window.dailyWordNextDay()" ${state.currentDay >= ((window.DAILY_WORD_DATA && window.DAILY_WORD_DATA.totalDays) || 30) ? 'disabled' : ''} title="Trang sau (Phím →)">
           <i class="fa-solid fa-chevron-right"></i>
         </button>
       </div>
@@ -375,7 +406,7 @@
         </div>
 
         <p style="font-size: 14px; font-weight: 600; color: var(--dw-red-liturgy); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 18px;">
-          Tuyển Tập Suy Niệm Tháng 10/2026
+          Tuyển Tập Suy Niệm Tháng ${(window.DAILY_WORD_DATA && window.DAILY_WORD_DATA.month) || 11}/${(window.DAILY_WORD_DATA && window.DAILY_WORD_DATA.year) || 2026}
         </p>
 
         <div style="background: var(--dw-gold-light); border: 1px dashed var(--dw-border-gold); border-radius: 12px; padding: 14px 18px; max-width: 320px; margin-bottom: 24px;">
@@ -408,7 +439,7 @@
           </div>
 
           <div class="dw-liturgy-date-row">
-            <span class="dw-date-pill">${dayData.displayDate || ('Ngày ' + dayData.day + '/10')}</span>
+            <span class="dw-date-pill">${dayData.displayDate || ('Ngày ' + dayData.day + '/' + ((window.DAILY_WORD_DATA && window.DAILY_WORD_DATA.month) || 11))}</span>
             <span class="dw-liturgy-title">${escapeHtml(dayData.liturgy)}</span>
           </div>
 
@@ -500,10 +531,10 @@
         <!-- Page Footer Navigation Indicator -->
         <footer class="dw-page-footer">
           <span class="dw-footer-source">
-            <i class="fa-solid fa-church"></i> 5 Phút Lời Chúa • Tháng 10/2026
+            <i class="fa-solid fa-church"></i> 5 Phút Lời Chúa • Tháng ${(window.DAILY_WORD_DATA && window.DAILY_WORD_DATA.month) || 11}/${(window.DAILY_WORD_DATA && window.DAILY_WORD_DATA.year) || 2026}
           </span>
           <span class="dw-page-num">
-            Trang ${dayData.day} / 31
+            Trang ${dayData.day} / ${(window.DAILY_WORD_DATA && window.DAILY_WORD_DATA.totalDays) || 30}
           </span>
         </footer>
 
@@ -606,7 +637,8 @@
   };
 
   window.dailyWordNextDay = function() {
-    if (state.currentDay < 31) {
+    const totalDays = (window.DAILY_WORD_DATA && window.DAILY_WORD_DATA.totalDays) || 30;
+    if (state.currentDay < totalDays) {
       window.dailyWordGoToDay(state.currentDay + 1, 'next');
     }
   };
@@ -620,8 +652,9 @@
   window.dailyWordToday = function() {
     const target = getSystemTodayDay();
     window.dailyWordGoToDay(target);
+    const curMonth = (window.DAILY_WORD_DATA && window.DAILY_WORD_DATA.month) || 11;
     if (typeof showToast === 'function') {
-      showToast(`Đã chuyển về bài Lời Chúa Hôm Nay (Ngày ${String(target).padStart(2, '0')}/10)`, 'info');
+      showToast(`Đã chuyển về bài Lời Chúa Hôm Nay (Ngày ${String(target).padStart(2, '0')}/${String(curMonth).padStart(2, '0')})`, 'info');
     }
   };
 
@@ -822,8 +855,9 @@ https://giangviengiaoly.vn`;
       const label = document.getElementById('dw-tts-label');
       if (btn) btn.classList.add('dw-btn-primary');
       if (label) label.textContent = 'Dừng Đọc';
+      const curMonth = (window.DAILY_WORD_DATA && window.DAILY_WORD_DATA.month) || 11;
       if (typeof showToast === 'function') {
-        showToast('Đang đọc Lời Chúa ngày ' + d.day + '/10...', 'info');
+        showToast('Đang đọc Lời Chúa ngày ' + d.day + '/' + curMonth + '...', 'info');
       }
     };
 
