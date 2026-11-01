@@ -135,6 +135,11 @@
     const allMonths = window.DAILY_WORD_ALL_MONTHS || { '2026-11': activeData };
     const realToday = getSystemTodayDay();
 
+    // Clamp current day to valid bounds of the active month
+    if (!state.currentDay || state.currentDay > totalDays || state.currentDay < 1) {
+      state.currentDay = realToday;
+    }
+
     const allDays = getAllDays();
     const currentData = getDayData(state.currentDay) || (allDays[0] || {});
 

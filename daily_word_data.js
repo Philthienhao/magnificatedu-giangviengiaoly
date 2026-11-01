@@ -936,9 +936,14 @@ window.DAILY_WORD_ALL_MONTHS = {
   }
 };
 
-// Mặc định nạp tháng 11/2026 (hoặc theo lựa chọn đã lưu)
-window.DAILY_WORD_CURRENT_KEY = localStorage.getItem('daily_word_selected_month') || '2026-11';
-if (!window.DAILY_WORD_ALL_MONTHS[window.DAILY_WORD_CURRENT_KEY]) {
+// Mặc định nạp tháng 11/2026 (tự động chuyển sang tháng 11 nếu vừa qua tháng mới)
+let savedMonth = null;
+try { savedMonth = localStorage.getItem('daily_word_selected_month'); } catch (e) {}
+
+if (!savedMonth || savedMonth === '2026-10') {
   window.DAILY_WORD_CURRENT_KEY = '2026-11';
+  try { localStorage.setItem('daily_word_selected_month', '2026-11'); } catch (e) {}
+} else {
+  window.DAILY_WORD_CURRENT_KEY = window.DAILY_WORD_ALL_MONTHS[savedMonth] ? savedMonth : '2026-11';
 }
 window.DAILY_WORD_DATA = window.DAILY_WORD_ALL_MONTHS[window.DAILY_WORD_CURRENT_KEY];
