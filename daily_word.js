@@ -168,7 +168,7 @@
                   <select class="dw-month-select" id="dw-month-select" onchange="window.changeDailyWordMonth(this.value)" title="Chọn tháng phụng vụ">
                     ${Object.keys(allMonths).sort().reverse().map(k => {
                       const m = allMonths[k];
-                      return `<option value="${k}" ${k === curKey ? 'selected' : ''}>Tháng ${m.month}/${m.year} ${k === '2026-11' ? '(Mới)' : ''}</option>`;
+                      return `<option value="${k}" ${k === curKey ? 'selected' : ''}>Tháng ${m.month}/${m.year}</option>`;
                     }).join('')}
                   </select>
                 </h1>
