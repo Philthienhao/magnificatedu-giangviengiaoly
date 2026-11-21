@@ -318,6 +318,20 @@ Hệ thống tính điểm được thiết kế minh bạch với các chế đ
   - **Quy tắc 1 - Luôn đồng bộ Thực thể kèm theo Sự kiện (Entity Materialization)**: Bất kỳ khi nào một hành động của người dùng (Đăng ký, Đăng nhập, Nộp bài...) gửi thông báo về cho Admin, BẮT BUỘC phải đồng thời lưu thực thể tương ứng (Hồ sơ GLV, Tài khoản, Điểm số) vào Database của Admin. Tuyệt đối không để sự kiện chỉ là một dòng chữ đơn thuần.
   - **Quy tắc 2 - Cơ chế Tự phục hồi dữ liệu (Self-Healing Fallback)**: Mọi hàm hiển thị danh sách quản lý phải có bước kiểm tra chéo với nhật ký sự kiện/thông báo để tự động bù đắp nếu bản ghi thực thể bị thất lạc giữa các thiết bị.
 
+### ⚡ Sự cố 14: Lỗi Đăng Nhập Tài Khoản Giáo Viên Mới Trên Thiết Bị Di Động (Khác Mật Khẩu Mặc Định & Lệch File app_v2.js / app.js)
+* **Nguyên nhân**:
+  1. Khi tạo tài khoản GLV mới trên Cloud, trường `account_info.password` bị để trống (`null`). Khi tải về client, code cũ mặc định gán `'123'`, trong khi trên giao diện thông báo mật khẩu mặc định là `'123456'`. Khi người dùng nhập `123456`, hệ thống đối chiếu so sánh nghiêm ngặt dẫn đến báo lỗi không chính xác.
+  2. Client chỉ truy vấn Cloud nếu không tìm thấy trong LocalStorage (`!match`), nên nếu máy đã từng lưu tài khoản với mật khẩu cũ `'123'`, nó không bao giờ tự động cập nhật lại mật khẩu mới từ Cloud khi đăng nhập.
+  3. Dự án nạp script thực thi là `app_v2.js` thông qua `index.html`. Nếu chỉ sửa file `app.js` mà không đồng bộ sang `app_v2.js` và không tăng Cache-Buster / Service Worker, các thiết bị di động sẽ tiếp tục chạy code cũ lưu trong cache.
+* **Biện pháp khắc phục**:
+  1. Cập nhật trực tiếp `password: "123456"` trong cơ sở dữ liệu Supabase cho tài khoản `ktsphamvankhanh1502@gmail.com`.
+  2. Nâng cấp logic đăng nhập: Luôn truy vấn Cloud Supabase khi đăng nhập để lấy thông tin mới nhất; chấp nhận linh hoạt cả `123` và `123456` cho mọi tài khoản dùng mật khẩu mặc định.
+  3. Đồng bộ 100% mã nguồn giữa `app.js` và `app_v2.js`.
+  4. Nâng Cache-Buster trong `index.html` lên `v=20261121_v8100` và Service Worker `sw.js` lên `magnificatedu-cache-v39`.
+* **Quy tắc phòng ngừa**:
+  - Luôn cập nhật song song cả `app.js` và `app_v2.js`.
+  - Nâng cache query param trong `index.html` và tăng version `CACHE_NAME` trong `sw.js` mỗi khi có thay đổi logic đăng nhập/dữ liệu.
+
 ---
 
 ## 🚀 4. Hướng Dẫn Cập Nhật & Deploy Dự Án Chuẩn 4 Bước

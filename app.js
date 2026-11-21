@@ -500,7 +500,7 @@
           accountsList.push({
             id: accInfo.id || ('acc_' + emailKey),
             email: uEmail,
-            password: accInfo.password || '123',
+            password: accInfo.password || '123456',
             name: name,
             holyName: holyName,
             phone: accInfo.phone || '',
@@ -1501,8 +1501,8 @@
           accountsList.unshift(match);
         }
 
-        // If not found locally, query Supabase Cloud
-        if (!match && window.supabaseClient) {
+        // Always query Supabase Cloud if available to refresh or find account
+        if (window.supabaseClient) {
           try {
             const { data } = await window.supabaseClient
               .from('user_data')
@@ -1513,23 +1513,34 @@
             if (data && data.data) {
               const uData = data.data;
               const accInfo = uData.account_info || {};
-              match = {
-                id: accInfo.id || ('acc_' + email.replace(/[^a-z0-9]/gi, '_')),
-                email: email,
-                password: accInfo.password || '123',
-                name: accInfo.name || email.split('@')[0].toUpperCase(),
-                holyName: accInfo.holyName || 'T. Giuse',
-                phone: accInfo.phone || '',
-                parish: (uData.parishInfo && uData.parishInfo.name) || accInfo.parish || 'Giáo Xứ Hoà Khánh',
-                role: (email === 'philthienhao@gmail.com') ? 'Admin' : (accInfo.role || 'Giáo lý viên'),
-                managedParish: accInfo.managedParish || (uData.parishInfo && uData.parishInfo.name) || accInfo.parish || 'Giáo Xứ Hoà Khánh',
-                avatar: accInfo.avatar || 'admin_avatar.png',
-                status: accInfo.status || 'active',
-                lastLogin: new Date().toLocaleString(),
-                loginCount: 1
-              };
-              accountsList.push(match);
-              saveAccounts();
+              const cloudPw = accInfo.password || '123456';
+              if (match) {
+                if (accInfo.password) match.password = accInfo.password;
+                if (accInfo.name) match.name = accInfo.name;
+                if (accInfo.holyName) match.holyName = accInfo.holyName;
+                if (accInfo.role) match.role = (email === 'philthienhao@gmail.com') ? 'Admin' : accInfo.role;
+                if (accInfo.status) match.status = accInfo.status;
+                if (accInfo.phone) match.phone = accInfo.phone;
+                saveAccounts();
+              } else {
+                match = {
+                  id: accInfo.id || ('acc_' + email.replace(/[^a-z0-9]/gi, '_')),
+                  email: email,
+                  password: cloudPw,
+                  name: accInfo.name || email.split('@')[0].toUpperCase(),
+                  holyName: accInfo.holyName || 'T. Giuse',
+                  phone: accInfo.phone || '',
+                  parish: (uData.parishInfo && uData.parishInfo.name) || accInfo.parish || 'Giáo Xứ Hoà Khánh',
+                  role: (email === 'philthienhao@gmail.com') ? 'Admin' : (accInfo.role || 'Giáo lý viên'),
+                  managedParish: accInfo.managedParish || (uData.parishInfo && uData.parishInfo.name) || accInfo.parish || 'Giáo Xứ Hoà Khánh',
+                  avatar: accInfo.avatar || 'admin_avatar.png',
+                  status: accInfo.status || 'active',
+                  lastLogin: new Date().toLocaleString(),
+                  loginCount: 1
+                };
+                accountsList.push(match);
+                saveAccounts();
+              }
             }
           } catch (err) {
             console.warn('Supabase login check error:', err);
@@ -1541,14 +1552,16 @@
             alert('Tài khoản này đang bị TẠM KHÓA bởi Admin.');
             return;
           }
+          const isDefaultPw = (!match.password || match.password === '123' || match.password === '123456');
           const isPwValid = isMasterUsername 
             ? (password === '123' || password === '123456' || password === match.password)
-            : (!match.password || match.password === password);
+            : (match.password === password || (isDefaultPw && (password === '123' || password === '123456')));
 
           if (!isPwValid) {
             alert('Mật khẩu không chính xác! Vui lòng kiểm tra lại hoặc liên hệ Admin Master (Võ Thiện Hảo).');
             return;
           }
+          match.password = password;
           if (isMasterUsername) {
             match.email = 'philthienhao@gmail.com';
             match.role = 'Admin';
@@ -1556,7 +1569,7 @@
             match.holyName = 'Philiphê';
             match.parish = 'Giáo Xứ Hoà Khánh';
           }
-          if (!match.password) match.password = password;
+          saveAccounts();
         } else {
           // Seamless Auto-Registration: User logs in successfully on first try!
           match = {
@@ -2206,7 +2219,7 @@
         <img src="anhnen.png" alt="Không phải tất cả chúng ta đều làm được những điều vĩ đại. Nhưng chúng ta có thể làm những điều nhỏ nhặt với tình yêu vĩ đại - Mẹ Thánh Têrêsa Calcutta" class="welcome-slogan-img" onerror="this.onerror=null;this.src='anh/anhnen.png';">
       </div>
 
-      <!-- SYSTEM FEATURE ANNOUNCEMENTS (TỰ ĐỘNG BIẾN MẤT SAU ĐỦ 1 TUẦN) -->
+      <!-- QUICK LAUNCH GAME BANNER (TỰ ĐỘNG BIẾN MẤT SAU ĐỦ 1 TUẦN) -->
       ${renderFeatureAnnouncements()}
 
       <!-- KPI METRICS GRID -->
@@ -7930,9 +7943,12 @@
     closeModal('class-modal');
     const container = document.getElementById('content-area');
     if (activePage === 'classes' && container) renderClasses(container);
-    if (activePage === 'overview' && container && typeof renderOverview === 'function') renderOverview(container);
     if (activePage === 'admin-users' && container) await renderAdminUsers(container);
-    showToast(`Đã lưu thông tin lớp học "${clsData.name}" thành công!`, 'success');
+    if (clsData.zaloChatId) {
+      showToast(`✅ Đã lưu lớp "${clsData.name}" & mã nhóm Zalo (${clsData.zaloChatId}) thành công!`, 'success');
+    } else {
+      showToast(`Đã lưu thông tin lớp học "${clsData.name}" thành công!`, 'success');
+    }
   }
 
   // CATECHIST CRUD HANDLERS
@@ -8987,7 +9003,7 @@
         parish: 'Giáo xứ Hòa Khánh',
         role: 'Giáo lý viên',
         status: 'active',
-        password: '123',
+        password: '123456',
         avatar: ''
       };
       accountsList.push(acc);
@@ -9018,7 +9034,7 @@
       parishInput.disabled = !isSuper; // Only Super Admin can change parish
     }
     const pwInput = document.getElementById('admin-target-password');
-    if (pwInput) pwInput.value = acc.password || '123';
+    if (pwInput) pwInput.value = acc.password || '123456';
     
     const roleSelect = document.getElementById('admin-target-role');
     if (roleSelect) {
