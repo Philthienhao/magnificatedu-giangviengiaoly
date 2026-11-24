@@ -2987,6 +2987,7 @@
                 <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--slate-border); padding-top: 12px; gap: 8px; flex-wrap: wrap;">
                   <span style="font-weight: 700; color: var(--slate-dark); white-space: nowrap;"><i class="fa-solid fa-users text-primary"></i> ${classStudentCount} Học viên</span>
                   <div style="display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap;">
+                    <button class="btn btn-sm" style="color: #047857; border: 1px solid #10b981; background: #ecfdf5; font-weight: 700;" onclick="window.downloadClassStudentList('${safeId}')" title="Tải xuống danh sách học sinh lớp ${escapedName} (file Excel)"><i class="fa-solid fa-file-excel"></i> Tải DS Lớp</button>
                     <button class="btn btn-sm" style="color: #b45309; border: 1px solid #f59e0b; background: #fffbeb; font-weight: 700;" onclick="window.openClassEmulation('${safeId}')" title="Mở Sổ Thi Đua & Bảng Vinh Danh Lớp Chủ Nhiệm"><i class="fa-solid fa-award"></i> Thi Đua & Vinh Danh</button>
                     <button class="btn btn-sm btn-outline-primary" style="color: #2563eb; border-color: #93c5fd;" data-class-id="${safeId}" data-class-name="${escapedName}" data-teacher-email="${teacher1Email}" onclick="window.editClass(this)" title="Cài đặt mã nhóm Zalo Bot cho lớp này"><i class="fa-solid fa-robot"></i> Cài Zalo</button>
                     <button class="btn btn-sm btn-outline-primary" data-class-id="${safeId}" data-class-name="${escapedName}" data-teacher-email="${teacher1Email}" onclick="window.editClass(this)"><i class="fa-solid fa-pen"></i> Sửa</button>
@@ -3015,6 +3016,7 @@
           <p class="page-subtitle">${isAdmin ? '👑 Quản lý toàn bộ học viên tất cả các lớp của các GLV trong hệ thống' : 'Quản lý sơ yếu lý lịch, hình ảnh vĩnh viễn, bí tích và kết quả học tập'} (${students.length} học viên)</p>
         </div>
         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <button class="btn btn-outline-success" onclick="window.downloadClassStudentListFromFilter()" style="font-weight: 700; color: #047857; border-color: #10b981; background: #ecfdf5;" title="Tải file Excel danh sách học viên (theo lớp đang chọn hoặc toàn bộ)"><i class="fa-solid fa-file-excel"></i> Tải Xuống Danh Sách (Excel)</button>
           <button class="btn btn-outline-primary" onclick="window.downloadCSVTemplate()"><i class="fa-solid fa-file-excel"></i> Tải Mẫu CSV</button>
           <button class="btn btn-success" onclick="window.openCSVImportModal()"><i class="fa-solid fa-file-import"></i> Tải File Up (CSV/Excel)</button>
           <button class="btn btn-primary" onclick="window.openAddStudentModal()"><i class="fa-solid fa-user-plus"></i> Thêm Học Viên Mới</button>
@@ -3031,13 +3033,18 @@
               <input type="text" id="std-search-input" class="form-control" placeholder="Tìm tên học viên, mã HV, giáo khóm, SĐT..." onkeyup="window.filterStudentTable()">
             </div>
             <div class="col-4">
-              <select id="std-filter-class" class="form-control" onchange="window.filterStudentTable()">
-                <option value="">-- Tất cả Lớp Học (${classes.length} lớp) --</option>
-                ${classes.map(c => {
-                  const teacherStr = c.teacher ? ' (' + c.teacher + (c.coTeacher ? ' & ' + c.coTeacher : '') + ')' : '';
-                  return `<option value="${c.id}">${c.name}${teacherStr}</option>`;
-                }).join('')}
-              </select>
+              <div style="display: flex; gap: 6px;">
+                <select id="std-filter-class" class="form-control" onchange="window.filterStudentTable()" style="flex: 1;">
+                  <option value="">-- Tất cả Lớp Học (${classes.length} lớp) --</option>
+                  ${classes.map(c => {
+                    const teacherStr = c.teacher ? ' (' + c.teacher + (c.coTeacher ? ' & ' + c.coTeacher : '') + ')' : '';
+                    return `<option value="${c.id}">${c.name}${teacherStr}</option>`;
+                  }).join('')}
+                </select>
+                <button type="button" id="btn-quick-download-class" class="btn btn-outline-success" onclick="window.downloadSelectedClassStudentList()" title="Tải xuống danh sách học sinh của lớp đang chọn trong bộ lọc (file Excel)" style="white-space: nowrap; font-weight: 700; color: #047857; border-color: #10b981; background: #ecfdf5; padding: 0 12px; display: flex; align-items: center; gap: 5px;">
+                  <i class="fa-solid fa-file-arrow-down"></i> Tải DS
+                </button>
+              </div>
             </div>
             <div class="col-4">
               <select id="std-filter-gender" class="form-control" onchange="window.filterStudentTable()">
@@ -8567,6 +8574,183 @@
     renderAppHeaderAndSidebar();
     if (activePage === 'notifications') renderNotifications(document.getElementById('content-area'));
     showToast('Đã gửi thông báo thành công!', 'success');
+  };
+
+  // EXPORT CLASS STUDENT LIST (ROSTER) TO EXCEL (.xlsx / .csv)
+  window.downloadClassStudentList = function(classId) {
+    const classes = getAccessibleClasses();
+    const students = getAccessibleStudents();
+    const parish = (appData && appData.parishInfo && appData.parishInfo.name) || (currentUser && currentUser.parish) || 'Giáo Xứ Hoà Khánh';
+    const academicYear = (appData && appData.parishInfo && appData.parishInfo.academicYear) || '2026 - 2027';
+
+    let targetClass = null;
+    if (classId) {
+      targetClass = classes.find(c => c && (c.id === classId || c.name === classId || String(c.id) === String(classId)));
+    }
+
+    let exportStudents = [];
+    let titleStr = '';
+    let sheetName = '';
+    let filename = '';
+
+    if (targetClass) {
+      exportStudents = students.filter(s => s && (s.classId === targetClass.id || s.className === targetClass.name || (targetClass.name && s.className && s.className.toLowerCase() === targetClass.name.toLowerCase())));
+      titleStr = `DANH SÁCH HỌC VIÊN - ${targetClass.name.toUpperCase()}`;
+      sheetName = (targetClass.name || 'Danh Sách Lớp').slice(0, 31);
+      const cleanClassName = targetClass.name.replace(/[^a-zA-Z0-9\u00C0-\u1EF9]/g, '_');
+      const cleanYear = academicYear.replace(/[^a-zA-Z0-9]/g, '_');
+      filename = `Danh_Sach_${cleanClassName}_${cleanYear}.xlsx`;
+    } else {
+      exportStudents = [...students];
+      titleStr = `DANH SÁCH TOÀN BỘ HỌC VIÊN GIÁO LÝ`;
+      sheetName = 'Toàn Bộ Học Viên';
+      const cleanParish = parish.replace(/[^a-zA-Z0-9\u00C0-\u1EF9]/g, '_');
+      const cleanYear = academicYear.replace(/[^a-zA-Z0-9]/g, '_');
+      filename = `Danh_Sach_Toan_Bo_Hoc_Vien_${cleanParish}_${cleanYear}.xlsx`;
+    }
+
+    if (exportStudents.length === 0) {
+      alert(`Lớp "${targetClass ? targetClass.name : 'được chọn'}" hiện chưa có học viên nào trong danh sách!`);
+      return;
+    }
+
+    // Sort students by name (Vietnamese alphabetical order)
+    exportStudents.sort((a, b) => {
+      const nameA = (a.fullName || '').split(' ').pop() || '';
+      const nameB = (b.fullName || '').split(' ').pop() || '';
+      return nameA.localeCompare(nameB, 'vi');
+    });
+
+    const teacherInfo = targetClass 
+      ? `GLV Chủ nhiệm: ${targetClass.teacher || '---'}${targetClass.coTeacher ? ' & ' + targetClass.coTeacher : ''}`
+      : `Đơn vị: ${parish}`;
+
+    const rowsData = [
+      [parish.toUpperCase(), '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
+      [titleStr, '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
+      [`Năm học: ${academicYear} | ${teacherInfo} | Sĩ số: ${exportStudents.length} học viên`, '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
+      [`Ngày xuất danh sách: ${new Date().toLocaleDateString('vi-VN')} lúc ${new Date().toLocaleTimeString('vi-VN')}`, '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
+      [''], // Empty spacer row
+      [
+        'STT',
+        'Mã Học Viên',
+        'Tên Thánh',
+        'Họ và Tên',
+        'Giới Tính',
+        'Lớp Học',
+        'Ngày Sinh',
+        'Giáo Khóm',
+        'Địa Chỉ',
+        'Tên Cha',
+        'SĐT Cha',
+        'Tên Mẹ',
+        'SĐT Mẹ',
+        'SĐT Liên Hệ',
+        'Rửa Tội',
+        'Rước Lễ',
+        'Thêm Sức',
+        'Ghi Chú'
+      ]
+    ];
+
+    let maleCount = 0;
+    let femaleCount = 0;
+
+    exportStudents.forEach((st, idx) => {
+      const cls = classes.find(c => c && (c.id === st.classId || c.name === st.className));
+      const clsName = cls ? cls.name : (st.className || (targetClass ? targetClass.name : 'Chưa phân lớp'));
+      const isMale = (st.gender === 'Nam');
+      if (isMale) maleCount++; else femaleCount++;
+
+      // Format date of birth to DD/MM/YYYY if standard YYYY-MM-DD
+      let dobDisplay = st.dob || '';
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dobDisplay)) {
+        const p = dobDisplay.split('-');
+        dobDisplay = `${p[2]}/${p[1]}/${p[0]}`;
+      }
+
+      const isBaptized = st.sacraments && st.sacraments.baptized;
+      const isEucharist = st.sacraments && st.sacraments.eucharist;
+      const isConfirmed = st.sacraments && st.sacraments.confirmed;
+
+      rowsData.push([
+        idx + 1,
+        st.code || `HV${st.id}`,
+        st.holyName || '',
+        st.fullName || '',
+        st.gender || 'Nam',
+        clsName,
+        dobDisplay,
+        st.subParish || '',
+        st.address || '',
+        st.fatherName || '',
+        st.fatherPhone || '',
+        st.motherName || '',
+        st.motherPhone || '',
+        st.phone || st.fatherPhone || st.motherPhone || '',
+        isBaptized ? 'Đã có' : 'Chưa',
+        isEucharist ? 'Đã có' : 'Chưa',
+        isConfirmed ? 'Đã có' : 'Chưa',
+        st.note || ''
+      ]);
+    });
+
+    // Summary footer
+    rowsData.push(['']);
+    rowsData.push(['TỔNG KẾT:', `Tổng sĩ số: ${exportStudents.length} em`, '', `Nam: ${maleCount} em`, '', `Nữ: ${femaleCount} em`]);
+    rowsData.push(['']);
+    rowsData.push(['', '', 'Người lập bảng', '', '', '', '', '', '', '', 'Giáo Lý Viên Phụ Trách', '', '', '', 'Linh Mục Quản Xứ']);
+    rowsData.push(['', '', '(Ký và ghi rõ họ tên)', '', '', '', '', '', '', '', '(Ký và ghi rõ họ tên)', '', '', '', '(Ký và đóng dấu)']);
+
+    if (typeof XLSX !== 'undefined') {
+      const ws = XLSX.utils.aoa_to_sheet(rowsData);
+      ws['!cols'] = [
+        { wch: 6 },  // STT
+        { wch: 14 }, // Mã HV
+        { wch: 16 }, // Tên Thánh
+        { wch: 25 }, // Họ Tên
+        { wch: 10 }, // Giới Tính
+        { wch: 18 }, // Lớp Học
+        { wch: 13 }, // Ngày Sinh
+        { wch: 15 }, // Giáo Khóm
+        { wch: 28 }, // Địa Chỉ
+        { wch: 20 }, // Tên Cha
+        { wch: 14 }, // SĐT Cha
+        { wch: 20 }, // Tên Mẹ
+        { wch: 14 }, // SĐT Mẹ
+        { wch: 15 }, // SĐT Liên Hệ
+        { wch: 11 }, // Rửa Tội
+        { wch: 11 }, // Rước Lễ
+        { wch: 11 }, // Thêm Sức
+        { wch: 20 }  // Ghi Chú
+      ];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, sheetName);
+      XLSX.writeFile(wb, filename);
+      showToast(`📊 Đã tải xuống thành công danh sách: ${filename}`, 'success');
+    } else {
+      const csvContent = "\uFEFF" + rowsData.map(e => e.map(cell => `"${String(cell || '').replace(/"/g, '""')}"`).join(",")).join("\n");
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename.replace('.xlsx', '.csv');
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast(`📊 Đã tải xuống file CSV: ${a.download}`, 'success');
+    }
+  };
+
+  window.downloadClassStudentListFromFilter = function() {
+    const classVal = (document.getElementById('std-filter-class')?.value || '').trim();
+    window.downloadClassStudentList(classVal);
+  };
+
+  window.downloadSelectedClassStudentList = function() {
+    const classVal = (document.getElementById('std-filter-class')?.value || '').trim();
+    window.downloadClassStudentList(classVal);
   };
 
   // EXCEL & CSV ROSTER IMPORT & TEMPLATE DOWNLOAD ENGINE

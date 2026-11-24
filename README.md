@@ -332,6 +332,21 @@ Hệ thống tính điểm được thiết kế minh bạch với các chế đ
   - Luôn cập nhật song song cả `app.js` và `app_v2.js`.
   - Nâng cache query param trong `index.html` và tăng version `CACHE_NAME` trong `sw.js` mỗi khi có thay đổi logic đăng nhập/dữ liệu.
 
+### ⚡ Cập nhật 15: Tải Xuống Danh Sách Lớp Học Viên Trong Từng Lớp (Xuất File Excel Chuẩn Công Giáo)
+* **Yêu cầu**: Thêm nút tải xuống danh sách lớp trong từng lớp học và tại trang quản lý danh sách học viên.
+* **Giải pháp triển khai**:
+  1. **Trang Quản Lý Lớp Học & Chủ Nhiệm (`#classes`)**: Thêm nút `[ 📊 Tải DS Lớp ]` trực tiếp trên từng thẻ lớp học (`.card`), bấm vào sẽ tải ngay file Excel danh sách toàn bộ học viên của lớp đó.
+  2. **Trang Danh Sách Học Viên Giáo Lý (`#students`)**: 
+     - Thêm nút `[ 📊 Tải Xuống Danh Sách (Excel) ]` ở thanh tác vụ trên cùng (bên cạnh Tải Mẫu CSV và Thêm Học Viên).
+     - Thêm nút `[ 📥 Tải DS ]` đặt ngay bên cạnh ô chọn Lớp Học trong Bộ Lọc Tìm Kiếm, cho phép giáo viên vừa lọc lớp vừa tải ngay danh sách lớp đó chỉ với 1 click.
+  3. **Định dạng bảng tính Excel chuyên nghiệp (`.xlsx`)**:
+     - Tiêu đề Giáo phận & Giáo xứ, Năm học, Tên lớp, GLV phụ trách & đồng chủ nhiệm, Sĩ số.
+     - 18 cột thông tin chi tiết: STT, Mã HV, Tên Thánh, Họ và Tên, Giới tính, Lớp học, Ngày sinh (DD/MM/YYYY), Giáo khóm, Địa chỉ, Tên Cha, SĐT Cha, Tên Mẹ, SĐT Mẹ, SĐT Liên Hệ, Tình trạng 3 Bí tích (Rửa tội, Rước lễ, Thêm sức), Ghi chú.
+     - Phần tổng kết cuối bảng: Tổng sĩ số, số nam, số nữ, cùng phần ký tên trang trọng (Người lập bảng, GLV Phụ trách, Linh mục Quản xứ).
+  4. **Đồng bộ hóa & Bộ nhớ đệm**:
+     - Đồng bộ 100% giữa `app_v2.js` và `app.js`.
+     - Nâng Cache-Buster trong `index.html` lên `v=20261124_v8200` và Service Worker trong `sw.js` lên `magnificatedu-cache-v40`.
+
 ---
 
 ## 🚀 4. Hướng Dẫn Cập Nhật & Deploy Dự Án Chuẩn 4 Bước
