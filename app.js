@@ -2987,7 +2987,7 @@
                 <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--slate-border); padding-top: 12px; gap: 8px; flex-wrap: wrap;">
                   <span style="font-weight: 700; color: var(--slate-dark); white-space: nowrap;"><i class="fa-solid fa-users text-primary"></i> ${classStudentCount} Học viên</span>
                   <div style="display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap;">
-                    <button class="btn btn-sm" style="color: #047857; border: 1px solid #10b981; background: #ecfdf5; font-weight: 700;" onclick="window.downloadClassStudentList('${safeId}')" title="Tải xuống danh sách học sinh lớp ${escapedName} (file Excel)"><i class="fa-solid fa-file-excel"></i> Tải DS Lớp</button>
+                    <button class="btn btn-sm btn-success" style="background: linear-gradient(135deg, #059669, #047857) !important; color: #ffffff !important; border: none !important; font-weight: 700; box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25);" onclick="window.downloadClassStudentList('${safeId}')" title="Tải xuống danh sách học sinh lớp ${escapedName} (file Excel)"><i class="fa-solid fa-file-excel"></i> Tải DS Lớp</button>
                     <button class="btn btn-sm" style="color: #b45309; border: 1px solid #f59e0b; background: #fffbeb; font-weight: 700;" onclick="window.openClassEmulation('${safeId}')" title="Mở Sổ Thi Đua & Bảng Vinh Danh Lớp Chủ Nhiệm"><i class="fa-solid fa-award"></i> Thi Đua & Vinh Danh</button>
                     <button class="btn btn-sm btn-outline-primary" style="color: #2563eb; border-color: #93c5fd;" data-class-id="${safeId}" data-class-name="${escapedName}" data-teacher-email="${teacher1Email}" onclick="window.editClass(this)" title="Cài đặt mã nhóm Zalo Bot cho lớp này"><i class="fa-solid fa-robot"></i> Cài Zalo</button>
                     <button class="btn btn-sm btn-outline-primary" data-class-id="${safeId}" data-class-name="${escapedName}" data-teacher-email="${teacher1Email}" onclick="window.editClass(this)"><i class="fa-solid fa-pen"></i> Sửa</button>
@@ -3016,7 +3016,7 @@
           <p class="page-subtitle">${isAdmin ? '👑 Quản lý toàn bộ học viên tất cả các lớp của các GLV trong hệ thống' : 'Quản lý sơ yếu lý lịch, hình ảnh vĩnh viễn, bí tích và kết quả học tập'} (${students.length} học viên)</p>
         </div>
         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-          <button class="btn btn-outline-success" onclick="window.downloadClassStudentListFromFilter()" style="font-weight: 700; color: #047857; border-color: #10b981; background: #ecfdf5;" title="Tải file Excel danh sách học viên (theo lớp đang chọn hoặc toàn bộ)"><i class="fa-solid fa-file-excel"></i> Tải Xuống Danh Sách (Excel)</button>
+          <button class="btn btn-success" onclick="window.downloadClassStudentListFromFilter()" style="font-weight: 800; background: linear-gradient(135deg, #059669, #047857) !important; color: #ffffff !important; border: none !important; box-shadow: 0 4px 14px rgba(5, 150, 105, 0.35);" title="Tải file Excel danh sách học viên (theo lớp đang chọn hoặc toàn bộ)"><i class="fa-solid fa-file-excel"></i> Tải Xuống Danh Sách (Excel)</button>
           <button class="btn btn-outline-primary" onclick="window.downloadCSVTemplate()"><i class="fa-solid fa-file-excel"></i> Tải Mẫu CSV</button>
           <button class="btn btn-success" onclick="window.openCSVImportModal()"><i class="fa-solid fa-file-import"></i> Tải File Up (CSV/Excel)</button>
           <button class="btn btn-primary" onclick="window.openAddStudentModal()"><i class="fa-solid fa-user-plus"></i> Thêm Học Viên Mới</button>
@@ -3041,7 +3041,7 @@
                     return `<option value="${c.id}">${c.name}${teacherStr}</option>`;
                   }).join('')}
                 </select>
-                <button type="button" id="btn-quick-download-class" class="btn btn-outline-success" onclick="window.downloadSelectedClassStudentList()" title="Tải xuống danh sách học sinh của lớp đang chọn trong bộ lọc (file Excel)" style="white-space: nowrap; font-weight: 700; color: #047857; border-color: #10b981; background: #ecfdf5; padding: 0 12px; display: flex; align-items: center; gap: 5px;">
+                <button type="button" id="btn-quick-download-class" class="btn btn-success" onclick="window.downloadSelectedClassStudentList()" title="Tải xuống danh sách học sinh của lớp đang chọn trong bộ lọc (file Excel)" style="white-space: nowrap; font-weight: 700; color: #ffffff !important; background: linear-gradient(135deg, #059669, #047857) !important; border: none !important; padding: 0 14px; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25);">
                   <i class="fa-solid fa-file-arrow-down"></i> Tải DS
                 </button>
               </div>
